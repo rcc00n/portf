@@ -120,8 +120,8 @@ const projects = [
     impact: "React · Tailwind · Framer Motion",
     blurb: "This very site: modern portfolio built with React, Tailwind, and Framer Motion. Responsive, animated, and fully modular.",
     links: [
-      { label: "Live", href: "https://yourdomain.com" },
-      { label: "Repo", href: "https://github.com/yourrepo/portfolio" },
+      { label: "Live", href: "https://rcc00n.github.io/portf/" },
+      { label: "Repo", href: "https://github.com/rcc00n/portf" },
     ],
     url: "https://yourdomain.com",
     tags: ["Portfolio", "React", "Tailwind", "Framer Motion"],
