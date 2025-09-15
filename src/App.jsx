@@ -52,9 +52,9 @@ const projects = [
     url: "https://badguymotors.com",
     tags: ["Commerce", "Catalog", "SEO"],
     images: [
-      "/assets/projects/bgm/1.png",
-      "/assets/projects/bgm/2.png",
-      "/assets/projects/bgm/3.png",
+      "assets/projects/bgm/1.png",
+      "assets/projects/bgm/2.png",
+      "assets/projects/bgm/3.png",
     ],
   },
   {
@@ -68,9 +68,9 @@ const projects = [
     url: "https://rcc00n.github.io/grr/",
     tags: ["Web", "Rental"],
     images: [
-      "/assets/projects/swiftfleet/1.png",
-      "/assets/projects/swiftfleet/2.png",
-      "/assets/projects/swiftfleet/3.png",
+      "assets/projects/swiftfleet/1.png",
+      "assets/projects/swiftfleet/2.png",
+      "assets/projects/swiftfleet/3.png",
     ],
   },
   {
@@ -84,8 +84,8 @@ const projects = [
     url: "https://rcc00n.github.io/prj_E/",
     tags: ["Directory", "Search"],
     images: [
-      "/assets/projects/worlddoc/1.png",
-      "/assets/projects/worlddoc/2.png",
+      "assets/projects/worlddoc/1.png",
+      "assets/projects/worlddoc/2.png",
     ],
   },
   {
@@ -99,8 +99,8 @@ const projects = [
     url: "https://rcc00n.github.io/SnowPlow/",
     tags: ["Portfolio", "Landing"],
     images: [
-      "/assets/projects/northpeak/1.png",
-      "/assets/projects/northpeak/2.png",
+      "assets/projects/northpeak/1.png",
+      "assets/projects/northpeak/2.png",
     ],
   },
   {
@@ -111,7 +111,7 @@ const projects = [
     url: "https://example.com",
     tags: ["Mobile", "Game"],
     images: [
-      "/assets/projects/arcade/1.png",
+      "assets/projects/arcade/1.png",
       // "/assets/projects/arcade/2.png",
     ],
   },
@@ -126,8 +126,8 @@ const projects = [
     url: "https://yourdomain.com",
     tags: ["Portfolio", "React", "Tailwind", "Framer Motion"],
     images: [
-      "/assets/projects/portfolio/1.png",
-      "/assets/projects/portfolio/2.png",
+      "assets/projects/portfolio/1.png",
+      "assets/projects/portfolio/2.png",
       // "/assets/projects/portfolio/3.png",
     ],
   },
