@@ -17,6 +17,8 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
+import raccoonGif from "./assets/raccoon.gif";
+import raccoonLogo from "./assets/raccoon-logo.png"; // наверху файла
 
 /* ===================== Data ===================== */
 const nav = [
@@ -193,21 +195,19 @@ const Btn = ({ as: As = 'a', className = '', children, ...props }) => (
   </motion.a>
 );
 
-const Logo = () => (
-  <div className="flex items-center gap-2">
-    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="drop-shadow">
-      <defs>
-        <linearGradient id="g" x1="0" x2="1" y1="0" y2="1">
-          <stop offset="0" stopColor="#ffffff"/>
-          <stop offset="1" stopColor="#9ca3af"/>
-        </linearGradient>
-      </defs>
-      <path d="M4 12c0-4.418 3.582-8 8-8 1.657 0 3.19.504 4.46 1.36L12 12l6.4 6.4A7.963 7.963 0 0 1 12 20c-4.418 0-8-3.582-8-8Z" fill="url(#g)"/>
-      <path d="M19 5l-7 7 3.5 3.5L22 9.5" stroke="#fff" strokeOpacity="0.9" strokeWidth="1.5" strokeLinecap="round"/>
-    </svg>
-    <span className="font-semibold tracking-wide">studio</span>
+
+const Logo = ({ size = "h-12 w-12 sm:h-14 sm:w-14" }) => (
+  <div className="flex items-center gap-3">
+    <img
+      src={raccoonLogo}
+      alt="raccoon logo"
+      className={`${size} -ml-1 select-none drop-shadow-[0_0_24px_rgba(56,189,248,.45)]`}
+      draggable={false}
+    />
+    <span className="text-lg sm:text-xl font-semibold tracking-wide">studio</span>
   </div>
 );
+
 
 /* ===== Pricing card variants ===== */
 const TierCard = ({ children, featured = false }) => (
@@ -332,6 +332,57 @@ const ImageCarousel = ({ images, alt = "Preview" }) => {
   );
 };
 
+const RaccoonPop = ({ gif, targetId }) => {
+  const [visible, setVisible] = React.useState(false);
+  const timers = React.useRef([]);
+  const cooling = React.useRef(false);
+
+  React.useEffect(() => {
+    const el = document.getElementById(targetId);
+    if (!el) return;
+
+    const onHit = (entries) => {
+      const hit = entries.some((e) => e.isIntersecting);
+      if (!hit || cooling.current) return;
+
+      cooling.current = true;
+      timers.current.push(
+        setTimeout(() => setVisible(true), 1000)   // show через 1с
+      );
+      timers.current.push(
+        setTimeout(() => setVisible(false), 6000)  // hide через 5с
+      );
+      timers.current.push(
+        setTimeout(() => { cooling.current = false; }, 20000) // кулдаун
+      );
+    };
+
+    const io = new IntersectionObserver(onHit, { threshold: 0.8 });
+    io.observe(el);
+    return () => {
+      io.disconnect();
+      timers.current.forEach(clearTimeout);
+      timers.current = [];
+    };
+  }, [targetId]);
+
+  return (
+    <motion.div
+      initial={{ x: 200, y: 200, opacity: 0 }}
+      animate={visible ? { x: 0, y: 0, opacity: 1 } : { x: 200, y: 200, opacity: 0 }}
+      transition={{ type: "spring", stiffness: 260, damping: 22 }}
+      className="fixed bottom-4 right-4 z-[60] pointer-events-none"
+    >
+      <img
+        src={gif}
+        alt="raccoon"
+        className="h-44 w-auto drop-shadow-[0_8px_30px_rgba(0,0,0,.6)] select-none"
+        draggable={false}
+      />
+    </motion.div>
+  );
+};
+
 /* ===================== Page ===================== */
 export default function PortfolioSite() {
   const [showAll, setShowAll] = useState(false);            // Services
@@ -340,6 +391,7 @@ export default function PortfolioSite() {
   return (
     <div className="min-h-screen scroll-smooth bg-black text-zinc-100 antialiased">
       {/* Nav */}
+      
       <div className="sticky top-0 z-50 border-b border-white/10 bg-black/70 backdrop-blur supports-[backdrop-filter]:bg-black/55">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
           <a href="#top" className="flex items-center gap-2 font-semibold tracking-wide"><Logo /></a>
@@ -601,9 +653,19 @@ export default function PortfolioSite() {
             <a href="#" className="hover:text-zinc-300">Privacy Policy</a>
             <span className="opacity-50">•</span>
             <a href="#" className="hover:text-zinc-300">Terms</a>
+          
           </div>
         </div>
       </footer>
+      
+
+
+
+      <div id="page-end-sentinel" className="h-2 w-full" />
+      <RaccoonPop gif={raccoonGif} targetId="page-end-sentinel" />
     </div>
   );
 }
+
+
+
