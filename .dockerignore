@@ -1,0 +1,13 @@
+.git
+.github
+app/node_modules
+app/dist
+backend/__pycache__
+backend/*.sqlite3
+backend/media
+backend/staticfiles
+backend/frontend_dist
+*.log
+.DS_Store
+.idea
+.vscode
