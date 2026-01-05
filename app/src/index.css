@@ -5,7 +5,7 @@
 }
 
 body {
-  background-color: #030406;
+  background-color: #020303;
 }
 
 .infinite-bg {
@@ -14,23 +14,21 @@ body {
   z-index: 0;
   pointer-events: none;
   overflow: hidden;
-  background: #030406;
+  background: linear-gradient(110deg, #02110a 0%, #020303 45%, #0b0313 100%);
 }
 
 .infinite-bg__mesh {
   position: absolute;
   inset: -75%;
   background-image:
-    radial-gradient(65% 65% at 8% 6%, rgba(56, 189, 248, 0.2), transparent 72%),
-    radial-gradient(62% 62% at 92% 16%, rgba(236, 72, 153, 0.18), transparent 72%),
-    radial-gradient(60% 65% at 55% 95%, rgba(99, 102, 241, 0.2), transparent 72%),
-    radial-gradient(60% 60% at 16% 85%, rgba(16, 185, 129, 0.16), transparent 76%),
-    radial-gradient(55% 55% at 78% 78%, rgba(234, 179, 8, 0.14), transparent 76%),
-    radial-gradient(50% 50% at 35% 45%, rgba(94, 234, 212, 0.12), transparent 75%);
-  filter: blur(84px) saturate(1.12);
-  opacity: 0.78;
+    radial-gradient(68% 68% at 6% 10%, rgba(16, 185, 129, 0.2), transparent 72%),
+    radial-gradient(60% 60% at 18% 80%, rgba(5, 150, 105, 0.18), transparent 76%),
+    radial-gradient(62% 62% at 92% 18%, rgba(139, 92, 246, 0.18), transparent 72%),
+    radial-gradient(60% 65% at 78% 82%, rgba(88, 28, 135, 0.2), transparent 76%),
+    radial-gradient(55% 55% at 40% 50%, rgba(34, 197, 94, 0.12), transparent 75%);
+  filter: blur(48px) saturate(1.05);
+  opacity: 0.6;
   transform: translate3d(0, 0, 0) scale(1.18);
-  animation: bg-drift 95s ease-in-out infinite;
 }
 
 .infinite-bg__spectrum {
@@ -38,18 +36,16 @@ body {
   inset: -85%;
   background-image: linear-gradient(
     130deg,
-    rgba(56, 189, 248, 0.12),
-    rgba(168, 85, 247, 0.12),
-    rgba(236, 72, 153, 0.1),
-    rgba(234, 179, 8, 0.1),
-    rgba(34, 197, 94, 0.1),
-    rgba(56, 189, 248, 0.12)
+    rgba(5, 150, 105, 0.12),
+    rgba(16, 185, 129, 0.12),
+    rgba(88, 28, 135, 0.12),
+    rgba(139, 92, 246, 0.12),
+    rgba(5, 150, 105, 0.12)
   );
   background-size: 220% 220%;
   mix-blend-mode: screen;
-  opacity: 0.3;
-  filter: blur(52px) saturate(1.1);
-  animation: bg-pan 140s ease-in-out infinite;
+  opacity: 0.18;
+  filter: blur(34px) saturate(1.02);
 }
 
 .infinite-bg__aurora {
@@ -57,17 +53,15 @@ body {
   inset: -90%;
   background-image: conic-gradient(
     from 90deg at 50% 50%,
-    rgba(59, 130, 246, 0.08),
-    rgba(139, 92, 246, 0.12),
-    rgba(236, 72, 153, 0.1),
-    rgba(34, 197, 94, 0.08),
-    rgba(234, 179, 8, 0.08),
-    rgba(59, 130, 246, 0.08)
+    rgba(5, 150, 105, 0.08),
+    rgba(16, 185, 129, 0.1),
+    rgba(88, 28, 135, 0.1),
+    rgba(139, 92, 246, 0.1),
+    rgba(5, 150, 105, 0.08)
   );
   mix-blend-mode: screen;
-  opacity: 0.28;
-  filter: blur(38px);
-  animation: bg-spin 200s linear infinite;
+  opacity: 0.18;
+  filter: blur(28px);
 }
 
 .infinite-bg__noise {
@@ -76,14 +70,14 @@ body {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180' viewBox='0 0 180 180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='0.4'/%3E%3C/svg%3E");
   background-size: 220px 220px;
   mix-blend-mode: soft-light;
-  opacity: 0.12;
+  opacity: 0.08;
   transform: translateZ(0);
 }
 
 .infinite-bg__vignette {
   position: absolute;
   inset: 0;
-  background: radial-gradient(120% 120% at 50% 8%, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.45) 52%, rgba(0, 0, 0, 0.82) 86%);
+  background: radial-gradient(120% 120% at 50% 8%, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.5) 52%, rgba(0, 0, 0, 0.88) 86%);
 }
 
 @keyframes bg-drift {
