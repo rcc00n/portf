@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Link, Route, Routes, useLocation } from "react-router-dom";
+import { Link, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import {
   Rocket,
   Workflow,
@@ -20,8 +20,17 @@ import {
   X,
 } from "lucide-react";
 import raccoonLogo from "./assets/raccoon-logo.png";
+import ToggleGroup from "./components/ToggleGroup";
+import DataCard from "./components/DataCard";
 import { trackCtaClick, trackPageView } from "./utils/analytics";
 import { getMetaForPath } from "./utils/seo";
+import {
+  buildEstimate,
+  PRODUCT_OPTIONS as ESTIMATE_PRODUCT_OPTIONS,
+  COMPLEXITY_OPTIONS as ESTIMATE_COMPLEXITY_OPTIONS,
+  TEAM_OPTIONS as ESTIMATE_TEAM_OPTIONS,
+  INTEGRATION_OPTIONS as ESTIMATE_INTEGRATION_OPTIONS,
+} from "./pages/engineering/estimateData";
 
 const EngineeringLandingPage = lazy(() => import("./pages/engineering/EngineeringLanding.jsx"));
 const ArchitecturePreviewPage = lazy(() => import("./pages/engineering/ArchitecturePreview.jsx"));
@@ -40,7 +49,7 @@ const nav = [
   { id: "engineering", label: "Engineering", href: "/engineering", icon: Braces, desc: "Advanced modules" },
   { id: "about", label: "About", href: "/about", icon: Sparkles, desc: "Studio story" },
   { id: "testimonials", label: "Testimonials", href: "/testimonials", icon: Star, desc: "Client proof" },
-  { id: "contact", label: "Contact", href: "/contact", icon: Mail, desc: "Get estimate in 24h" },
+  { id: "contact", label: "Contact", href: "/start", icon: Mail, desc: "Get estimate in 24h" },
 ];
 
 const CONTACT = {
@@ -66,6 +75,83 @@ const whoWeWorkWith = [
   { title: "For Founders", lines: ["MVP → product → scale", "SaaS, marketplaces, internal tools"] },
   { title: "For Small Businesses", lines: ["Websites, e-commerce, bookings", "Automation instead of hiring staff"] },
   { title: "For Teams", lines: ["Internal CRMs & dashboards", "Roles, reporting, integrations"] },
+];
+
+const notForEveryoneItems = [
+  { title: "Founders without decision power", desc: "We need a clear owner who can approve scope, budget, and trade-offs." },
+  { title: "\"Copy competitor X\" requests", desc: "We research markets, but we do not clone existing products." },
+  { title: "Projects without admin control", desc: "Admin access is non-negotiable for reliable operations." },
+  { title: "\"Cheap & fast\" expectations", desc: "We move quickly, but never by trading away quality." },
+];
+
+const QUALIFICATION_STORAGE_KEY = "qualificationGate";
+
+const QUAL_DEFAULTS = {
+  projectType: "saas",
+  complexity: "medium",
+  budget: "10_25k",
+  timeline: "soon",
+};
+
+const QUAL_PROJECT_OPTIONS = [
+  { value: "saas", label: "SaaS / web product", description: "MVP to scale" },
+  { value: "crm", label: "CRM / internal tool", description: "Admin-first workflows" },
+  { value: "marketplace", label: "Marketplace / platform", description: "Multi-sided flows" },
+  { value: "commerce", label: "Commerce", description: "Catalog, checkout, operations" },
+  { value: "unsure", label: "Not sure yet", description: "We can scope together" },
+];
+
+const QUAL_COMPLEXITY_OPTIONS = [
+  { value: "simple", label: "Simple", description: "1-2 workflows, low integrations", minBudget: 5000 },
+  { value: "medium", label: "Medium", description: "Multiple workflows, core integrations", minBudget: 10000 },
+  { value: "complex", label: "Complex", description: "Heavy integrations, multi-role ops", minBudget: 25000 },
+];
+
+const QUAL_BUDGET_OPTIONS = [
+  { value: "under_5k", label: "Under $5k", description: "Prototype or discovery", amount: 4000 },
+  { value: "5_10k", label: "$5k-10k", description: "Tight MVP scope", amount: 7500 },
+  { value: "10_25k", label: "$10k-25k", description: "Standard build", amount: 15000 },
+  { value: "25_50k", label: "$25k-50k", description: "Multi-sprint delivery", amount: 35000 },
+  { value: "50k_plus", label: "$50k+", description: "Platform scale", amount: 60000 },
+];
+
+const QUAL_TIMELINE_OPTIONS = [
+  { value: "urgent", label: "ASAP (2-3 weeks)", description: "Hard launch or deadline" },
+  { value: "soon", label: "4-8 weeks", description: "Standard delivery window" },
+  { value: "steady", label: "8-12 weeks", description: "Phased build" },
+  { value: "flexible", label: "Flexible", description: "Open timeline" },
+];
+
+const ESTIMATE_STORAGE_KEY = "estimateSnapshot";
+
+const MATURITY_LABELS = {
+  idea: "Idea",
+  mvp: "MVP",
+  growth: "Growth",
+  scale: "Scale",
+  unknown: "Unspecified",
+};
+
+const preCallWorkflow = [
+  { title: "Discovery", desc: "Clarify goals, constraints, success metrics, and decision owner." },
+  { title: "Design", desc: "Map flows, data model, and system boundaries." },
+  { title: "Build", desc: "Plan milestones, sprints, QA, and launch." },
+  { title: "Grow", desc: "Instrument, review outcomes, and iterate." },
+];
+
+const preCallResources = [
+  { title: "Architecture Preview", desc: "System map across frontend, backend, data, and integrations.", to: "/architecture-preview" },
+  { title: "Production Checklist", desc: "Release, monitoring, and security defaults.", to: "/production-ready" },
+  { title: "Engineering Journal", desc: "Decision notes and trade-offs from real builds.", to: "/journal" },
+];
+
+const preCallPrepItems = [
+  "Primary goal and non-goals for this build.",
+  "Current stack or screenshots if replacing something.",
+  "Must-have workflows and known risks.",
+  "Decision owner + stakeholders who must sign off.",
+  "Timeline drivers and acceptable budget range.",
+  "External systems or integrations to consider.",
 ];
 
 /* ===== Projects with image galleries ===== */
@@ -195,6 +281,120 @@ const testimonials = [
   { name: "COO, logistics platform", quote: "We cut idle time and empty rides; dashboards are clear even for drivers — magic." },
 ];
 
+const journalPosts = [
+  {
+    title: "Why admin-first systems outperform pretty dashboards",
+    sections: [
+      {
+        title: "Control plane first",
+        body: "Dashboards are read-only. Admin tools are where decisions become edits. If the write path is weak, the UI is theater.",
+      },
+      {
+        title: "Exceptions show the truth",
+        body: "Refunds, overrides, and edge cases reveal where margin leaks. Admin-first builds those flows before the polish.",
+      },
+      {
+        title: "Schema exposes intent",
+        body: "Admin screens force you to name entities and lifecycle states. That clarity keeps analytics honest.",
+      },
+      {
+        title: "Permissions are architecture",
+        body: "Roles define data boundaries and workflows. If you postpone them, you rebuild later.",
+      },
+      {
+        title: "Speed beats beauty",
+        body: "Ops teams care about getting out of trouble fast. A fast, plain tool beats a slow, pretty one.",
+      },
+      {
+        title: "Auditability over aesthetics",
+        body: "If you cannot track who changed what, you cannot scale a team.",
+      },
+    ],
+  },
+  {
+    title: "What breaks first when a product scales",
+    sections: [
+      {
+        title: "Support load, not servers",
+        body: "Tickets spike before CPU does. Missing workflows and unclear ownership show up first.",
+      },
+      {
+        title: "State assumptions",
+        body: "A single source of truth turns into multiple writers. Concurrency bugs replace feature bugs.",
+      },
+      {
+        title: "Role edges",
+        body: "Happy-path permissions fail when new teams join. You end up patching with exceptions.",
+      },
+      {
+        title: "Background jobs",
+        body: "Queues grow, retries cascade, idempotency becomes mandatory.",
+      },
+      {
+        title: "Observability noise",
+        body: "Logs multiply without correlation. If you cannot trace a request, you cannot fix it.",
+      },
+      {
+        title: "Process drift",
+        body: "Manual workarounds become default behavior. If you do not formalize them, quality drops.",
+      },
+    ],
+  },
+  {
+    title: "Why we never ship without audit logs",
+    sections: [
+      {
+        title: "Debugging time",
+        body: "Audit logs turn anecdotes into timelines. Root cause starts with a concrete sequence.",
+      },
+      {
+        title: "Security baseline",
+        body: "Without logs, you cannot prove or disprove a breach. That is operational debt.",
+      },
+      {
+        title: "Operational trust",
+        body: "Teams act faster when edits are traceable. Confidence beats hesitation.",
+      },
+      {
+        title: "Compliance pressure",
+        body: "Even small businesses get asked for change history. Logs keep you ahead of it.",
+      },
+      {
+        title: "Rollback with context",
+        body: "You can reverse a change only if you know the actor and the payload.",
+      },
+      {
+        title: "Product discipline",
+        body: "If a feature cannot emit audit events, it is not ready to ship.",
+      },
+    ],
+  },
+];
+
+const decisionRecords = [
+  {
+    title: "Why we don't start with microservices",
+    context: "Early teams have moving requirements, unclear domain boundaries, and limited operators. Splitting too soon multiplies failure modes.",
+    decision: "Start with a modular monolith and enforce boundaries through interfaces, packages, and clear ownership.",
+    tradeoffs: "Less independent deployment and more shared runtime risk. You trade flexibility for focus and speed.",
+    change: "We split when domains stabilize, teams can own services end-to-end, and deployment coupling becomes the bottleneck.",
+  },
+  {
+    title: "When real-time is a bad idea",
+    context: "Real-time adds state, infra, and UX complexity. Most workflows do not require sub-second updates.",
+    decision: "Prefer near-real-time with polling or event-driven refresh for the few panels that demand it.",
+    tradeoffs: "Slightly stale data and less visual drama. You gain simpler failure handling and lower cost.",
+    change: "We go real-time when latency directly impacts revenue or safety and the budget covers streaming infra.",
+  },
+  {
+    title: "Why every system needs roles & permissions",
+    context: "Data access is never uniform. The first incident usually starts with someone seeing or changing too much.",
+    decision: "Define roles early and design data models around least-privilege access.",
+    tradeoffs: "More upfront design and a larger test surface. It prevents expensive rework later.",
+    change: "We relax only for truly single-user products with no sensitive data and no audit needs.",
+  },
+];
+
 const engagementModels = [
   {
     title: "Product Squad",
@@ -316,6 +516,188 @@ const contactSteps = [
   { title: "Scope brief", desc: "We map features, tech, and risks." },
   { title: "Proposal", desc: "Timeline, budget, and team in 3-5 days." },
 ];
+
+const getValidOption = (value, options, fallback) => (
+  options.some((option) => option.value === value) ? value : fallback
+);
+
+const normalizeQualification = (payload = {}) => ({
+  projectType: getValidOption(payload.projectType, QUAL_PROJECT_OPTIONS, QUAL_DEFAULTS.projectType),
+  complexity: getValidOption(payload.complexity, QUAL_COMPLEXITY_OPTIONS, QUAL_DEFAULTS.complexity),
+  budget: getValidOption(payload.budget, QUAL_BUDGET_OPTIONS, QUAL_DEFAULTS.budget),
+  timeline: getValidOption(payload.timeline, QUAL_TIMELINE_OPTIONS, QUAL_DEFAULTS.timeline),
+});
+
+const getStoredQualification = () => {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.localStorage.getItem(QUALIFICATION_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== "object") return null;
+    return normalizeQualification(parsed);
+  } catch {
+    return null;
+  }
+};
+
+const normalizeEstimate = (payload = {}) => ({
+  product: getValidOption(payload.product, ESTIMATE_PRODUCT_OPTIONS, ESTIMATE_PRODUCT_OPTIONS[0].value),
+  complexity: getValidOption(payload.complexity, ESTIMATE_COMPLEXITY_OPTIONS, ESTIMATE_COMPLEXITY_OPTIONS[0].value),
+  team: getValidOption(payload.team, ESTIMATE_TEAM_OPTIONS, ESTIMATE_TEAM_OPTIONS[1].value),
+  integrations: getValidOption(payload.integrations, ESTIMATE_INTEGRATION_OPTIONS, ESTIMATE_INTEGRATION_OPTIONS[1].value),
+});
+
+const getStoredEstimate = () => {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.localStorage.getItem(ESTIMATE_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== "object") return null;
+    return normalizeEstimate(parsed);
+  } catch {
+    return null;
+  }
+};
+
+const mapQualificationToEstimate = (qualification) => {
+  if (!qualification) return null;
+  const productMap = {
+    crm: "CRM",
+    marketplace: "Marketplace",
+    commerce: "E-commerce",
+    saas: "CRM",
+    unsure: ESTIMATE_PRODUCT_OPTIONS[0].value,
+  };
+  const complexityMap = {
+    simple: "Lean",
+    medium: "Balanced",
+    complex: "Advanced",
+  };
+
+  return normalizeEstimate({
+    product: productMap[qualification.projectType] || ESTIMATE_PRODUCT_OPTIONS[0].value,
+    complexity: complexityMap[qualification.complexity] || ESTIMATE_COMPLEXITY_OPTIONS[0].value,
+    team: ESTIMATE_TEAM_OPTIONS[1].value,
+    integrations: ESTIMATE_INTEGRATION_OPTIONS[1].value,
+  });
+};
+
+const getMaturityFromQualification = (qualification) => {
+  if (!qualification) return "unknown";
+  const budgetScore = {
+    under_5k: 0,
+    "5_10k": 1,
+    "10_25k": 2,
+    "25_50k": 3,
+    "50k_plus": 4,
+  };
+  const complexityScore = {
+    simple: 0,
+    medium: 1,
+    complex: 2,
+  };
+  const score = (budgetScore[qualification.budget] ?? 0) + (complexityScore[qualification.complexity] ?? 0);
+  if (score <= 1) return "idea";
+  if (score <= 3) return "mvp";
+  if (score <= 5) return "growth";
+  return "scale";
+};
+
+const getMaturityFromEstimate = (estimate) => {
+  if (!estimate) return "unknown";
+  const complexityScore = { Lean: 0, Balanced: 1, Advanced: 2 };
+  const integrationScore = { None: 0, Standard: 1, Heavy: 2 };
+  const score = (complexityScore[estimate.complexity] ?? 0) + (integrationScore[estimate.integrations] ?? 0);
+  if (score <= 1) return "idea";
+  if (score <= 2) return "mvp";
+  if (score <= 3) return "growth";
+  return "scale";
+};
+
+const getLeadRouting = () => {
+  const qualification = getStoredQualification();
+  if (qualification) {
+    return {
+      productType: qualification.projectType,
+      complexity: qualification.complexity,
+      maturity: getMaturityFromQualification(qualification),
+    };
+  }
+  const estimate = getStoredEstimate();
+  if (estimate) {
+    const productMap = {
+      CRM: "crm",
+      Marketplace: "marketplace",
+      "E-commerce": "commerce",
+    };
+    const complexityMap = {
+      Lean: "simple",
+      Balanced: "medium",
+      Advanced: "complex",
+    };
+    return {
+      productType: productMap[estimate.product] || "unknown",
+      complexity: complexityMap[estimate.complexity] || "unknown",
+      maturity: getMaturityFromEstimate(estimate),
+    };
+  }
+  return { productType: "unknown", complexity: "unknown", maturity: "unknown" };
+};
+
+const getOptionLabel = (value, options) => options.find((option) => option.value === value)?.label || value || "-";
+
+const getMaturityLabel = (value) => MATURITY_LABELS[value] || MATURITY_LABELS.unknown;
+
+const buildRoutingParams = (routing) => {
+  const params = new URLSearchParams();
+  if (routing?.productType && routing.productType !== "unknown") {
+    params.set("product", routing.productType);
+  }
+  if (routing?.complexity && routing.complexity !== "unknown") {
+    params.set("complexity", routing.complexity);
+  }
+  if (routing?.maturity && routing.maturity !== "unknown") {
+    params.set("maturity", routing.maturity);
+  }
+  return params;
+};
+
+const appendRoutingToSource = (source, routing) => {
+  const params = buildRoutingParams(routing);
+  const query = params.toString();
+  if (!query) return source;
+  if (!source) return `/?${query}`;
+  const joiner = source.includes("?") ? "&" : "?";
+  return `${source}${joiner}${query}`;
+};
+
+const buildPreCallUrl = (routing) => {
+  const params = buildRoutingParams(routing);
+  const query = params.toString();
+  return query ? `/pre-call?${query}` : "/pre-call";
+};
+
+const buildSummaryNextSteps = ({ product, integrations }) => {
+  const steps = [
+    "Review the pre-call package.",
+    "Share goals, constraints, and success metrics.",
+    "Confirm decision owner and stakeholders.",
+    "Confirm timeline range and launch drivers.",
+  ];
+  if (integrations && integrations !== "None") {
+    steps.push("List external systems, owners, and access needs.");
+  }
+  if (product === "Marketplace") {
+    steps.push("Define trust, payouts, and dispute flow.");
+  } else if (product === "E-commerce") {
+    steps.push("Provide catalog structure and fulfillment flow.");
+  } else if (product === "CRM") {
+    steps.push("Share pipeline stages and role matrix.");
+  }
+  return steps;
+};
 
 /* ===================== UI helpers ===================== */
 const PERFORMANCE_MODE = true;
@@ -532,6 +914,7 @@ const ContactForm = ({ apiBase = "", source = "" }) => {
   const [fieldErrors, setFieldErrors] = useState({});
   const [submitted, setSubmitted] = useState(false);
   const isSubmitting = status.state === "loading";
+  const navigate = useNavigate();
 
   const validate = (values) => {
     const errors = {};
@@ -571,12 +954,17 @@ const ContactForm = ({ apiBase = "", source = "" }) => {
     setStatus({ state: "loading", message: "" });
     setFieldErrors({});
 
+    const routing = getLeadRouting();
+    const baseSource = source || (typeof window !== "undefined" ? window.location.pathname : "");
+    const sourceWithRouting = appendRoutingToSource(baseSource, routing);
+
     const payload = {
       name: form.name.trim(),
       email: form.email.trim(),
       company: form.company.trim(),
       message: form.message.trim(),
-      source: source || (typeof window !== "undefined" ? window.location.pathname : ""),
+      source: sourceWithRouting,
+      routing,
     };
 
     try {
@@ -607,6 +995,7 @@ const ContactForm = ({ apiBase = "", source = "" }) => {
       setStatus({ state: "success", message: "Thanks! We will reply within 24 hours." });
       setForm(emptyContactForm);
       setSubmitted(false);
+      navigate(buildPreCallUrl(routing), { replace: true });
     } catch {
       setStatus({ state: "error", message: "We could not send your brief. Please try again." });
     }
@@ -698,7 +1087,7 @@ const ContactForm = ({ apiBase = "", source = "" }) => {
   );
 };
 
-const CTABox = ({ title, subtitle, primaryLabel = "Get estimate in 24h", primaryTo = "/contact", secondaryLabel = "See pricing", secondaryTo = "/pricing" }) => (
+const CTABox = ({ title, subtitle, primaryLabel = "Get estimate in 24h", primaryTo = "/start", secondaryLabel = "See pricing", secondaryTo = "/pricing" }) => (
   <Section className="pt-8">
     <div className="relative">
       <div className="absolute inset-0 -z-10 rounded-3xl bg-[radial-gradient(80%_120%_at_50%_-20%,rgba(99,102,241,0.35),transparent)]" />
@@ -907,7 +1296,7 @@ const MobileNav = ({ open, onClose }) => {
         <div className="mt-3 text-xl font-semibold text-white">Next slot in 2-3 weeks</div>
         <p className="mt-2 text-sm text-zinc-300">Limited slots per quarter. Reserve yours now.</p>
         <div className="mt-4">
-          <BtnLink to="/contact" analyticsLabel="Get estimate in 24h" analyticsMeta={{ context: "mobile_nav" }} className="w-full bg-white text-black hover:bg-zinc-200">Get estimate in 24h</BtnLink>
+          <BtnLink to="/start" analyticsLabel="Get estimate in 24h" analyticsMeta={{ context: "mobile_nav" }} className="w-full bg-white text-black hover:bg-zinc-200">Get estimate in 24h</BtnLink>
         </div>
         <div className="mt-4 text-xs text-zinc-400">{SALES_PROMISE}</div>
       </div>
@@ -957,7 +1346,7 @@ const MobileNav = ({ open, onClose }) => {
 const FloatingContactButton = () => (
   <div className="fixed bottom-6 left-6 z-40 sm:bottom-8 sm:left-8">
     <BtnLink
-      to="/contact"
+      to="/start"
       analyticsLabel="Get estimate in 24h"
       analyticsMeta={{ context: "floating_cta" }}
       className="gap-2 bg-white px-4 py-3 text-sm text-black shadow-lg shadow-black/40 ring-1 ring-white/10 hover:bg-zinc-200"
@@ -1003,7 +1392,7 @@ const SiteNav = () => {
             </nav>
             <div className="flex items-center gap-3">
               <div className="hidden md:block">
-                <BtnLink to="/contact" analyticsLabel="Get estimate in 24h" analyticsMeta={{ context: "nav" }} className="bg-white text-black hover:bg-zinc-200 px-4 py-2 text-sm">Get estimate in 24h</BtnLink>
+                <BtnLink to="/start" analyticsLabel="Get estimate in 24h" analyticsMeta={{ context: "nav" }} className="bg-white text-black hover:bg-zinc-200 px-4 py-2 text-sm">Get estimate in 24h</BtnLink>
               </div>
               <button
                 type="button"
@@ -1564,7 +1953,7 @@ const ServicesPage = () => (
       kicker="Services"
       title="Senior teams that ship product, not slides"
       subtitle="We lead end-to-end delivery from discovery to growth. Expect sharp decisions, modern craft, and measurable outcomes."
-      primary={{ label: "Get estimate in 24h", to: "/contact" }}
+      primary={{ label: "Get estimate in 24h", to: "/start" }}
       secondary={{ label: "See projects", to: "/projects" }}
       stats={[
         { label: "Avg. delivery", value: "10-14 w" },
@@ -1641,7 +2030,7 @@ const ProjectsPage = ({ projectsData }) => (
       kicker="Projects"
       title="Case studies with measurable impact"
       subtitle="We design, build, and grow digital products that move real metrics. Here is a selection of recent work."
-      primary={{ label: "Get estimate in 24h", to: "/contact" }}
+      primary={{ label: "Get estimate in 24h", to: "/start" }}
       secondary={{ label: "See services", to: "/services" }}
       stats={[
         { label: "Launches", value: "120+" },
@@ -1735,7 +2124,7 @@ const ProcessPage = () => (
       kicker="Process"
       title="A delivery engine built for clarity"
       subtitle="Our process keeps stakeholders aligned, risks visible, and releases predictable. It is calm, transparent, and senior-led."
-      primary={{ label: "Get estimate in 24h", to: "/contact" }}
+      primary={{ label: "Get estimate in 24h", to: "/start" }}
       secondary={{ label: "See pricing", to: "/pricing" }}
       stats={[
         { label: "Cadence", value: "2-week" },
@@ -1785,7 +2174,7 @@ const PricingPage = ({ pricingData }) => (
       kicker="Pricing"
       title="Transparent tiers with senior delivery"
       subtitle="Choose a fixed scope or a dedicated squad. Every tier comes with senior-only execution and clear reporting."
-      primary={{ label: "Get estimate in 24h", to: "/contact" }}
+      primary={{ label: "Get estimate in 24h", to: "/start" }}
       secondary={{ label: "See process", to: "/process" }}
       stats={[
         { label: "Quote time", value: "24h" },
@@ -1829,7 +2218,7 @@ const PricingPage = ({ pricingData }) => (
                     </ul>
                   </div>
                   <div className="mt-auto pt-6">
-                    <BtnLink to="/contact" analyticsLabel="Get estimate in 24h" analyticsMeta={{ context: "pricing_tier" }} className="w-full bg-white text-black hover:bg-zinc-200">Get estimate in 24h</BtnLink>
+                    <BtnLink to="/start" analyticsLabel="Get estimate in 24h" analyticsMeta={{ context: "pricing_tier" }} className="w-full bg-white text-black hover:bg-zinc-200">Get estimate in 24h</BtnLink>
                   </div>
                 </div>
               </TierCardClean>
@@ -1871,7 +2260,7 @@ const TechPage = () => (
       kicker="Tech"
       title="Modern stack, engineered for reliability"
       subtitle="We pick proven tools that ship fast and scale without drama. Every layer is optimized for performance and observability."
-      primary={{ label: "Get estimate in 24h", to: "/contact" }}
+      primary={{ label: "Get estimate in 24h", to: "/start" }}
       secondary={{ label: "See projects", to: "/projects" }}
       stats={[
         { label: "Stack maturity", value: "Battle-tested" },
@@ -1924,7 +2313,7 @@ const AboutPage = () => (
       kicker="About"
       title="Senior-only studio with a product mindset"
       subtitle="We are a compact team of senior operators. We move fast, stay calm, and own outcomes with you."
-      primary={{ label: "Get estimate in 24h", to: "/contact" }}
+      primary={{ label: "Get estimate in 24h", to: "/start" }}
       secondary={{ label: "See testimonials", to: "/testimonials" }}
       stats={[
         { label: "Years in product", value: "14+" },
@@ -1983,7 +2372,7 @@ const TestimonialsPage = () => (
       kicker="Testimonials"
       title="Proof from teams that ship with us"
       subtitle="We are trusted by leaders who want speed, clarity, and premium craft. Here is what they say."
-      primary={{ label: "Get estimate in 24h", to: "/contact" }}
+      primary={{ label: "Get estimate in 24h", to: "/start" }}
       secondary={{ label: "See projects", to: "/projects" }}
       stats={testimonialHighlights}
     />
@@ -2001,6 +2390,505 @@ const TestimonialsPage = () => (
       </div>
     </Section>
     <CTABox title="Want results like these?" subtitle="We align metrics early and optimize for outcomes, not vanity launches." secondaryLabel="See pricing" secondaryTo="/pricing" />
+  </>
+);
+
+const NotForEveryonePage = () => (
+  <>
+    <PageHero
+      kicker="Fit"
+      title="Not for everyone"
+      subtitle="We're not a fit for everyone. That's intentional."
+      primary={{ label: "Start qualification", to: "/start" }}
+      secondary={{ label: "See services", to: "/services" }}
+      stats={[
+        { label: "Decision owner", value: "Required" },
+        { label: "Admin control", value: "Non-negotiable" },
+        { label: "Quality bar", value: "Senior-only" },
+      ]}
+    />
+    <Section>
+      <H2>We don't work with</H2>
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+        {notForEveryoneItems.map((item, idx) => (
+          <motion.div key={item.title} {...fade} transition={{ ...fade.transition, delay: idx * 0.05 }}>
+            <Card className="h-full">
+              <div className="flex items-start gap-3">
+                <div className="mt-1 flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/5">
+                  <X className="h-4 w-4 text-zinc-300" />
+                </div>
+                <div>
+                  <div className="text-lg font-semibold text-white">{item.title}</div>
+                  <p className="mt-2 text-sm text-zinc-300">{item.desc}</p>
+                </div>
+              </div>
+            </Card>
+          </motion.div>
+        ))}
+      </div>
+    </Section>
+    <Section className="pt-8">
+      <Card className="bg-zinc-950/70">
+        <div className="text-2xl font-semibold text-white">If this sounds like you - we'll probably work well together.</div>
+        <p className="mt-3 text-sm text-zinc-300">
+          Start the qualification gate to confirm fit before the estimate request.
+        </p>
+        <div className="mt-5 flex flex-wrap gap-3">
+          <BtnLink to="/start" analyticsLabel="Start qualification" analyticsMeta={{ context: "not_for_everyone" }} className="bg-white text-black hover:bg-zinc-200">Start qualification</BtnLink>
+          <BtnLink to="/pricing" analyticsLabel="See pricing" analyticsMeta={{ context: "not_for_everyone" }} className="border border-white/15 text-white hover:bg-white/5">See pricing</BtnLink>
+        </div>
+      </Card>
+    </Section>
+  </>
+);
+
+const StartPage = () => {
+  const [answers, setAnswers] = useState(() => getStoredQualification() || normalizeQualification(QUAL_DEFAULTS));
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const payload = { ...answers, updatedAt: new Date().toISOString() };
+    window.localStorage.setItem(QUALIFICATION_STORAGE_KEY, JSON.stringify(payload));
+  }, [answers]);
+
+  const projectOption = QUAL_PROJECT_OPTIONS.find((option) => option.value === answers.projectType);
+  const complexityOption = QUAL_COMPLEXITY_OPTIONS.find((option) => option.value === answers.complexity);
+  const budgetOption = QUAL_BUDGET_OPTIONS.find((option) => option.value === answers.budget);
+  const timelineOption = QUAL_TIMELINE_OPTIONS.find((option) => option.value === answers.timeline);
+  const budgetAmount = budgetOption?.amount || 0;
+  const minBudget = complexityOption?.minBudget || 0;
+  const budgetGap = budgetAmount < minBudget;
+  const isUrgent = answers.timeline === "urgent";
+  const timelineMismatch = isUrgent && answers.complexity !== "simple";
+  const isAligned = !budgetGap && !timelineMismatch;
+
+  const recommendations = [];
+  if (budgetGap) {
+    recommendations.push("Start with a smaller MVP scope or a phased rollout.");
+    recommendations.push("Consider a discovery sprint to lock scope before build.");
+  }
+  if (timelineMismatch) {
+    recommendations.push("Plan a short discovery sprint, then phase the build.");
+    recommendations.push("Ship a thin slice first, then expand.");
+  }
+  if (isUrgent && budgetAmount < 15000) {
+    recommendations.push("Adjust timeline or budget to protect quality.");
+  }
+  const uniqueRecommendations = Array.from(new Set(recommendations));
+
+  return (
+    <>
+      <PageHero
+        kicker="Start"
+        title="A quick fit check before we talk"
+        subtitle="Four quick selections so we can align scope, budget, and timeline. No forms, no judgment."
+        primary={{ label: "Who we don't work with", to: "/not-for-everyone" }}
+        secondary={{ label: "See pricing", to: "/pricing" }}
+        stats={[
+          { label: "Steps", value: "4" },
+          { label: "Time", value: "1 min" },
+          { label: "Response", value: "24h" },
+        ]}
+      />
+      <Section>
+        <H2>Qualification gate</H2>
+        <div className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr]">
+          <div className="space-y-6">
+            <Card className="space-y-4">
+              <div className="text-xs uppercase tracking-[0.3em] text-zinc-500">Step 1</div>
+              <div className="text-lg font-semibold text-white">Project type</div>
+              <ToggleGroup
+                options={QUAL_PROJECT_OPTIONS}
+                value={answers.projectType}
+                onChange={(value) => setAnswers((prev) => ({ ...prev, projectType: value }))}
+              />
+            </Card>
+            <Card className="space-y-4">
+              <div className="text-xs uppercase tracking-[0.3em] text-zinc-500">Step 2</div>
+              <div className="text-lg font-semibold text-white">Complexity</div>
+              <ToggleGroup
+                options={QUAL_COMPLEXITY_OPTIONS}
+                value={answers.complexity}
+                onChange={(value) => setAnswers((prev) => ({ ...prev, complexity: value }))}
+              />
+            </Card>
+            <Card className="space-y-4">
+              <div className="text-xs uppercase tracking-[0.3em] text-zinc-500">Step 3</div>
+              <div className="text-lg font-semibold text-white">Budget range</div>
+              <ToggleGroup
+                options={QUAL_BUDGET_OPTIONS}
+                value={answers.budget}
+                onChange={(value) => setAnswers((prev) => ({ ...prev, budget: value }))}
+              />
+            </Card>
+            <Card className="space-y-4">
+              <div className="text-xs uppercase tracking-[0.3em] text-zinc-500">Step 4</div>
+              <div className="text-lg font-semibold text-white">Timeline urgency</div>
+              <ToggleGroup
+                options={QUAL_TIMELINE_OPTIONS}
+                value={answers.timeline}
+                onChange={(value) => setAnswers((prev) => ({ ...prev, timeline: value }))}
+              />
+            </Card>
+          </div>
+          <div className="space-y-6">
+            <Card className="space-y-4">
+              <div className="text-xs uppercase tracking-[0.3em] text-zinc-500">Your selections</div>
+              <div className="grid gap-3 text-sm text-zinc-300">
+                <div className="flex items-center justify-between gap-4">
+                  <span className="text-zinc-500">Project</span>
+                  <span className="text-right text-zinc-200">{projectOption?.label || "-"}</span>
+                </div>
+                <div className="flex items-center justify-between gap-4">
+                  <span className="text-zinc-500">Complexity</span>
+                  <span className="text-right text-zinc-200">{complexityOption?.label || "-"}</span>
+                </div>
+                <div className="flex items-center justify-between gap-4">
+                  <span className="text-zinc-500">Budget</span>
+                  <span className="text-right text-zinc-200">{budgetOption?.label || "-"}</span>
+                </div>
+                <div className="flex items-center justify-between gap-4">
+                  <span className="text-zinc-500">Timeline</span>
+                  <span className="text-right text-zinc-200">{timelineOption?.label || "-"}</span>
+                </div>
+              </div>
+              <div className="text-xs text-zinc-500">Saved locally on this device.</div>
+            </Card>
+            <Card className="space-y-4">
+              <div className="text-xs uppercase tracking-[0.3em] text-zinc-500">Fit signal</div>
+              {isAligned ? (
+                <>
+                  <div className="text-lg font-semibold text-emerald-300">Looks aligned.</div>
+                  <p className="text-sm text-zinc-300">
+                    If you want an estimate, continue to the request form and we will reply within 24 hours.
+                  </p>
+                  <div className="flex flex-wrap gap-3">
+                    <BtnLink to="/contact" analyticsLabel="Continue to estimate request" analyticsMeta={{ context: "qualification_gate" }} className="bg-white text-black hover:bg-zinc-200">
+                      Continue to estimate request
+                    </BtnLink>
+                    <BtnLink to="/not-for-everyone" analyticsLabel="Who we don't work with" analyticsMeta={{ context: "qualification_gate" }} className="border border-white/15 text-white hover:bg-white/5">
+                      Who we don't work with
+                    </BtnLink>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="text-lg font-semibold text-amber-300">This might not be the best fit - here's what we recommend instead.</div>
+                  <ul className="space-y-2 text-sm text-zinc-300">
+                    {(uniqueRecommendations.length ? uniqueRecommendations : ["Start with a focused scope and a realistic timeline."]).map((item) => (
+                      <li key={item} className="flex items-start gap-2">
+                        <span className="mt-1 h-1.5 w-1.5 rounded-full bg-amber-300/70" />
+                        <span>{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <div className="flex flex-wrap gap-3">
+                    <BtnLink to="/not-for-everyone" analyticsLabel="Who we don't work with" analyticsMeta={{ context: "qualification_gate" }} className="border border-white/15 text-white hover:bg-white/5">
+                      Who we don't work with
+                    </BtnLink>
+                    <BtnLink to="/contact" analyticsLabel="Continue anyway" analyticsMeta={{ context: "qualification_gate" }} className="text-white/80 hover:text-white">
+                      Continue anyway
+                    </BtnLink>
+                  </div>
+                  <div className="text-xs text-zinc-500">No hard stops. If you want to talk, we'll review it with you.</div>
+                </>
+              )}
+            </Card>
+          </div>
+        </div>
+      </Section>
+    </>
+  );
+};
+
+const PreCallPage = () => {
+  const location = useLocation();
+  const params = new URLSearchParams(location.search);
+  const productParam = params.get("product");
+  const complexityParam = params.get("complexity");
+  const maturityParam = params.get("maturity");
+  const hasRouting = Boolean(productParam || complexityParam || maturityParam);
+
+  const intakeCards = [
+    productParam
+      ? { meta: "Project type", title: getOptionLabel(productParam, QUAL_PROJECT_OPTIONS) }
+      : null,
+    complexityParam
+      ? { meta: "Complexity", title: getOptionLabel(complexityParam, QUAL_COMPLEXITY_OPTIONS) }
+      : null,
+    maturityParam
+      ? { meta: "Maturity", title: getMaturityLabel(maturityParam) }
+      : null,
+  ].filter(Boolean);
+
+  return (
+    <>
+      <PageHero
+        kicker="Pre-call"
+        title="Pre-call package"
+        subtitle="Read this before we meet. It covers how we work, what to review, and what to prepare."
+        primary={{ label: "View one-pager", to: "/summary" }}
+        secondary={{ label: "Back to contact", to: "/contact" }}
+        stats={[
+          { label: "Read time", value: "10 min" },
+          { label: "Call length", value: "30 min" },
+          { label: "Outcome", value: "Clear next step" },
+        ]}
+      />
+      {hasRouting ? (
+        <Section className="pt-8">
+          <H2>Intake snapshot</H2>
+          <div className="grid gap-4 md:grid-cols-3">
+            {intakeCards.map((card) => (
+              <DataCard key={card.meta} meta={card.meta} title={card.title} />
+            ))}
+          </div>
+        </Section>
+      ) : null}
+      <Section>
+        <H2>How we work</H2>
+        <div className="text-xs uppercase tracking-[0.3em] text-zinc-500">Discovery → Design → Build → Grow</div>
+        <div className="mt-6 grid gap-4 md:grid-cols-2">
+          {preCallWorkflow.map((step, idx) => (
+            <motion.div key={step.title} {...fade} transition={{ ...fade.transition, delay: idx * 0.05 }}>
+              <Card className="h-full">
+                <div className="text-xs uppercase tracking-[0.3em] text-zinc-500">Step {idx + 1}</div>
+                <div className="mt-3 text-lg font-semibold text-white">{step.title}</div>
+                <p className="mt-2 text-sm text-zinc-300">{step.desc}</p>
+              </Card>
+            </motion.div>
+          ))}
+        </div>
+      </Section>
+      <Section className="pt-8">
+        <H2>Read before the call</H2>
+        <div className="grid gap-4 md:grid-cols-3">
+          {preCallResources.map((item, idx) => (
+            <motion.div key={item.title} {...fade} transition={{ ...fade.transition, delay: idx * 0.05 }}>
+              <Link to={item.to} className="block h-full">
+                <Card className="h-full transition hover:border-white/30 hover:bg-white/10">
+                  <div className="text-xs uppercase tracking-[0.3em] text-zinc-500">Resource</div>
+                  <div className="mt-3 text-lg font-semibold text-white">{item.title}</div>
+                  <p className="mt-2 text-sm text-zinc-300">{item.desc}</p>
+                </Card>
+              </Link>
+            </motion.div>
+          ))}
+        </div>
+      </Section>
+      <Section className="pt-8">
+        <H2>Prepare before the call</H2>
+        <Card>
+          <ul className="space-y-3 text-sm text-zinc-300">
+            {preCallPrepItems.map((item) => (
+              <li key={item} className="flex items-start gap-2">
+                <span className="mt-2 h-1.5 w-1.5 rounded-full bg-white/60" />
+                <span>{item}</span>
+              </li>
+            ))}
+          </ul>
+          <div className="mt-4 text-xs text-zinc-500">If something is missing, call it out. We'll fill gaps in discovery.</div>
+        </Card>
+      </Section>
+    </>
+  );
+};
+
+const SummaryPage = () => {
+  const location = useLocation();
+  const params = new URLSearchParams(location.search);
+  const overrides = {
+    product: params.get("product"),
+    complexity: params.get("complexity"),
+    team: params.get("team"),
+    integrations: params.get("integrations"),
+  };
+  const overrideValues = Object.fromEntries(
+    Object.entries(overrides).filter(([, value]) => value)
+  );
+  const hasOverrides = Object.keys(overrideValues).length > 0;
+  const storedEstimate = getStoredEstimate();
+  const qualification = getStoredQualification();
+  const fallbackEstimate = mapQualificationToEstimate(qualification);
+  const estimateInputs = normalizeEstimate({
+    ...(fallbackEstimate || {}),
+    ...(storedEstimate || {}),
+    ...(hasOverrides ? overrideValues : {}),
+  });
+  const estimate = buildEstimate(estimateInputs);
+
+  const estimateProductLabel = getOptionLabel(estimateInputs.product, ESTIMATE_PRODUCT_OPTIONS);
+  const estimateComplexityLabel = getOptionLabel(estimateInputs.complexity, ESTIMATE_COMPLEXITY_OPTIONS);
+  const projectLabel = qualification
+    ? getOptionLabel(qualification.projectType, QUAL_PROJECT_OPTIONS)
+    : estimateProductLabel;
+  const complexityLabel = qualification
+    ? getOptionLabel(qualification.complexity, QUAL_COMPLEXITY_OPTIONS)
+    : estimateComplexityLabel;
+  const maturityLabel = qualification
+    ? getMaturityLabel(getMaturityFromQualification(qualification))
+    : getMaturityLabel(getMaturityFromEstimate(estimateInputs));
+  const projectTags = [complexityLabel, maturityLabel].filter(
+    (tag) => tag && tag !== "-" && tag !== MATURITY_LABELS.unknown
+  );
+  const nextSteps = buildSummaryNextSteps(estimateInputs);
+  const hasInputs = Boolean(storedEstimate || qualification || hasOverrides);
+
+  return (
+    <>
+      <PageHero
+        kicker="Summary"
+        title="Project one-pager"
+        subtitle="A single-screen summary of scope signals and next steps. No PDF, just the essentials."
+        primary={{ label: "Open pre-call package", to: "/pre-call" }}
+        secondary={{ label: "Adjust estimate", to: "/estimate" }}
+        stats={[
+          { label: "Format", value: "HTML" },
+          { label: "Update", value: "Live" },
+          { label: "Share", value: "Screen" },
+        ]}
+      />
+      <Section>
+        <H2>Project snapshot</H2>
+        <div className="grid gap-4 md:grid-cols-2">
+          <DataCard
+            meta="Project type"
+            title={projectLabel}
+            subtitle={projectTags.length ? "Complexity + maturity signal" : ""}
+            tags={projectTags}
+          />
+          <DataCard
+            meta="Timeline range"
+            title={estimate.timeline.range}
+            subtitle={estimate.timeline.note}
+            tags={["Range only", "Scope-driven"]}
+          />
+        </div>
+        {hasInputs ? (
+          <div className="mt-4 text-xs text-zinc-500">Based on your latest estimator or qualification inputs.</div>
+        ) : (
+          <Card className="mt-6 bg-zinc-950/70">
+            <div className="text-sm text-zinc-300">
+              No inputs captured yet. Run the estimator or qualification gate to generate a tailored summary.
+            </div>
+            <div className="mt-4 flex flex-wrap gap-3">
+              <BtnLink to="/estimate" analyticsLabel="Run estimator" analyticsMeta={{ context: "summary_empty" }} className="bg-white text-black hover:bg-zinc-200">
+                Run estimator
+              </BtnLink>
+              <BtnLink to="/start" analyticsLabel="Start qualification" analyticsMeta={{ context: "summary_empty" }} className="border border-white/15 text-white hover:bg-white/5">
+                Start qualification
+              </BtnLink>
+            </div>
+          </Card>
+        )}
+      </Section>
+      <Section className="pt-8">
+        <H2>Architecture blocks</H2>
+        <div className="grid gap-4 md:grid-cols-2">
+          {estimate.blocks.map((block) => (
+            <DataCard
+              key={block.id}
+              title={block.title}
+              subtitle={block.summary}
+              tags={block.tags}
+            />
+          ))}
+        </div>
+      </Section>
+      <Section className="pt-8">
+        <H2>Next steps</H2>
+        <Card>
+          <ul className="space-y-3 text-sm text-zinc-300">
+            {nextSteps.map((item) => (
+              <li key={item} className="flex items-start gap-2">
+                <span className="mt-2 h-1.5 w-1.5 rounded-full bg-white/60" />
+                <span>{item}</span>
+              </li>
+            ))}
+          </ul>
+          <div className="mt-5 flex flex-wrap gap-3">
+            <BtnLink to="/pre-call" analyticsLabel="Open pre-call package" analyticsMeta={{ context: "summary_next_steps" }} className="bg-white text-black hover:bg-zinc-200">
+              Open pre-call package
+            </BtnLink>
+            <BtnLink to="/contact" analyticsLabel="Send intake" analyticsMeta={{ context: "summary_next_steps" }} className="border border-white/15 text-white hover:bg-white/5">
+              Send intake
+            </BtnLink>
+          </div>
+        </Card>
+      </Section>
+    </>
+  );
+};
+
+const JournalPage = () => (
+  <>
+    <header className="border-b border-white/10">
+      <div className="mx-auto max-w-4xl px-6 py-20 text-center">
+        <div className="text-xs uppercase tracking-[0.3em] text-zinc-500">Engineering Journal</div>
+        <h1 className="mt-4 text-3xl font-semibold text-white sm:text-5xl">How we reason about systems</h1>
+        <p className="mt-4 text-base text-zinc-300 sm:text-lg">Short notes from active builds. Opinionated, technical, and decision-driven.</p>
+        <p className="mt-3 text-sm text-zinc-400">If you need a cosmetic dashboard before operational control, we are not a fit.</p>
+      </div>
+    </header>
+    <Section className="pt-16">
+      <div className="mx-auto max-w-4xl space-y-12">
+        {journalPosts.map((post) => (
+          <article key={post.title} className="rounded-2xl border border-white/10 bg-zinc-950/60 p-6 sm:p-8">
+            <h2 className="text-2xl font-semibold text-white">{post.title}</h2>
+            <div className="mt-6 space-y-6">
+              {post.sections.map((section) => (
+                <div key={section.title} className="space-y-2">
+                  <div className="text-xs uppercase tracking-[0.3em] text-zinc-500">{section.title}</div>
+                  <p className="text-sm text-zinc-300">{section.body}</p>
+                </div>
+              ))}
+            </div>
+          </article>
+        ))}
+      </div>
+    </Section>
+  </>
+);
+
+const DecisionsPage = () => (
+  <>
+    <header className="border-b border-white/10">
+      <div className="mx-auto max-w-4xl px-6 py-20 text-center">
+        <div className="text-xs uppercase tracking-[0.3em] text-zinc-500">Public Decision Records</div>
+        <h1 className="mt-4 text-3xl font-semibold text-white sm:text-5xl">We document trade-offs, not slogans</h1>
+        <p className="mt-4 text-base text-zinc-300 sm:text-lg">These defaults hold until constraints change. We revisit them openly.</p>
+        <p className="mt-3 text-sm text-zinc-400">If you need the opposite, we should know early.</p>
+      </div>
+    </header>
+    <Section className="pt-16">
+      <div className="mx-auto max-w-4xl space-y-6">
+        {decisionRecords.map((record) => (
+          <details key={record.title} className="rounded-2xl border border-white/10 bg-zinc-950/60 p-6 sm:p-7">
+            <summary className="cursor-pointer text-lg font-semibold text-white focus:outline-none">
+              {record.title}
+            </summary>
+            <div className="mt-5 space-y-4 text-sm text-zinc-300">
+              <div>
+                <div className="text-xs uppercase tracking-[0.3em] text-zinc-500">Context</div>
+                <p className="mt-2">{record.context}</p>
+              </div>
+              <div>
+                <div className="text-xs uppercase tracking-[0.3em] text-zinc-500">Decision</div>
+                <p className="mt-2">{record.decision}</p>
+              </div>
+              <div>
+                <div className="text-xs uppercase tracking-[0.3em] text-zinc-500">Trade-offs</div>
+                <p className="mt-2">{record.tradeoffs}</p>
+              </div>
+              <div>
+                <div className="text-xs uppercase tracking-[0.3em] text-zinc-500">When we would change our mind</div>
+                <p className="mt-2">{record.change}</p>
+              </div>
+            </div>
+          </details>
+        ))}
+      </div>
+    </Section>
   </>
 );
 
@@ -2022,7 +2910,7 @@ const ContactPage = ({ apiBase }) => (
       <H2>Project intake</H2>
       <div className="grid grid-cols-1 gap-6 md:grid-cols-[1.2fr_0.8fr]">
         <Card>
-          <ContactForm apiBase={apiBase} source="contact-page" />
+          <ContactForm apiBase={apiBase} source="/contact" />
         </Card>
         <div className="space-y-4">
           {contactSteps.map((step, idx) => (
@@ -2047,7 +2935,7 @@ const NotFoundPage = () => (
       title="This page does not exist"
       subtitle="The page you are looking for moved or was never published."
       primary={{ label: "Back home", to: "/" }}
-      secondary={{ label: "Get estimate in 24h", to: "/contact" }}
+      secondary={{ label: "Get estimate in 24h", to: "/start" }}
       stats={[]}
     />
   </>
@@ -2122,6 +3010,8 @@ export default function PortfolioSite() {
           <Route path="/process" element={<ProcessPage />} />
           <Route path="/pricing" element={<PricingPage pricingData={pricingData} />} />
           <Route path="/tech" element={<TechPage />} />
+          <Route path="/journal" element={<JournalPage />} />
+          <Route path="/decisions" element={<DecisionsPage />} />
           <Route path="/engineering" element={<LazyRoute><EngineeringLandingPage /></LazyRoute>} />
           <Route path="/architecture-preview" element={<LazyRoute><ArchitecturePreviewPage /></LazyRoute>} />
           <Route path="/admin-first" element={<LazyRoute><AdminFirstPage /></LazyRoute>} />
@@ -2130,6 +3020,10 @@ export default function PortfolioSite() {
           <Route path="/cases/renter-architecture" element={<LazyRoute><RenterArchitectureCasePage /></LazyRoute>} />
           <Route path="/about" element={<AboutPage />} />
           <Route path="/testimonials" element={<TestimonialsPage />} />
+          <Route path="/not-for-everyone" element={<NotForEveryonePage />} />
+          <Route path="/start" element={<StartPage />} />
+          <Route path="/pre-call" element={<PreCallPage />} />
+          <Route path="/summary" element={<SummaryPage />} />
           <Route path="/contact" element={<ContactPage apiBase={apiBase} />} />
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
