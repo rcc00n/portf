@@ -1,2 +1,79 @@
 @import "tailwindcss";
 
+:root {
+  color-scheme: dark;
+}
+
+body {
+  background-color: #050608;
+}
+
+.infinite-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+  background: #050608;
+}
+
+.infinite-bg__mesh {
+  position: absolute;
+  inset: -35%;
+  background-image:
+    radial-gradient(60% 60% at 10% 10%, rgba(56, 189, 248, 0.22), transparent 70%),
+    radial-gradient(55% 55% at 90% 20%, rgba(236, 72, 153, 0.2), transparent 70%),
+    radial-gradient(50% 55% at 50% 90%, rgba(99, 102, 241, 0.22), transparent 70%),
+    radial-gradient(60% 55% at 20% 80%, rgba(16, 185, 129, 0.16), transparent 75%);
+  filter: blur(40px) saturate(1.15);
+  opacity: 0.9;
+  transform: translate3d(0, 0, 0) scale(1.05);
+  animation: bg-drift 80s ease-in-out infinite;
+}
+
+.infinite-bg__aurora {
+  position: absolute;
+  inset: -45%;
+  background-image: conic-gradient(
+    from 120deg at 50% 50%,
+    rgba(59, 130, 246, 0.08),
+    rgba(139, 92, 246, 0.12),
+    rgba(14, 165, 233, 0.08),
+    rgba(59, 130, 246, 0.08)
+  );
+  mix-blend-mode: screen;
+  opacity: 0.45;
+  filter: blur(20px);
+  animation: bg-spin 160s linear infinite;
+}
+
+.infinite-bg__vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(120% 120% at 50% 10%, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.35) 55%, rgba(0, 0, 0, 0.7) 85%);
+}
+
+@keyframes bg-drift {
+  0% {
+    transform: translate3d(-6%, -4%, 0) scale(1.05);
+  }
+  50% {
+    transform: translate3d(5%, 6%, 0) scale(1.08);
+  }
+  100% {
+    transform: translate3d(-6%, -4%, 0) scale(1.05);
+  }
+}
+
+@keyframes bg-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .infinite-bg__mesh,
+  .infinite-bg__aurora {
+    animation: none;
+  }
+}

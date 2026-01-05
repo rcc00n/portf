@@ -311,10 +311,11 @@ const getProjectMeta = (project) => {
   };
 };
 
-const Glow = ({ className = "" }) => (
-  <div className={`pointer-events-none absolute inset-0 overflow-hidden ${className}`} aria-hidden>
-    <div className="absolute -top-40 -left-40 h-80 w-80 rounded-full blur-3xl opacity-20 bg-gradient-to-br from-fuchsia-600 via-indigo-600 to-cyan-500" />
-    <div className="absolute -bottom-40 -right-40 h-80 w-80 rounded-full blur-3xl opacity-20 bg-gradient-to-tr from-violet-600 via-blue-600 to-teal-400" />
+const InfiniteBackground = () => (
+  <div className="infinite-bg" aria-hidden>
+    <div className="infinite-bg__mesh" />
+    <div className="infinite-bg__aurora" />
+    <div className="infinite-bg__vignette" />
   </div>
 );
 
@@ -398,7 +399,6 @@ const StatPill = ({ icon: Icon, children }) => (
 
 const PageHero = ({ kicker, title, subtitle, primary, secondary, stats = [] }) => (
   <header className="relative overflow-hidden">
-    <Glow />
     <div className="mx-auto flex max-w-7xl flex-col items-center gap-6 px-6 pb-16 pt-20 text-center sm:pb-20">
       {kicker ? (
         <motion.div {...fade} className="flex flex-wrap items-center justify-center gap-3">
@@ -809,7 +809,6 @@ const HomePage = ({ projectsData, pricingData }) => {
     <>
       {/* Hero */}
       <header id="top" className="relative overflow-hidden">
-        <Glow />
         <div className="mx-auto flex max-w-7xl flex-col items-center gap-8 px-6 pb-20 pt-24 text-center">
           <motion.div {...fade} className="flex items-center gap-3">
             <Badge>CRM · Software · SMM · Marketing</Badge>
@@ -826,7 +825,6 @@ const HomePage = ({ projectsData, pricingData }) => {
 
       {/* Services */}
       <Section id="services">
-        <Glow />
         <H2>Services</H2>
         <div className="relative">
           <div
@@ -857,7 +855,6 @@ const HomePage = ({ projectsData, pricingData }) => {
 
       {/* Projects */}
       <Section id="projects">
-        <Glow />
         <H2>Projects</H2>
 
         <div className="relative">
@@ -1087,7 +1084,6 @@ const HomePage = ({ projectsData, pricingData }) => {
 
       {/* Process */}
       <Section id="process">
-        <Glow />
         <H2>Process</H2>
         <div className="grid grid-cols-1 gap-6 md:grid-cols-4">
           {["Discovery", "Design", "Build", "Grow"].map((step, i) => (
@@ -1109,7 +1105,6 @@ const HomePage = ({ projectsData, pricingData }) => {
 
       {/* Pricing — luxe cards */}
       <Section id="pricing">
-        <Glow />
         <H2>Pricing</H2>
         <div className="grid grid-cols-1 gap-6 md:grid-cols-5">
           {pricingData.map((p, i) => {
@@ -1148,7 +1143,6 @@ const HomePage = ({ projectsData, pricingData }) => {
 
       {/* Tech */}
       <Section id="stack">
-        <Glow />
         <H2>Tech Stack</H2>
         <div className="flex flex-wrap gap-3">
           {stack.map((t, i) => (
@@ -1161,7 +1155,6 @@ const HomePage = ({ projectsData, pricingData }) => {
 
       {/* About */}
       <Section id="about">
-        <Glow />
         <H2>About</H2>
         <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
           <motion.div {...fade} className="col-span-2">
@@ -1192,7 +1185,6 @@ const HomePage = ({ projectsData, pricingData }) => {
 
       {/* Testimonials */}
       <Section id="testimonials">
-        <Glow />
         <H2>Testimonials</H2>
         <div className="grid grid-cols-1 gap-6 md:grid-cols-3 auto-rows-fr">
           {testimonials.map((r, i) => (
@@ -1208,7 +1200,6 @@ const HomePage = ({ projectsData, pricingData }) => {
 
       {/* Contact */}
       <Section id="contact">
-        <Glow />
         <H2>Contact</H2>
         <motion.p {...fade} className="mb-8 max-w-2xl text-zinc-300">Tell us about your challenge — we'll return with architecture, timeline and budget within 24 hours.</motion.p>
         <Card>
@@ -1245,7 +1236,6 @@ const ServicesPage = () => (
       ]}
     />
     <Section>
-      <Glow />
       <H2>Service tracks</H2>
       <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
         {services.map((s, idx) => (
@@ -1260,7 +1250,6 @@ const ServicesPage = () => (
       </div>
     </Section>
     <Section>
-      <Glow />
       <H2>Engagement models</H2>
       <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
         {engagementModels.map((model, idx) => (
@@ -1280,7 +1269,6 @@ const ServicesPage = () => (
       </div>
     </Section>
     <Section>
-      <Glow />
       <H2>Delivery standards</H2>
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         <Card className="h-full">
@@ -1325,7 +1313,6 @@ const ProjectsPage = ({ projectsData }) => (
       ]}
     />
     <Section>
-      <Glow />
       <H2>Selected work</H2>
       <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
         {projectsData.map((project, idx) => {
@@ -1381,7 +1368,6 @@ const ProjectsPage = ({ projectsData }) => (
       </div>
     </Section>
     <Section>
-      <Glow />
       <H2>Outcomes we optimize for</H2>
       <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
         {projectOutcomes.map((outcome, idx) => (
@@ -1414,7 +1400,6 @@ const ProcessPage = () => (
       ]}
     />
     <Section>
-      <Glow />
       <H2>Five phases, no surprises</H2>
       <div className="grid grid-cols-1 gap-6 md:grid-cols-5">
         {processSteps.map((step, idx) => (
@@ -1434,7 +1419,6 @@ const ProcessPage = () => (
       </div>
     </Section>
     <Section>
-      <Glow />
       <H2>Operating rhythm</H2>
       <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
         {processRituals.map((ritual, idx) => (
@@ -1466,7 +1450,6 @@ const PricingPage = ({ pricingData }) => (
       ]}
     />
     <Section>
-      <Glow />
       <H2>Pricing tiers</H2>
       <div className="grid grid-cols-1 gap-6 md:grid-cols-5">
         {pricingData.map((p, i) => {
@@ -1503,7 +1486,6 @@ const PricingPage = ({ pricingData }) => (
       </div>
     </Section>
     <Section>
-      <Glow />
       <H2>How pricing works</H2>
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         {pricingPrinciples.map((item, idx) => (
@@ -1540,7 +1522,6 @@ const TechPage = () => (
       ]}
     />
     <Section>
-      <Glow />
       <H2>Stack by layer</H2>
       <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
         {stackGroups.map((group, idx) => (
@@ -1558,7 +1539,6 @@ const TechPage = () => (
       </div>
     </Section>
     <Section>
-      <Glow />
       <H2>Engineering principles</H2>
       <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
         {engineeringPrinciples.map((item, idx) => (
@@ -1595,7 +1575,6 @@ const AboutPage = () => (
       ]}
     />
     <Section>
-      <Glow />
       <H2>Studio model</H2>
       <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
         <motion.div {...fade} className="md:col-span-2">
@@ -1624,7 +1603,6 @@ const AboutPage = () => (
       </div>
     </Section>
     <Section>
-      <Glow />
       <H2>Values we build by</H2>
       <div className="grid grid-cols-1 gap-6 md:grid-cols-4">
         {aboutValues.map((value, idx) => (
@@ -1652,7 +1630,6 @@ const TestimonialsPage = () => (
       stats={testimonialHighlights}
     />
     <Section>
-      <Glow />
       <H2>Client voices</H2>
       <div className="grid grid-cols-1 gap-6 md:grid-cols-3 auto-rows-fr">
         {testimonialsExtended.map((r, i) => (
@@ -1684,7 +1661,6 @@ const ContactPage = () => (
       ]}
     />
     <Section>
-      <Glow />
       <H2>Project intake</H2>
       <div className="grid grid-cols-1 gap-6 md:grid-cols-[1.2fr_0.8fr]">
         <Card>
@@ -1774,24 +1750,27 @@ export default function PortfolioSite() {
   }, [apiBase]);
 
   return (
-    <div className="min-h-screen scroll-smooth bg-black text-zinc-100 antialiased">
-      <ScrollToTop />
-      <SiteNav />
-      <Routes>
-        <Route path="/" element={<HomePage projectsData={projectsData} pricingData={pricingData} />} />
-        <Route path="/services" element={<ServicesPage />} />
-        <Route path="/projects" element={<ProjectsPage projectsData={projectsData} />} />
-        <Route path="/process" element={<ProcessPage />} />
-        <Route path="/pricing" element={<PricingPage pricingData={pricingData} />} />
-        <Route path="/tech" element={<TechPage />} />
-        <Route path="/about" element={<AboutPage />} />
-        <Route path="/testimonials" element={<TestimonialsPage />} />
-        <Route path="/contact" element={<ContactPage />} />
-        <Route path="*" element={<NotFoundPage />} />
-      </Routes>
-      <SiteFooter />
-      <div id="page-end-sentinel" className="h-2 w-full" />
-      <RaccoonPop gif={raccoonGif} targetId="page-end-sentinel" />
+    <div className="relative min-h-screen scroll-smooth text-zinc-100 antialiased">
+      <InfiniteBackground />
+      <div className="relative z-10">
+        <ScrollToTop />
+        <SiteNav />
+        <Routes>
+          <Route path="/" element={<HomePage projectsData={projectsData} pricingData={pricingData} />} />
+          <Route path="/services" element={<ServicesPage />} />
+          <Route path="/projects" element={<ProjectsPage projectsData={projectsData} />} />
+          <Route path="/process" element={<ProcessPage />} />
+          <Route path="/pricing" element={<PricingPage pricingData={pricingData} />} />
+          <Route path="/tech" element={<TechPage />} />
+          <Route path="/about" element={<AboutPage />} />
+          <Route path="/testimonials" element={<TestimonialsPage />} />
+          <Route path="/contact" element={<ContactPage />} />
+          <Route path="*" element={<NotFoundPage />} />
+        </Routes>
+        <SiteFooter />
+        <div id="page-end-sentinel" className="h-2 w-full" />
+        <RaccoonPop gif={raccoonGif} targetId="page-end-sentinel" />
+      </div>
     </div>
   );
 }
