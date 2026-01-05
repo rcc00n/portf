@@ -30,6 +30,7 @@ class ContactRequest(models.Model):
     company = models.CharField(max_length=200, blank=True)
     message = models.TextField()
     source = models.CharField(max_length=120, blank=True)
+    qualification = models.JSONField(blank=True, null=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_NEW)
     ip_address = models.GenericIPAddressField(blank=True, null=True)
     user_agent = models.CharField(max_length=255, blank=True)

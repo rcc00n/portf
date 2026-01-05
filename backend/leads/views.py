@@ -22,10 +22,75 @@ def _clean_value(value):
     return ""
 
 
+def _clean_int(value):
+    if isinstance(value, bool):
+        return None
+    if isinstance(value, int):
+        return value
+    if isinstance(value, float):
+        return int(value)
+    if isinstance(value, str):
+        value = value.strip()
+        if value.isdigit():
+            return int(value)
+    return None
+
+
+def _clean_qualification(payload):
+    if not isinstance(payload, dict):
+        return None
+    cleaned = {}
+    for key in ("projectType", "complexity", "budget", "timeline"):
+        item = payload.get(key)
+        if not isinstance(item, dict):
+            continue
+        value = _clean_value(item.get("value"))
+        label = _clean_value(item.get("label"))
+        rating = _clean_int(item.get("rating"))
+        total = _clean_int(item.get("total"))
+        if not any([value, label, rating, total]):
+            continue
+        cleaned[key] = {
+            "value": value,
+            "label": label,
+            "rating": rating,
+            "total": total,
+        }
+    return cleaned or None
+
+
 def _truncate(text, limit=3500):
     if len(text) <= limit:
         return text
     return text[: max(limit - 3, 0)] + "..."
+
+
+def _format_qualification_lines(qualification):
+    if not isinstance(qualification, dict):
+        return []
+    labels = {
+        "projectType": "Project type",
+        "complexity": "Complexity",
+        "budget": "Budget",
+        "timeline": "Timeline",
+    }
+    ordered_keys = ("projectType", "complexity", "budget", "timeline")
+    lines = []
+    for key in ordered_keys:
+        item = qualification.get(key)
+        if not isinstance(item, dict):
+            continue
+        rating = item.get("rating")
+        rating_part = "-"
+        if isinstance(rating, int):
+            rating_part = str(rating)
+        label = item.get("label") or item.get("value")
+        title = labels.get(key, key)
+        if label:
+            lines.append(f"{title}: {rating_part} ({label})")
+        else:
+            lines.append(f"{title}: {rating_part}")
+    return lines
 
 
 def _format_message(lead):
@@ -40,6 +105,9 @@ def _format_message(lead):
     if lead.message:
         lines.append("Message:")
         lines.append(lead.message)
+    if lead.qualification:
+        lines.append("Qualification:")
+        lines.extend(_format_qualification_lines(lead.qualification))
     if lead.source:
         lines.append(f"Source: {lead.source}")
     return _truncate("\n".join(lines))
@@ -102,6 +170,7 @@ def contact_request(request):
         or request.META.get("HTTP_ORIGIN")
         or request.META.get("HTTP_REFERER")
     )
+    qualification = _clean_qualification(payload.get("qualification"))
     if source:
         source = source[:120]
 
@@ -122,6 +191,7 @@ def contact_request(request):
         company=company,
         message=message,
         source=source,
+        qualification=qualification,
         ip_address=_get_client_ip(request),
         user_agent=_clean_value(request.META.get("HTTP_USER_AGENT", ""))[:255],
     )
