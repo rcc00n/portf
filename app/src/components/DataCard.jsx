@@ -6,6 +6,7 @@ const DataCard = ({
   active = false,
   onClick,
   compact = false,
+  fullWidth = true,
   className = "",
   children,
   ...props
@@ -19,7 +20,8 @@ const DataCard = ({
       onClick={onClick}
       aria-pressed={interactive ? active : undefined}
       className={[
-        "w-full rounded-2xl border p-4 text-left transition",
+        "rounded-2xl border p-4 text-left transition",
+        fullWidth ? "w-full" : "",
         "border-white/10 bg-white/5",
         active ? "border-sky-300/50 bg-sky-300/10 shadow-[0_0_0_1px_rgba(56,189,248,0.25)]" : "",
         interactive ? "cursor-pointer hover:border-white/30 hover:bg-white/10" : "",
