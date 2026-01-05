@@ -946,13 +946,19 @@ const FloatingContactButton = () => (
 const SiteNav = () => {
   const location = useLocation();
   const [open, setOpen] = useState(false);
+  const handleHomeClick = (event) => {
+    if (location.pathname !== "/") return;
+    if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    event.preventDefault();
+    window.scrollTo(0, 0);
+  };
 
   return (
     <>
       <div className="sticky top-0 z-50">
         <div className="border-b border-white/10 bg-black/85">
           <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-            <Link to="/" className="flex items-center gap-2 font-semibold tracking-wide">
+            <Link to="/" onClick={handleHomeClick} className="flex items-center gap-2 font-semibold tracking-wide">
               <Logo />
             </Link>
             <nav className="hidden gap-6 md:flex">
