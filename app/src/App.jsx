@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Rocket,
   Workflow,
@@ -165,6 +165,22 @@ const collapsedFadeMask = {
   WebkitMaskImage: "linear-gradient(to bottom, rgba(255,255,255,1) 0%, rgba(255,255,255,1) 70%, rgba(255,255,255,0) 100%)",
   maskImage: "linear-gradient(to bottom, rgba(255,255,255,1) 0%, rgba(255,255,255,1) 70%, rgba(255,255,255,0) 100%)",
 };
+const isExternalUrl = (url) => /^https?:\/\//i.test(url || "");
+const getProjectMeta = (project) => {
+  const rawLinks = Array.isArray(project?.links) ? project.links.filter((l) => l?.href) : [];
+  const primaryUrl = project?.url || project?.website || project?.link || rawLinks[0]?.href;
+  const hasPrimaryLink = primaryUrl && rawLinks.some((l) => l.href === primaryUrl);
+  const actionLinks = primaryUrl && !hasPrimaryLink
+    ? [{ label: "Visit site", href: primaryUrl }, ...rawLinks]
+    : rawLinks;
+
+  return {
+    primaryUrl,
+    actionLinks,
+    isPrimaryExternal: isExternalUrl(primaryUrl),
+    previewUrl: isExternalUrl(primaryUrl) ? primaryUrl : null,
+  };
+};
 
 const Glow = ({ className = "" }) => (
   <div className={`pointer-events-none absolute inset-0 overflow-hidden ${className}`} aria-hidden>
@@ -183,8 +199,8 @@ const Badge = ({ children }) => (
   <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/70 backdrop-blur-sm">{children}</span>
 );
 
-const Card = ({ children, className = "" }) => (
-  <div className={`rounded-2xl border border-white/10 bg-zinc-900/60 p-6 shadow-xl shadow-black/30 ${className}`}>{children}</div>
+const Card = ({ children, className = "", ...props }) => (
+  <div {...props} className={`rounded-2xl border border-white/10 bg-zinc-900/60 p-6 shadow-xl shadow-black/30 ${className}`}>{children}</div>
 );
 
 const H2 = ({ children }) => (
@@ -253,7 +269,7 @@ const StatPill = ({ icon: Icon, children }) => (
 );
 
 /* ===== Favicon fallback preview ===== */
-const FaviconPreview = ({ url }) => {
+const FaviconPreview = ({ url, className = "", heightClass = "h-44", iconClassName = "h-12 w-12" }) => {
   const host = new URL(url).host;
   const chain = [
     `https://www.google.com/s2/favicons?domain=${host}&sz=128`,
@@ -276,9 +292,9 @@ const FaviconPreview = ({ url }) => {
   const initials = host.replace(/^www\./, "").split(".")[0].slice(0, 2).toUpperCase();
 
   return (
-    <div className="mb-4 h-44 w-full rounded-xl border border-white/10 bg-zinc-950/60 flex flex-col items-center justify-center text-zinc-400">
-      <img src={chain[0]} data-i="0" onError={onErr} alt="" className="h-12 w-12 rounded" />
-      <div style={{ display: "none" }} className="h-12 w-12 items-center justify-center rounded bg-white/5 text-sm">
+    <div className={`mb-4 w-full rounded-xl border border-white/10 bg-zinc-950/60 flex flex-col items-center justify-center text-zinc-400 ${heightClass} ${className}`}>
+      <img src={chain[0]} data-i="0" onError={onErr} alt="" className={`${iconClassName} rounded`} />
+      <div style={{ display: "none" }} className={`${iconClassName} items-center justify-center rounded bg-white/5 text-sm`}>
         {initials}
       </div>
       <div className="mt-2 text-xs opacity-70">{host}</div>
@@ -287,14 +303,14 @@ const FaviconPreview = ({ url }) => {
 };
 
 /* ===== Lightweight image carousel ===== */
-const ImageCarousel = ({ images, alt = "Preview" }) => {
+const ImageCarousel = ({ images, alt = "Preview", heightClass = "h-44", showIndex = false, className = "" }) => {
   const [i, setI] = useState(0);
   const len = images.length;
   const go = (d) => setI((v) => (v + d + len) % len);
 
   return (
-    <div className="mb-4 relative select-none">
-      <div className="h-44 w-full overflow-hidden rounded-xl border border-white/10 bg-zinc-950/60">
+    <div className={`mb-4 relative select-none ${className}`}>
+      <div className={`${heightClass} w-full overflow-hidden rounded-xl border border-white/10 bg-zinc-950/60`}>
         <motion.img
           key={i}
           src={images[i]}
@@ -303,9 +319,15 @@ const ImageCarousel = ({ images, alt = "Preview" }) => {
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.35, ease: "easeOut" }}
           draggable={false}
-          className="h-44 w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+          className={`${heightClass} w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]`}
         />
       </div>
+
+      {showIndex ? (
+        <div className="absolute left-3 top-3 rounded-full border border-white/15 bg-black/60 px-2 py-1 text-[11px] text-white/80">
+          {i + 1} / {len}
+        </div>
+      ) : null}
 
       <button
         aria-label="Previous"
@@ -391,6 +413,7 @@ const RaccoonPop = ({ gif, targetId }) => {
 export default function PortfolioSite() {
   const [showAll, setShowAll] = useState(false);            // Services
   const [showAllProjects, setShowAllProjects] = useState(false); // Projects
+  const [activeProject, setActiveProject] = useState(null);
   const apiBase = (import.meta.env.VITE_API_BASE || "").replace(/\/$/, "");
   const [projectsData, setProjectsData] = useState(projectSeed);
 
@@ -408,6 +431,40 @@ export default function PortfolioSite() {
 
     return () => controller.abort();
   }, [apiBase]);
+
+  useEffect(() => {
+    if (!activeProject) return undefined;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [activeProject]);
+
+  useEffect(() => {
+    if (!activeProject) return undefined;
+    const onKeyDown = (event) => {
+      if (event.key === "Escape") {
+        setActiveProject(null);
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [activeProject]);
+
+  const handleProjectCardClick = (event, project) => {
+    if (event.defaultPrevented) return;
+    if (event.target.closest("a,button")) return;
+    setActiveProject(project);
+  };
+
+  const handleProjectCardKeyDown = (event, project) => {
+    if (event.currentTarget !== event.target) return;
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      setActiveProject(project);
+    }
+  };
 
   return (
     <div className="min-h-screen scroll-smooth bg-black text-zinc-100 antialiased">
@@ -483,35 +540,25 @@ export default function PortfolioSite() {
             style={showAllProjects ? undefined : collapsedFadeMask}
           >
             {(showAllProjects ? projectsData : projectsData.slice(0, 3)).map((c, idx) => {
-              const rawLinks = Array.isArray(c.links) ? c.links.filter((l) => l?.href) : [];
-              const primaryUrl = c.url || c.website || c.link || rawLinks[0]?.href;
-              const hasPrimaryLink = primaryUrl && rawLinks.some((l) => l.href === primaryUrl);
-              const actionLinks = primaryUrl && !hasPrimaryLink
-                ? [{ label: "Visit site", href: primaryUrl }, ...rawLinks]
-                : rawLinks;
-              const isPrimaryExternal = primaryUrl ? /^https?:\/\//i.test(primaryUrl) : false;
-              const previewUrl = isPrimaryExternal ? primaryUrl : null;
+              const { primaryUrl, actionLinks, previewUrl } = getProjectMeta(c);
 
               return (
                 <motion.div key={c.title} {...fade} transition={{ ...fade.transition, delay: idx * 0.03 }} className="h-full">
                   <Card
+                    role="button"
+                    tabIndex={0}
+                    aria-haspopup="dialog"
+                    aria-label={`View ${c.title} details`}
+                    onClick={(event) => handleProjectCardClick(event, c)}
+                    onKeyDown={(event) => handleProjectCardKeyDown(event, c)}
                     className={[
                       "group relative h-full overflow-hidden flex flex-col",
                       "border-white/10 bg-zinc-900/60",
                       "shadow-[0_18px_60px_rgba(0,0,0,.45)]",
                       "transition-all duration-500 hover:-translate-y-1 hover:border-white/20 hover:shadow-[0_28px_90px_rgba(0,0,0,.55)]",
-                      primaryUrl ? "cursor-pointer focus-within:ring-2 focus-within:ring-white/20" : ""
+                      "cursor-pointer focus-visible:ring-2 focus-visible:ring-white/25"
                     ].join(" ")}
                   >
-                    {primaryUrl ? (
-                      <a
-                        href={primaryUrl}
-                        target={isPrimaryExternal ? "_blank" : undefined}
-                        rel={isPrimaryExternal ? "noreferrer" : undefined}
-                        aria-label={c.title ? `Open ${c.title}` : "Open project"}
-                        className="absolute inset-0 z-0"
-                      />
-                    ) : null}
                     <div className="pointer-events-none absolute inset-0 z-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100">
                       <div className="absolute -top-24 right-[-20%] h-56 w-56 rounded-full bg-emerald-500/10 blur-3xl" />
                       <div className="absolute -bottom-24 left-[-20%] h-56 w-56 rounded-full bg-cyan-500/10 blur-3xl" />
@@ -545,7 +592,7 @@ export default function PortfolioSite() {
 
                       <div className="mt-auto flex flex-wrap gap-3 pt-4">
                         {actionLinks.map((l) => {
-                          const isExternal = l?.href ? /^https?:\/\//i.test(l.href) : false;
+                          const isExternal = l?.href ? isExternalUrl(l.href) : false;
                           const isPrimary = primaryUrl && l?.href === primaryUrl;
                           return (
                             <Btn
@@ -585,6 +632,127 @@ export default function PortfolioSite() {
           </Btn>
         </div>
       </Section>
+
+      <AnimatePresence>
+        {activeProject ? (() => {
+          const { primaryUrl, actionLinks, previewUrl } = getProjectMeta(activeProject);
+          return (
+            <motion.div
+              key={activeProject.title || "project-details"}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[70] flex items-center justify-center px-4 py-8"
+            >
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="absolute inset-0 bg-black/70 backdrop-blur-md"
+                onClick={() => setActiveProject(null)}
+              />
+              <motion.div
+                initial={{ opacity: 0, y: 24, scale: 0.98 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 24, scale: 0.98 }}
+                transition={{ type: "spring", stiffness: 200, damping: 22 }}
+                role="dialog"
+                aria-modal="true"
+                aria-label="Project details"
+                className="relative z-10 w-full max-w-5xl overflow-hidden rounded-3xl border border-white/10 bg-zinc-950/90 shadow-[0_30px_120px_rgba(0,0,0,.65)]"
+                onClick={(event) => event.stopPropagation()}
+              >
+                <div className="max-h-[85vh] overflow-y-auto">
+                  <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/10 px-6 py-5">
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-3">
+                        <h3 className="truncate text-2xl font-semibold">{activeProject.title || "Project"}</h3>
+                        {activeProject.impact ? (
+                          <span className="rounded-full border border-emerald-400/25 bg-emerald-500/15 px-3 py-1 text-[11px] uppercase tracking-wide text-emerald-200/90">
+                            {activeProject.impact}
+                          </span>
+                        ) : null}
+                      </div>
+                      <p className="mt-1 text-sm text-zinc-400">Project details</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setActiveProject(null)}
+                      className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-medium uppercase tracking-wide text-white/80 transition hover:bg-white/10"
+                    >
+                      Close
+                    </button>
+                  </div>
+
+                  <div className="grid gap-6 px-6 pb-6 pt-5 lg:grid-cols-[1.2fr_0.8fr]">
+                    <div className="space-y-4">
+                      {activeProject.images?.length ? (
+                        <ImageCarousel
+                          images={activeProject.images}
+                          alt={activeProject.title}
+                          heightClass="h-64 sm:h-80"
+                          showIndex
+                          className="mb-0"
+                        />
+                      ) : previewUrl ? (
+                        <FaviconPreview url={previewUrl} heightClass="h-64 sm:h-80" iconClassName="h-16 w-16" className="mb-0" />
+                      ) : (
+                        <div className="h-64 w-full rounded-2xl border border-white/10 bg-zinc-950/60 flex items-center justify-center text-zinc-500">
+                          Project preview
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex h-full flex-col gap-6">
+                      <div>
+                        <div className="text-xs uppercase tracking-[0.2em] text-zinc-500">Overview</div>
+                        <p className="mt-3 text-sm leading-relaxed text-zinc-300">
+                          {activeProject.blurb || "Detailed project notes will be published soon."}
+                        </p>
+                      </div>
+
+                      {activeProject.tags?.length ? (
+                        <div>
+                          <div className="text-xs uppercase tracking-[0.2em] text-zinc-500">Tech stack</div>
+                          <div className="mt-3 flex flex-wrap gap-2">
+                            {activeProject.tags.map((t) => <Badge key={t}>{t}</Badge>)}
+                          </div>
+                        </div>
+                      ) : null}
+
+                      {actionLinks?.length ? (
+                        <div>
+                          <div className="text-xs uppercase tracking-[0.2em] text-zinc-500">Links</div>
+                          <div className="mt-3 flex flex-wrap gap-3">
+                            {actionLinks.map((l) => {
+                              const isExternal = l?.href ? isExternalUrl(l.href) : false;
+                              const isPrimary = primaryUrl && l?.href === primaryUrl;
+                              return (
+                                <Btn
+                                  key={`${l.label}-${l.href}`}
+                                  href={l.href}
+                                  target={isExternal ? "_blank" : undefined}
+                                  rel={isExternal ? "noreferrer" : undefined}
+                                  className={[
+                                    "px-4 py-2 text-xs",
+                                    isPrimary ? "bg-white text-black hover:bg-zinc-200" : "border border-white/15 text-white hover:bg-white/5"
+                                  ].join(" ")}
+                                >
+                                  {l.label}
+                                </Btn>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      ) : null}
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            </motion.div>
+          );
+        })() : null}
+      </AnimatePresence>
 
       {/* Process */}
       <Section id="process">
