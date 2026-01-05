@@ -43,10 +43,6 @@ const ROUTE_META = {
     title: "About - studio",
     description: "A senior-only team founded by engineers and focused on delivery quality.",
   },
-  "/testimonials": {
-    title: "Testimonials - studio",
-    description: "Client feedback from product, growth, and CRM transformations.",
-  },
   "/not-for-everyone": {
     title: "Not for everyone - studio",
     description: "A calm fit check to help teams self-select before starting.",
@@ -86,6 +82,14 @@ const ROUTE_META = {
   "/estimate": {
     title: "Estimator - studio",
     description: "Range-based estimator for timelines, budgets, and architecture scope.",
+  },
+  "/admin-demo": {
+    title: "Admin Demo - studio",
+    description: "Interactive admin control demo showing roles, ops, disputes, and financial transparency.",
+  },
+  "/demo/admin": {
+    title: "Admin Demo - studio",
+    description: "Interactive admin control demo showing roles, ops, disputes, and financial transparency.",
   },
   "/cases/renter-architecture": {
     title: "Renter Architecture - studio",

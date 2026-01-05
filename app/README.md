@@ -7,7 +7,7 @@ Welcome to Studio, a modern and opinionated portfolio and service‑showcase tem
 
 ✨ What’s inside?
 
-src/App.jsx is the heart of the app. It defines a number of data arrays – navigation items, services, projects, pricing tiers, the tech stack and testimonials – and then renders them into a cohesive single‑page website. Thanks to framer-motion and lucide-react, the page is full of subtle animation and crisp icons. Here’s an overview of the key sections:
+src/App.jsx is the heart of the app. It defines a number of data arrays – navigation items, services, projects, pricing tiers, and the tech stack – and then renders them into a cohesive single‑page website. Thanks to framer-motion and lucide-react, the page is full of subtle animation and crisp icons. Here’s an overview of the key sections:
 
 Hero & navigation
 
@@ -61,15 +61,13 @@ raw.githubusercontent.com
 raw.githubusercontent.com
 . Update this list to reflect your own expertise; the current values include TypeScript, React/Next.js, Node, Python/Django, Go, Postgres, Kafka, Docker/K8s, LangChain and more.
 
-About & testimonials
+About
 
 The About section summarises your ethos. The provided copy emphasises a senior‑only studio shipping fast and delivering measurable impact
 raw.githubusercontent.com
 . It also displays key stats (e.g. average conversion uplift, uptime, releases across industries) using StatPill components
 raw.githubusercontent.com
 . A side card lists certifications like SOC2 and HIPAA readiness
-raw.githubusercontent.com
-. The Testimonials section displays quotes from past clients, drawn from the testimonials array
 raw.githubusercontent.com
 .
 
@@ -135,7 +133,7 @@ Rename the project: Change the repository name and update vite.config.js’s bas
 raw.githubusercontent.com
 .
 
-Update content: Edit the arrays at the top of src/App.jsx to modify navigation, services, projects, pricing tiers, tech stack and testimonials
+Update content: Edit the arrays at the top of src/App.jsx to modify navigation, services, projects, pricing tiers and the tech stack
 raw.githubusercontent.com
 raw.githubusercontent.com
 . Replace or remove the raccoon GIF and logo by swapping files in src/assets/ and adjusting the imports at the top of the file

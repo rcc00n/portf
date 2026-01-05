@@ -38,6 +38,7 @@ const AdminFirstPage = lazy(() => import("./pages/engineering/AdminFirst.jsx"));
 const ProductionReadyPage = lazy(() => import("./pages/engineering/ProductionReady.jsx"));
 const EstimatePage = lazy(() => import("./pages/engineering/Estimate.jsx"));
 const RenterArchitectureCasePage = lazy(() => import("./pages/cases/RenterArchitectureCase.jsx"));
+const AdminDemoPage = lazy(() => import("./pages/admin/AdminDemo.jsx"));
 
 /* ===================== Data ===================== */
 const nav = [
@@ -48,7 +49,6 @@ const nav = [
   { id: "stack", label: "Tech", href: "/tech", icon: Braces, desc: "Stack and tooling" },
   { id: "engineering", label: "Engineering", href: "/engineering", icon: Braces, desc: "Advanced modules" },
   { id: "about", label: "About", href: "/about", icon: Sparkles, desc: "Studio story" },
-  { id: "testimonials", label: "Testimonials", href: "/testimonials", icon: Star, desc: "Client proof" },
   { id: "contact", label: "Contact", href: "/start", icon: Mail, desc: "Get estimate in 24h" },
 ];
 
@@ -275,12 +275,6 @@ const stack = [
   "OpenAPI/Swagger", "LangChain", "Vector DBs (PGVector/Weaviate)", "RAG",
 ];
 
-const testimonials = [
-  { name: "CEO, FinTech SaaS", quote: "The team mapped our domains, wired the CRM to our services and delivered the reporting we always lacked." },
-  { name: "CMO, D2C brand", quote: "Creative + performance + analytics — the puzzle finally clicked and growth became predictable." },
-  { name: "COO, logistics platform", quote: "We cut idle time and empty rides; dashboards are clear even for drivers — magic." },
-];
-
 const journalPosts = [
   {
     title: "Why admin-first systems outperform pretty dashboards",
@@ -496,19 +490,6 @@ const aboutValues = [
   { title: "Signal over noise", desc: "Decisions backed by data and user insight." },
   { title: "Design with intent", desc: "Every pixel has a reason." },
   { title: "Calm execution", desc: "Senior teams keep the pace sustainable." },
-];
-
-const testimonialsExtended = [
-  ...testimonials,
-  { name: "VP Product, SaaS", quote: "They shipped a full redesign and reduced churn within one quarter." },
-  { name: "Founder, HealthTech", quote: "Fast discovery, sharp decisions, and a product the team loves to run." },
-  { name: "Head of Growth, Marketplace", quote: "Performance spend became predictable thanks to their analytics stack." },
-];
-
-const testimonialHighlights = [
-  { label: "Avg. NPS", value: "68" },
-  { label: "ROI in 6 mo", value: "3.4x" },
-  { label: "Client retention", value: "92%" },
 ];
 
 const contactSteps = [
@@ -1920,21 +1901,6 @@ const HomePage = ({ projectsData, pricingData, apiBase }) => {
         </div>
       </Section>
 
-      {/* Testimonials */}
-      <Section id="testimonials">
-        <H2>Testimonials</H2>
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-3 auto-rows-fr">
-          {testimonials.map((r, i) => (
-            <motion.div key={r.name} {...fade} transition={{ ...fade.transition, delay: i * 0.05 }} className="h-full">
-              <Card className="h-full flex flex-col">
-                <p className="mb-4 text-zinc-200">“{r.quote}”</p>
-                <div className="mt-auto text-sm text-zinc-400">— {r.name}</div>
-              </Card>
-            </motion.div>
-          ))}
-        </div>
-      </Section>
-
       {/* Contact */}
       <Section id="contact">
         <H2>Free estimate & architecture outline in 24 hours — no commitment.</H2>
@@ -2314,7 +2280,7 @@ const AboutPage = () => (
       title="Senior-only studio with a product mindset"
       subtitle="We are a compact team of senior operators. We move fast, stay calm, and own outcomes with you."
       primary={{ label: "Get estimate in 24h", to: "/start" }}
-      secondary={{ label: "See testimonials", to: "/testimonials" }}
+      secondary={{ label: "See projects", to: "/projects" }}
       stats={[
         { label: "Years in product", value: "14+" },
         { label: "Releases", value: "120+" },
@@ -2363,33 +2329,6 @@ const AboutPage = () => (
       </div>
     </Section>
     <CTABox title="Looking for a senior partner?" subtitle="We can join discovery or take full delivery of your roadmap." secondaryLabel="See services" secondaryTo="/services" />
-  </>
-);
-
-const TestimonialsPage = () => (
-  <>
-    <PageHero
-      kicker="Testimonials"
-      title="Proof from teams that ship with us"
-      subtitle="We are trusted by leaders who want speed, clarity, and premium craft. Here is what they say."
-      primary={{ label: "Get estimate in 24h", to: "/start" }}
-      secondary={{ label: "See projects", to: "/projects" }}
-      stats={testimonialHighlights}
-    />
-    <Section>
-      <H2>Client voices</H2>
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-3 auto-rows-fr">
-        {testimonialsExtended.map((r, i) => (
-          <motion.div key={`${r.name}-${i}`} {...fade} transition={{ ...fade.transition, delay: i * 0.05 }} className="h-full">
-            <Card className="h-full flex flex-col">
-              <p className="mb-4 text-zinc-200">“{r.quote}”</p>
-              <div className="mt-auto text-sm text-zinc-400">— {r.name}</div>
-            </Card>
-          </motion.div>
-        ))}
-      </div>
-    </Section>
-    <CTABox title="Want results like these?" subtitle="We align metrics early and optimize for outcomes, not vanity launches." secondaryLabel="See pricing" secondaryTo="/pricing" />
   </>
 );
 
@@ -3018,8 +2957,9 @@ export default function PortfolioSite() {
           <Route path="/production-ready" element={<LazyRoute><ProductionReadyPage /></LazyRoute>} />
           <Route path="/estimate" element={<LazyRoute><EstimatePage /></LazyRoute>} />
           <Route path="/cases/renter-architecture" element={<LazyRoute><RenterArchitectureCasePage /></LazyRoute>} />
+          <Route path="/admin-demo" element={<LazyRoute><AdminDemoPage /></LazyRoute>} />
+          <Route path="/demo/admin" element={<LazyRoute><AdminDemoPage /></LazyRoute>} />
           <Route path="/about" element={<AboutPage />} />
-          <Route path="/testimonials" element={<TestimonialsPage />} />
           <Route path="/not-for-everyone" element={<NotForEveryonePage />} />
           <Route path="/start" element={<StartPage />} />
           <Route path="/pre-call" element={<PreCallPage />} />
