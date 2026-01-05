@@ -30,7 +30,7 @@ const nav = [
   { id: "stack", label: "Tech", href: "/tech", icon: Braces, desc: "Stack and tooling" },
   { id: "about", label: "About", href: "/about", icon: Sparkles, desc: "Studio story" },
   { id: "testimonials", label: "Testimonials", href: "/testimonials", icon: Star, desc: "Client proof" },
-  { id: "contact", label: "Contact", href: "/contact", icon: Mail, desc: "Get proposal" },
+  { id: "contact", label: "Contact", href: "/contact", icon: Mail, desc: "Get estimate in 24h" },
 ];
 
 const CONTACT = {
@@ -52,12 +52,19 @@ const services = [
   { icon: Star, title: "SEO / ASO", desc: "Technical SEO, content ops, on-page, app store optimization.", tags: ["Core Web Vitals", "Schema", "Backlinks"] },
 ];
 
+const whoWeWorkWith = [
+  { title: "For Founders", lines: ["MVP → product → scale", "SaaS, marketplaces, internal tools"] },
+  { title: "For Small Businesses", lines: ["Websites, e-commerce, bookings", "Automation instead of hiring staff"] },
+  { title: "For Teams", lines: ["Internal CRMs & dashboards", "Roles, reporting, integrations"] },
+];
+
 /* ===== Projects with image galleries ===== */
 const projectSeed = [
   {
     title: "Bad Guy Motors — Motorcycle Parts Catalog",
     impact: "Commerce · SEO",
     blurb: "E-commerce catalog for motorcycle parts with clear navigation and search.",
+    outcome: "Searchable catalog with SKU taxonomy and SEO landing pages.",
     links: [{ label: "Live", href: "https://badguymotors.com" }],
     url: "https://badguymotors.com",
     tags: ["Commerce", "Catalog", "SEO"],
@@ -71,6 +78,7 @@ const projectSeed = [
     title: "SwiftFleet — Car Rental Platform",
     impact: "Frontend · Canvas",
     blurb: "Modern car rental web app with playful interactions and fast browsing.",
+    outcome: "Multi-step booking flow with availability, pricing, and vehicle filters.",
     links: [
       { label: "Live", href: "https://rcc00n.github.io/grr/index.html" },
       { label: "Repo", href: "https://github.com/rcc00n/grr" },
@@ -87,6 +95,7 @@ const projectSeed = [
     title: "WorldDoc — Global Doctor Finder",
     impact: "Search · Directory",
     blurb: "Online service to discover doctors worldwide, filter by speciality and region.",
+    outcome: "Global directory with specialty taxonomy and region-based filters.",
     links: [
       { label: "Live", href: "https://rcc00n.github.io/prj_E/" },
       { label: "Repo", href: "https://github.com/rcc00n/prj_E" },
@@ -102,6 +111,7 @@ const projectSeed = [
     title: "NorthPeak — Personal Portfolio Site",
     impact: "Landing · Branding",
     blurb: "Clean personal landing page to showcase work, bio and contacts.",
+    outcome: "Fast, single-page funnel that directs leads to contact.",
     links: [
       { label: "Live", href: "https://rcc00n.github.io/SnowPlow/" },
       { label: "Repo", href: "https://github.com/rcc00n/SnowPlow" },
@@ -117,6 +127,7 @@ const projectSeed = [
     title: "Mobile Arcade (Android/iOS)",
     impact: "Unity · Mobile",
     blurb: "Lightweight arcade game for phones. Store links/APK can be attached later.",
+    outcome: "Cross-platform build pipeline for iOS and Android releases.",
     links: [{ label: "APK / TestFlight", href: "#" }],
     url: "https://example.com",
     tags: ["Mobile", "Game"],
@@ -129,6 +140,7 @@ const projectSeed = [
     title: "PortfolioSite — Studio Website",
     impact: "React · Tailwind · Framer Motion",
     blurb: "This very site: modern portfolio built with React, Tailwind, and Framer Motion. Responsive, animated, and fully modular.",
+    outcome: "Modular marketing site with reusable sections and routed pages.",
     links: [
       { label: "Live", href: "https://rcc00n.github.io/portf/" },
       { label: "Repo", href: "https://github.com/rcc00n/portf" },
@@ -147,7 +159,7 @@ const pricingSeed = [
   { tier: "CRM Basic", price: "$6k", info: "4–6 weeks · core features", points: ["Architecture & UX", "Main CRM features", "Basic analytics", "Deploy & docs"] },
   { tier: "CRM Standard", price: "$11k", info: "6–10 weeks · 2+ integrations", points: ["Advanced roles & reports", "Custom dashboards", "Sales pipeline automation", "Observability & alerts"], featured: true },
   { tier: "CRM Pro", price: "$18k", info: "10–14 weeks · scale", points: ["Complex integrations", "Full analytics suite", "Marketing funnels", "Support & SLA"] },
-  { tier: "Custom Projects", price: "Custom", info: "Unique scope & team setup", points: ["Dedicated squad", "Architecture runway", "Budget & roadmap", "SLA on demand"] },
+  { tier: "Custom Software", price: "Custom", info: "Unique scope & team setup", points: ["Dedicated squad", "Architecture runway", "Budget & roadmap", "SLA on demand"] },
   { tier: "AI Bot Service", price: "$3k", info: "Chatbot + CRM integration", points: ["Your data (RAG)", "Web/Widget/WhatsApp", "Handover to human agent", "Dashboards & KPIs"] },
 ];
 
@@ -162,9 +174,9 @@ const stack = [
 ];
 
 const testimonials = [
-  { name: "CEO, FinTech", quote: "The team mapped our domains, wired the CRM to our services and delivered the reporting we always lacked." },
-  { name: "CMO, D2C", quote: "Creative + performance + analytics — the puzzle finally clicked and growth became predictable." },
-  { name: "COO, Logistics", quote: "We cut idle time and empty rides; dashboards are clear even for drivers — magic." },
+  { name: "CEO, FinTech SaaS", quote: "The team mapped our domains, wired the CRM to our services and delivered the reporting we always lacked." },
+  { name: "CMO, D2C brand", quote: "Creative + performance + analytics — the puzzle finally clicked and growth became predictable." },
+  { name: "COO, logistics platform", quote: "We cut idle time and empty rides; dashboards are clear even for drivers — magic." },
 ];
 
 const engagementModels = [
@@ -644,14 +656,19 @@ const ContactForm = ({ apiBase = "", source = "" }) => {
           disabled={isSubmitting}
           className={`ml-auto bg-white text-black hover:bg-zinc-200 ${isSubmitting ? "cursor-not-allowed opacity-70" : ""}`}
         >
-          {isSubmitting ? "Sending..." : "Get proposal"}
+          {isSubmitting ? "Sending..." : "Get estimate in 24h"}
         </Btn>
+      </div>
+      <div className="md:col-span-2 flex flex-wrap gap-3 text-xs text-zinc-500">
+        <span>We reply personally</span>
+        <span>NDA available on request</span>
+        <span>No sales calls unless needed</span>
       </div>
     </form>
   );
 };
 
-const CTABox = ({ title, subtitle, primaryLabel = "Get proposal", primaryTo = "/contact", secondaryLabel = "See pricing", secondaryTo = "/pricing" }) => (
+const CTABox = ({ title, subtitle, primaryLabel = "Get estimate in 24h", primaryTo = "/contact", secondaryLabel = "See pricing", secondaryTo = "/pricing" }) => (
   <Section className="pt-8">
     <div className="relative">
       <div className="absolute inset-0 -z-10 rounded-3xl bg-[radial-gradient(80%_120%_at_50%_-20%,rgba(99,102,241,0.35),transparent)]" />
@@ -861,7 +878,7 @@ const MobileNav = ({ open, onClose }) => {
         <div className="mt-3 text-xl font-semibold text-white">Next slot in 2-3 weeks</div>
         <p className="mt-2 text-sm text-zinc-300">Limited slots per quarter. Reserve yours now.</p>
         <div className="mt-4">
-          <BtnLink to="/contact" className="w-full bg-white text-black hover:bg-zinc-200">Get proposal</BtnLink>
+          <BtnLink to="/contact" className="w-full bg-white text-black hover:bg-zinc-200">Get estimate in 24h</BtnLink>
         </div>
         <div className="mt-4 text-xs text-zinc-400">{SALES_PROMISE}</div>
         <ContactInline className="mt-3" />
@@ -909,12 +926,16 @@ const MobileNav = ({ open, onClose }) => {
   );
 };
 
-const TopContactBar = () => (
-  <div className="border-b border-white/10 bg-black/85">
-    <div className="mx-auto flex max-w-7xl flex-col gap-2 px-6 py-2 text-xs text-zinc-400 sm:flex-row sm:items-center sm:justify-between">
-      <span>{SALES_PROMISE}</span>
-      <ContactInline />
-    </div>
+const FloatingContactButton = () => (
+  <div className="fixed bottom-6 left-6 z-40 sm:bottom-8 sm:left-8">
+    <BtnLink
+      to="/contact"
+      className="gap-2 bg-white px-4 py-3 text-sm text-black shadow-lg shadow-black/40 ring-1 ring-white/10 hover:bg-zinc-200"
+      aria-label="Get estimate in 24h"
+    >
+      <Mail className="h-4 w-4" />
+      Get estimate in 24h
+    </BtnLink>
   </div>
 );
 
@@ -925,7 +946,6 @@ const SiteNav = () => {
   return (
     <>
       <div className="sticky top-0 z-50">
-        <TopContactBar />
         <div className="border-b border-white/10 bg-black/85">
           <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
             <Link to="/" className="flex items-center gap-2 font-semibold tracking-wide">
@@ -947,7 +967,7 @@ const SiteNav = () => {
             </nav>
             <div className="flex items-center gap-3">
               <div className="hidden md:block">
-                <BtnLink to="/contact" className="bg-white text-black hover:bg-zinc-200 px-4 py-2 text-sm">Get proposal</BtnLink>
+                <BtnLink to="/contact" className="bg-white text-black hover:bg-zinc-200 px-4 py-2 text-sm">Get estimate in 24h</BtnLink>
               </div>
               <button
                 type="button"
@@ -1029,16 +1049,36 @@ const HomePage = ({ projectsData, pricingData, apiBase }) => {
             <Badge>Revenue-first CRM · Software · Marketing</Badge>
             <Badge><ShieldCheck className="mr-1 inline h-4 w-4" /> Senior-only delivery</Badge>
           </motion.div>
-          <motion.h1 {...fade} className="bg-gradient-to-b from-white to-zinc-400 bg-clip-text text-4xl font-semibold leading-tight text-transparent sm:text-6xl">CRM and growth systems<br />that turn traffic into revenue</motion.h1>
-          <motion.p {...fade} className="max-w-2xl text-lg text-zinc-300">We design, build, and optimize digital products so every lead converts and every campaign is measurable.</motion.p>
+          <motion.h1 {...fade} className="bg-gradient-to-b from-white to-zinc-400 bg-clip-text text-4xl font-semibold leading-tight text-transparent sm:text-6xl">Custom software & CRMs that replace manual work and scale revenue</motion.h1>
+          <motion.p {...fade} className="max-w-2xl text-lg text-zinc-300">From internal CRMs to marketplaces and automation — built end-to-end with analytics and full admin control.</motion.p>
           <motion.div {...fade} className="flex flex-wrap items-center justify-center gap-3">
-            <Btn href="#contact" className="bg-white text-black hover:bg-zinc-200">Get proposal</Btn>
-            <Btn href="#projects" className="border border-white/15 text-white hover:bg-white/5">See case studies</Btn>
+            <Btn href="#contact" className="bg-white text-black hover:bg-zinc-200">Get estimate in 24h</Btn>
+            <Btn href="#projects" className="border border-white/15 text-white hover:bg-white/5">See our work</Btn>
+            <Btn href="#pricing" className="border border-white/15 text-white hover:bg-white/5">Pricing</Btn>
           </motion.div>
           <div className="text-xs text-zinc-400">{SALES_PROMISE}</div>
           <ContactInline className="justify-center" />
         </div>
       </header>
+
+      {/* Who we work with */}
+      <Section id="who">
+        <H2>Who we work with</H2>
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+          {whoWeWorkWith.map((group, idx) => (
+            <motion.div key={group.title} {...fade} transition={{ ...fade.transition, delay: idx * 0.04 }}>
+              <Card className="h-full">
+                <div className="text-lg font-semibold">{group.title}</div>
+                <ul className="mt-4 space-y-2 text-sm text-zinc-300">
+                  {group.lines.map((line) => (
+                    <li key={line}>{line}</li>
+                  ))}
+                </ul>
+              </Card>
+            </motion.div>
+          ))}
+        </div>
+      </Section>
 
       {/* Services */}
       <Section id="services">
@@ -1125,6 +1165,7 @@ const HomePage = ({ projectsData, pricingData, apiBase }) => {
                       )}
 
                       <p className="text-sm text-zinc-300">{c.blurb}</p>
+                      {c.outcome ? <p className="mt-3 text-sm text-zinc-400">{c.outcome}</p> : null}
 
                       {c.tags?.length ? (
                         <div className="mt-3 flex flex-wrap gap-2">
@@ -1326,6 +1367,7 @@ const HomePage = ({ projectsData, pricingData, apiBase }) => {
         <div className="grid grid-cols-1 gap-6 md:grid-cols-5">
           {pricingData.map((p, i) => {
             const points = Array.isArray(p.points) ? p.points : [];
+            const isCustomTier = /custom/i.test(p.tier);
             return (
               <motion.div key={`${p.tier}-${i}`} {...fade} transition={{ ...fade.transition, delay: i * 0.04 }} className="h-full">
                 <TierCardClean featured={p.featured}>
@@ -1336,7 +1378,15 @@ const HomePage = ({ projectsData, pricingData, apiBase }) => {
                         {p.featured && (<span className="rounded-full bg-white/12 px-2 py-0.5 text-[10px] text-white/95">Most popular</span>)}
                       </div>
                       <div className="mb-1 text-5xl font-extrabold tracking-tight bg-gradient-to-b from-white to-zinc-300 bg-clip-text text-transparent">{p.price}</div>
-                      <div className="mb-5 text-sm text-zinc-400">{p.info}</div>
+                      <div className="mb-5 text-sm text-zinc-400">
+                        {p.info}
+                        {isCustomTier ? (
+                          <div className="mt-3 text-xs text-zinc-500">
+                            <div>Typical budgets: $15k–50k+</div>
+                            <div>Avg timeline: 6–12 weeks</div>
+                          </div>
+                        ) : null}
+                      </div>
                       <div className="mb-6 h-px w-full bg-gradient-to-r from-transparent via-white/20 to-transparent" />
                       <ul className="space-y-2 text-sm text-zinc-300">
                         {points.map((pt, idx) => (
@@ -1348,7 +1398,7 @@ const HomePage = ({ projectsData, pricingData, apiBase }) => {
                       </ul>
                     </div>
                     <div className="mt-auto pt-6">
-                      <Btn href="#contact" className="w-full bg-white text-black hover:bg-zinc-200">Get proposal</Btn>
+                      <Btn href="#contact" className="w-full bg-white text-black hover:bg-zinc-200">Start with this</Btn>
                     </div>
                   </div>
                 </TierCardClean>
@@ -1377,7 +1427,7 @@ const HomePage = ({ projectsData, pricingData, apiBase }) => {
           <motion.div {...fade} className="col-span-2">
             <Card className="bg-zinc-900/70">
               <p className="text-lg text-zinc-300">
-                We’re a senior-only product studio focused on outcomes. We ship fast, measure impact, and own the roadmap — from discovery to growth. Our CRMs and growth systems don’t just look premium — they pay for themselves in months.
+                We’re a senior-only product studio focused on outcomes. We ship fast, measure impact, and own the roadmap — from discovery to growth. Our CRMs and growth systems don’t just look premium — they pay for themselves in months. Founded by engineers — not salespeople.
               </p>
               <ul className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <StatPill icon={LineChart}>↗ 38% avg. conversion uplift</StatPill>
@@ -1417,8 +1467,8 @@ const HomePage = ({ projectsData, pricingData, apiBase }) => {
 
       {/* Contact */}
       <Section id="contact">
-        <H2>Contact</H2>
-        <motion.p {...fade} className="mb-4 max-w-2xl text-zinc-300">Tell us about your challenge and we will return with scope, timeline, and budget within 24 hours.</motion.p>
+        <H2>Free estimate & architecture outline in 24 hours</H2>
+        <motion.p {...fade} className="mb-4 max-w-2xl text-zinc-300">Share your goals and we will return with a free estimate, architecture outline, and timeline within 24 hours.</motion.p>
         <ContactInline className="mb-8" />
         <Card>
           <ContactForm apiBase={apiBase} source="home-contact" />
@@ -1434,7 +1484,7 @@ const ServicesPage = () => (
       kicker="Services"
       title="Senior teams that ship product, not slides"
       subtitle="We lead end-to-end delivery from discovery to growth. Expect sharp decisions, modern craft, and measurable outcomes."
-      primary={{ label: "Get proposal", to: "/contact" }}
+      primary={{ label: "Get estimate in 24h", to: "/contact" }}
       secondary={{ label: "See projects", to: "/projects" }}
       stats={[
         { label: "Avg. delivery", value: "10-14 w" },
@@ -1511,7 +1561,7 @@ const ProjectsPage = ({ projectsData }) => (
       kicker="Projects"
       title="Case studies with measurable impact"
       subtitle="We design, build, and grow digital products that move real metrics. Here is a selection of recent work."
-      primary={{ label: "Get proposal", to: "/contact" }}
+      primary={{ label: "Get estimate in 24h", to: "/contact" }}
       secondary={{ label: "See services", to: "/services" }}
       stats={[
         { label: "Launches", value: "120+" },
@@ -1543,6 +1593,7 @@ const ProjectsPage = ({ projectsData }) => (
                   <div className="mb-4 h-44 w-full rounded-xl border border-white/10 bg-zinc-950/60 flex items-center justify-center text-zinc-500">Project preview</div>
                 )}
                 <p className="text-sm text-zinc-300">{project.blurb}</p>
+                {project.outcome ? <p className="mt-3 text-sm text-zinc-400">{project.outcome}</p> : null}
                 {project.tags?.length ? (
                   <div className="mt-3 flex flex-wrap gap-2">
                     {project.tags.map((t) => <Badge key={t}>{t}</Badge>)}
@@ -1598,7 +1649,7 @@ const ProcessPage = () => (
       kicker="Process"
       title="A delivery engine built for clarity"
       subtitle="Our process keeps stakeholders aligned, risks visible, and releases predictable. It is calm, transparent, and senior-led."
-      primary={{ label: "Get proposal", to: "/contact" }}
+      primary={{ label: "Get estimate in 24h", to: "/contact" }}
       secondary={{ label: "See pricing", to: "/pricing" }}
       stats={[
         { label: "Cadence", value: "2-week" },
@@ -1648,7 +1699,7 @@ const PricingPage = ({ pricingData }) => (
       kicker="Pricing"
       title="Transparent tiers with senior delivery"
       subtitle="Choose a fixed scope or a dedicated squad. Every tier comes with senior-only execution and clear reporting."
-      primary={{ label: "Get proposal", to: "/contact" }}
+      primary={{ label: "Get estimate in 24h", to: "/contact" }}
       secondary={{ label: "See process", to: "/process" }}
       stats={[
         { label: "Quote time", value: "24h" },
@@ -1661,6 +1712,7 @@ const PricingPage = ({ pricingData }) => (
       <div className="grid grid-cols-1 gap-6 md:grid-cols-5">
         {pricingData.map((p, i) => {
           const points = Array.isArray(p.points) ? p.points : [];
+          const isCustomTier = /custom/i.test(p.tier);
           return (
             <motion.div key={`${p.tier}-${i}`} {...fade} transition={{ ...fade.transition, delay: i * 0.04 }} className="h-full">
               <TierCardClean featured={p.featured}>
@@ -1671,7 +1723,15 @@ const PricingPage = ({ pricingData }) => (
                       {p.featured && (<span className="rounded-full bg-white/12 px-2 py-0.5 text-[10px] text-white/95">Most popular</span>)}
                     </div>
                     <div className="mb-1 text-5xl font-extrabold tracking-tight bg-gradient-to-b from-white to-zinc-300 bg-clip-text text-transparent">{p.price}</div>
-                    <div className="mb-5 text-sm text-zinc-400">{p.info}</div>
+                    <div className="mb-5 text-sm text-zinc-400">
+                      {p.info}
+                      {isCustomTier ? (
+                        <div className="mt-3 text-xs text-zinc-500">
+                          <div>Typical budgets: $15k–50k+</div>
+                          <div>Avg timeline: 6–12 weeks</div>
+                        </div>
+                      ) : null}
+                    </div>
                     <div className="mb-6 h-px w-full bg-gradient-to-r from-transparent via-white/20 to-transparent" />
                     <ul className="space-y-2 text-sm text-zinc-300">
                       {points.map((pt, idx) => (
@@ -1683,7 +1743,7 @@ const PricingPage = ({ pricingData }) => (
                     </ul>
                   </div>
                   <div className="mt-auto pt-6">
-                    <BtnLink to="/contact" className="w-full bg-white text-black hover:bg-zinc-200">Get proposal</BtnLink>
+                    <BtnLink to="/contact" className="w-full bg-white text-black hover:bg-zinc-200">Start with this</BtnLink>
                   </div>
                 </div>
               </TierCardClean>
@@ -1720,7 +1780,7 @@ const TechPage = () => (
       kicker="Tech"
       title="Modern stack, engineered for reliability"
       subtitle="We pick proven tools that ship fast and scale without drama. Every layer is optimized for performance and observability."
-      primary={{ label: "Get proposal", to: "/contact" }}
+      primary={{ label: "Get estimate in 24h", to: "/contact" }}
       secondary={{ label: "See projects", to: "/projects" }}
       stats={[
         { label: "Stack maturity", value: "Battle-tested" },
@@ -1773,7 +1833,7 @@ const AboutPage = () => (
       kicker="About"
       title="Senior-only studio with a product mindset"
       subtitle="We are a compact team of senior operators. We move fast, stay calm, and own outcomes with you."
-      primary={{ label: "Get proposal", to: "/contact" }}
+      primary={{ label: "Get estimate in 24h", to: "/contact" }}
       secondary={{ label: "See testimonials", to: "/testimonials" }}
       stats={[
         { label: "Years in product", value: "14+" },
@@ -1787,7 +1847,7 @@ const AboutPage = () => (
         <motion.div {...fade} className="md:col-span-2">
           <Card className="bg-zinc-900/70">
             <p className="text-lg text-zinc-300">
-              We are not a big agency. We are a tight senior crew that pairs product thinking with modern engineering. Our teams are built for focus, velocity, and accountability.
+              We are not a big agency. We are a tight senior crew that pairs product thinking with modern engineering. Our teams are built for focus, velocity, and accountability. Founded by engineers — not salespeople.
             </p>
             <ul className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
               <StatPill icon={LineChart}>↗ 38% avg. conversion uplift</StatPill>
@@ -1832,7 +1892,7 @@ const TestimonialsPage = () => (
       kicker="Testimonials"
       title="Proof from teams that ship with us"
       subtitle="We are trusted by leaders who want speed, clarity, and premium craft. Here is what they say."
-      primary={{ label: "Get proposal", to: "/contact" }}
+      primary={{ label: "Get estimate in 24h", to: "/contact" }}
       secondary={{ label: "See projects", to: "/projects" }}
       stats={testimonialHighlights}
     />
@@ -1864,7 +1924,7 @@ const ContactPage = ({ apiBase }) => (
       stats={[
         { label: "Response time", value: "24h" },
         { label: "Discovery", value: "1 week" },
-        { label: "Launch", value: "10-14 w" },
+        { label: "Launch", value: "2-7 weeks" },
       ]}
     />
     <Section>
@@ -1896,7 +1956,7 @@ const NotFoundPage = () => (
       title="This page does not exist"
       subtitle="The page you are looking for moved or was never published."
       primary={{ label: "Back home", to: "/" }}
-      secondary={{ label: "Get proposal", to: "/contact" }}
+      secondary={{ label: "Get estimate in 24h", to: "/contact" }}
       stats={[]}
     />
   </>
@@ -1964,6 +2024,7 @@ export default function PortfolioSite() {
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
         <SiteFooter />
+        <FloatingContactButton />
       </div>
     </div>
   );

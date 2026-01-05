@@ -40,6 +40,7 @@ Optional (DB SSL):
 - dokku run portf python manage.py createsuperuser
 
 6) Domain + TLS
+TODO: Replace duckdns domain with a proper production domain before marketing launch.
 - dokku domains:set portf yourdomain.com
 - dokku letsencrypt:enable portf
 
