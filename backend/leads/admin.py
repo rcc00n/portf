@@ -16,12 +16,18 @@ class ContactRequestAdmin(admin.ModelAdmin):
     list_display = ("id", "name", "email", "status", "created_at", "telegram_sent")
     list_filter = ("status", "telegram_sent", "created_at")
     search_fields = ("name", "email", "company", "message")
-    readonly_fields = ("created_at", "updated_at", "ip_address", "user_agent", "telegram_sent", "telegram_error")
+    readonly_fields = ("qualification", "created_at", "updated_at", "ip_address", "user_agent", "telegram_sent", "telegram_error")
     fieldsets = (
         (
             None,
             {
                 "fields": ("name", "email", "company", "message", "source", "status"),
+            },
+        ),
+        (
+            "Qualification",
+            {
+                "fields": ("qualification",),
             },
         ),
         (

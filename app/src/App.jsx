@@ -629,6 +629,35 @@ const getLeadRouting = () => {
 
 const getOptionLabel = (value, options) => options.find((option) => option.value === value)?.label || value || "-";
 
+const getOptionRating = (value, options) => {
+  const index = options.findIndex((option) => option.value === value);
+  return index >= 0 ? index + 1 : null;
+};
+
+const buildQualificationSnapshot = (qualification) => {
+  if (!qualification) return null;
+  const buildItem = (value, options) => {
+    const option = options.find((entry) => entry.value === value);
+    const rating = getOptionRating(value, options);
+    if (!option || rating === null) return null;
+    return {
+      value: option.value,
+      label: option.label,
+      rating,
+      total: options.length,
+    };
+  };
+
+  const snapshot = {
+    projectType: buildItem(qualification.projectType, QUAL_PROJECT_OPTIONS),
+    complexity: buildItem(qualification.complexity, QUAL_COMPLEXITY_OPTIONS),
+    budget: buildItem(qualification.budget, QUAL_BUDGET_OPTIONS),
+    timeline: buildItem(qualification.timeline, QUAL_TIMELINE_OPTIONS),
+  };
+
+  return Object.values(snapshot).some(Boolean) ? snapshot : null;
+};
+
 const getMaturityLabel = (value) => MATURITY_LABELS[value] || MATURITY_LABELS.unknown;
 
 const buildRoutingParams = (routing) => {
@@ -938,6 +967,7 @@ const ContactForm = ({ apiBase = "", source = "" }) => {
     const routing = getLeadRouting();
     const baseSource = source || (typeof window !== "undefined" ? window.location.pathname : "");
     const sourceWithRouting = appendRoutingToSource(baseSource, routing);
+    const qualificationSnapshot = buildQualificationSnapshot(getStoredQualification());
 
     const payload = {
       name: form.name.trim(),
@@ -947,6 +977,9 @@ const ContactForm = ({ apiBase = "", source = "" }) => {
       source: sourceWithRouting,
       routing,
     };
+    if (qualificationSnapshot) {
+      payload.qualification = qualificationSnapshot;
+    }
 
     try {
       const response = await fetch(`${apiBase}/api/contacts/`, {
