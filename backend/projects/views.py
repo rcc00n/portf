@@ -1,7 +1,7 @@
 from django.http import JsonResponse
 from django.views.decorators.http import require_GET
 
-from .models import Project
+from .models import PricingTier, Project
 
 
 def _absolute_url(request, url):
@@ -31,6 +31,25 @@ def project_list(request):
                 "tags": project.tags or [],
                 "links": [{"label": link.label, "href": link.href} for link in links],
                 "images": [_absolute_url(request, img.image.url) for img in images],
+            }
+        )
+
+    return JsonResponse(payload, safe=False)
+
+
+@require_GET
+def pricing_list(request):
+    tiers = PricingTier.objects.prefetch_related("points").order_by("order", "id")
+    payload = []
+    for tier in tiers:
+        points = tier.points.all()
+        payload.append(
+            {
+                "tier": tier.tier,
+                "price": tier.price,
+                "info": tier.info,
+                "featured": tier.featured,
+                "points": [point.text for point in points],
             }
         )
 

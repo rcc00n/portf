@@ -1,3 +1,4 @@
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
 
@@ -47,3 +48,34 @@ class ProjectImage(models.Model):
 
     def __str__(self):
         return self.image.name
+
+
+class PricingTier(models.Model):
+    tier = models.CharField(max_length=120)
+    price = models.CharField(max_length=40)
+    info = models.CharField(max_length=200, blank=True)
+    featured = models.BooleanField(default=False)
+    order = models.PositiveSmallIntegerField(
+        default=1,
+        validators=[MinValueValidator(1), MaxValueValidator(5)],
+        unique=True,
+        help_text="Slot number from 1 to 5 (unique).",
+    )
+
+    class Meta:
+        ordering = ["order", "id"]
+
+    def __str__(self):
+        return f"{self.order}. {self.tier}"
+
+
+class PricingPoint(models.Model):
+    tier = models.ForeignKey(PricingTier, related_name="points", on_delete=models.CASCADE)
+    text = models.CharField(max_length=160)
+    order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ["order", "id"]
+
+    def __str__(self):
+        return self.text

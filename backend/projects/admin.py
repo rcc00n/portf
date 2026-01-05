@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Project, ProjectImage, ProjectLink
+from .models import PricingPoint, PricingTier, Project, ProjectImage, ProjectLink
 
 
 class ProjectImageInline(admin.TabularInline):
@@ -14,6 +14,13 @@ class ProjectLinkInline(admin.TabularInline):
     model = ProjectLink
     extra = 1
     fields = ("label", "href", "order")
+    ordering = ("order",)
+
+
+class PricingPointInline(admin.TabularInline):
+    model = PricingPoint
+    extra = 1
+    fields = ("text", "order")
     ordering = ("order",)
 
 
@@ -54,3 +61,19 @@ class ProjectLinkAdmin(admin.ModelAdmin):
     list_display = ("project", "label", "href", "order")
     list_select_related = ("project",)
     ordering = ("project", "order")
+
+
+@admin.register(PricingTier)
+class PricingTierAdmin(admin.ModelAdmin):
+    list_display = ("order", "tier", "price", "info", "featured")
+    list_filter = ("featured",)
+    ordering = ("order",)
+    fields = ("tier", "price", "info", "featured", "order")
+    inlines = [PricingPointInline]
+
+
+@admin.register(PricingPoint)
+class PricingPointAdmin(admin.ModelAdmin):
+    list_display = ("tier", "text", "order")
+    list_select_related = ("tier",)
+    ordering = ("tier", "order")

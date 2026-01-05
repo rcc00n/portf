@@ -24,7 +24,8 @@ Frontend dev
 - npm run dev
 
 Notes
-- The API endpoint is /api/projects/ and the admin is /admin/.
+- The API endpoints are /api/projects/, /api/pricing/, /api/contacts/ and the admin is /admin/.
+- Set TELEGRAM_BOT_TOKEN to enable Telegram notifications and add chat IDs in the admin.
 - Uploaded images are stored under backend/media/.
 - Set DJANGO_SERVE_MEDIA=true if you want Django to serve uploads without a CDN.
 - For a production build, the Dockerfile builds the frontend and copies it into backend/frontend_dist.
