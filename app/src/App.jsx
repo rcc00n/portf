@@ -372,7 +372,7 @@ const Btn = ({ as = "a", className = "", children, ...props }) => {
   const Comp = as === "button" ? motion.button : motion.a;
   const motionProps = PERFORMANCE_MODE ? {} : { whileHover: { y: -2, scale: 1.02 }, whileTap: { scale: 0.98 } };
   return (
-    <Comp {...motionProps} {...props} className={`rounded-xl px-5 py-3 font-medium transition-colors ${className}`}>
+    <Comp {...motionProps} {...props} className={`inline-flex items-center justify-center text-center rounded-xl px-5 py-3 font-medium transition-colors ${className}`}>
       {children}
     </Comp>
   );
@@ -383,7 +383,7 @@ const BtnLink = ({ to, className = "", children, ...props }) => (
     {...(PERFORMANCE_MODE ? {} : { whileHover: { y: -2, scale: 1.02 }, whileTap: { scale: 0.98 } })}
     className="inline-flex"
   >
-    <Link to={to} className={`inline-flex items-center justify-center rounded-xl px-5 py-3 font-medium transition-colors ${className}`} {...props}>
+    <Link to={to} className={`inline-flex items-center justify-center text-center rounded-xl px-5 py-3 font-medium transition-colors ${className}`} {...props}>
       {children}
     </Link>
   </motion.span>
