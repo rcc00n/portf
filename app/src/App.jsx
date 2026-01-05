@@ -161,6 +161,10 @@ const testimonials = [
 
 /* ===================== UI helpers ===================== */
 const fade = { initial: { opacity: 0, y: 16 }, whileInView: { opacity: 1, y: 0 }, transition: { duration: 0.6, ease: "easeOut" }, viewport: { once: true, amount: 0.3 } };
+const collapsedFadeMask = {
+  WebkitMaskImage: "linear-gradient(to bottom, rgba(255,255,255,1) 0%, rgba(255,255,255,1) 70%, rgba(255,255,255,0) 100%)",
+  maskImage: "linear-gradient(to bottom, rgba(255,255,255,1) 0%, rgba(255,255,255,1) 70%, rgba(255,255,255,0) 100%)",
+};
 
 const Glow = ({ className = "" }) => (
   <div className={`pointer-events-none absolute inset-0 overflow-hidden ${className}`} aria-hidden>
@@ -443,7 +447,10 @@ export default function PortfolioSite() {
         <Glow />
         <H2>Services</H2>
         <div className="relative">
-          <div className={`grid grid-cols-1 gap-6 md:grid-cols-3 transition-all duration-300 ${showAll ? '' : 'max-h-[520px] overflow-hidden pb-10'}`}>
+          <div
+            className={`grid grid-cols-1 gap-6 md:grid-cols-3 transition-all duration-300 ${showAll ? "" : "max-h-[520px] overflow-hidden pb-8"}`}
+            style={showAll ? undefined : collapsedFadeMask}
+          >
             {services.slice(0, showAll ? services.length : 3).map((s, idx) => (
               <motion.div key={s.title} {...fade} transition={{ ...fade.transition, delay: idx * 0.04 }}>
                 <Card className="h-full">
@@ -454,7 +461,9 @@ export default function PortfolioSite() {
               </motion.div>
             ))}
           </div>
-          {!showAll && (<div className="pointer-events-none absolute inset-x-0 bottom-10 h-24 bg-gradient-to-t from-black via-black/60 to-transparent" />)}
+          {!showAll && (
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-black/90 via-black/60 to-transparent backdrop-blur-sm" />
+          )}
         </div>
         <div className="mt-8 flex justify-center">
           <Btn as="button" onClick={() => setShowAll(v=>!v)} className="border border-white/15 text-white hover:bg-white/5">{showAll ? 'Show less' : 'View all services'}</Btn>
@@ -469,8 +478,9 @@ export default function PortfolioSite() {
         <div className="relative">
           <div
             className={`grid grid-cols-1 gap-6 md:grid-cols-3 transition-all duration-300 ${
-              showAllProjects ? "" : "max-h-[560px] overflow-hidden pb-10"
+              showAllProjects ? "" : "max-h-[560px] overflow-hidden pb-8"
             }`}
+            style={showAllProjects ? undefined : collapsedFadeMask}
           >
             {(showAllProjects ? projectsData : projectsData.slice(0, 3)).map((c, idx) => {
               const rawLinks = Array.isArray(c.links) ? c.links.filter((l) => l?.href) : [];
@@ -561,7 +571,7 @@ export default function PortfolioSite() {
           </div>
 
           {!showAllProjects && (
-            <div className="pointer-events-none absolute inset-x-0 bottom-10 h-24 bg-gradient-to-t from-black via-black/60 to-transparent" />
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-black/90 via-black/60 to-transparent backdrop-blur-sm" />
           )}
         </div>
 
