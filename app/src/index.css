@@ -5,7 +5,7 @@
 }
 
 body {
-  background-color: #050608;
+  background-color: #030406;
 }
 
 .infinite-bg {
@@ -14,54 +14,54 @@ body {
   z-index: 0;
   pointer-events: none;
   overflow: hidden;
-  background: #050608;
+  background: #030406;
 }
 
 .infinite-bg__mesh {
   position: absolute;
-  inset: -35%;
+  inset: -60%;
   background-image:
-    radial-gradient(60% 60% at 10% 10%, rgba(56, 189, 248, 0.22), transparent 70%),
-    radial-gradient(55% 55% at 90% 20%, rgba(236, 72, 153, 0.2), transparent 70%),
-    radial-gradient(50% 55% at 50% 90%, rgba(99, 102, 241, 0.22), transparent 70%),
-    radial-gradient(60% 55% at 20% 80%, rgba(16, 185, 129, 0.16), transparent 75%);
-  filter: blur(40px) saturate(1.15);
-  opacity: 0.9;
-  transform: translate3d(0, 0, 0) scale(1.05);
-  animation: bg-drift 80s ease-in-out infinite;
+    radial-gradient(65% 65% at 12% 8%, rgba(56, 189, 248, 0.16), transparent 72%),
+    radial-gradient(60% 60% at 88% 18%, rgba(236, 72, 153, 0.14), transparent 72%),
+    radial-gradient(55% 60% at 48% 92%, rgba(99, 102, 241, 0.16), transparent 72%),
+    radial-gradient(65% 60% at 18% 78%, rgba(16, 185, 129, 0.12), transparent 76%);
+  filter: blur(68px) saturate(1.05);
+  opacity: 0.72;
+  transform: translate3d(0, 0, 0) scale(1.12);
+  animation: bg-drift 90s ease-in-out infinite;
 }
 
 .infinite-bg__aurora {
   position: absolute;
-  inset: -45%;
+  inset: -70%;
   background-image: conic-gradient(
     from 120deg at 50% 50%,
-    rgba(59, 130, 246, 0.08),
-    rgba(139, 92, 246, 0.12),
-    rgba(14, 165, 233, 0.08),
-    rgba(59, 130, 246, 0.08)
+    rgba(59, 130, 246, 0.06),
+    rgba(139, 92, 246, 0.1),
+    rgba(14, 165, 233, 0.06),
+    rgba(59, 130, 246, 0.06)
   );
   mix-blend-mode: screen;
-  opacity: 0.45;
-  filter: blur(20px);
-  animation: bg-spin 160s linear infinite;
+  opacity: 0.32;
+  filter: blur(30px);
+  animation: bg-spin 180s linear infinite;
 }
 
 .infinite-bg__vignette {
   position: absolute;
   inset: 0;
-  background: radial-gradient(120% 120% at 50% 10%, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.35) 55%, rgba(0, 0, 0, 0.7) 85%);
+  background: radial-gradient(120% 120% at 50% 8%, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.45) 52%, rgba(0, 0, 0, 0.82) 86%);
 }
 
 @keyframes bg-drift {
   0% {
-    transform: translate3d(-6%, -4%, 0) scale(1.05);
+    transform: translate3d(-8%, -6%, 0) scale(1.12);
   }
   50% {
-    transform: translate3d(5%, 6%, 0) scale(1.08);
+    transform: translate3d(7%, 8%, 0) scale(1.16);
   }
   100% {
-    transform: translate3d(-6%, -4%, 0) scale(1.05);
+    transform: translate3d(-8%, -6%, 0) scale(1.12);
   }
 }
 

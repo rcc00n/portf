@@ -442,6 +442,182 @@ const PageHero = ({ kicker, title, subtitle, primary, secondary, stats = [] }) =
   </header>
 );
 
+const emptyContactForm = {
+  name: "",
+  email: "",
+  company: "",
+  message: "",
+};
+
+const ContactForm = ({ apiBase = "", source = "" }) => {
+  const [form, setForm] = useState(emptyContactForm);
+  const [status, setStatus] = useState({ state: "idle", message: "" });
+  const [fieldErrors, setFieldErrors] = useState({});
+  const [submitted, setSubmitted] = useState(false);
+  const isSubmitting = status.state === "loading";
+
+  const validate = (values) => {
+    const errors = {};
+    if (!values.name.trim()) errors.name = "Name is required.";
+    if (!values.email.trim()) {
+      errors.email = "Email is required.";
+    } else if (!/\S+@\S+\.\S+/.test(values.email)) {
+      errors.email = "Enter a valid email.";
+    }
+    if (!values.message.trim()) errors.message = "Project details are required.";
+    return errors;
+  };
+
+  const handleChange = (event) => {
+    const { name, value } = event.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
+    if (fieldErrors[name]) {
+      setFieldErrors((prev) => ({ ...prev, [name]: "" }));
+    }
+    if (status.state !== "idle" && status.state !== "loading") {
+      setStatus({ state: "idle", message: "" });
+    }
+  };
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    if (isSubmitting) return;
+    setSubmitted(true);
+
+    const errors = validate(form);
+    if (Object.keys(errors).length) {
+      setFieldErrors(errors);
+      setStatus({ state: "error", message: "Please fill the highlighted fields." });
+      return;
+    }
+
+    setStatus({ state: "loading", message: "" });
+    setFieldErrors({});
+
+    const payload = {
+      name: form.name.trim(),
+      email: form.email.trim(),
+      company: form.company.trim(),
+      message: form.message.trim(),
+      source: source || (typeof window !== "undefined" ? window.location.pathname : ""),
+    };
+
+    try {
+      const response = await fetch(`${apiBase}/api/contacts/`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        let data = null;
+        try {
+          data = await response.json();
+        } catch {
+          data = null;
+        }
+        const serverErrors = data?.fields && typeof data.fields === "object" ? data.fields : {};
+        if (Object.keys(serverErrors).length) {
+          setFieldErrors(serverErrors);
+        }
+        setStatus({
+          state: "error",
+          message: data?.error || "We could not send your brief. Please try again.",
+        });
+        return;
+      }
+
+      setStatus({ state: "success", message: "Thanks! We will reply within 24 hours." });
+      setForm(emptyContactForm);
+      setSubmitted(false);
+    } catch {
+      setStatus({ state: "error", message: "We could not send your brief. Please try again." });
+    }
+  };
+
+  const baseField = "rounded-xl border bg-zinc-900/60 px-4 py-3 outline-none placeholder:text-zinc-500 transition";
+  const focusField = "focus:border-cyan-300/60 focus:ring-1 focus:ring-cyan-300/30";
+  const errorField = "border-rose-400/50 focus:border-rose-400/80 focus:ring-1 focus:ring-rose-400/30";
+  const fieldClass = (hasError) => `${baseField} ${hasError ? errorField : `border-white/10 ${focusField}`}`;
+  const showError = (field) => submitted && fieldErrors[field];
+
+  return (
+    <form className="grid grid-cols-1 gap-4 md:grid-cols-2" onSubmit={handleSubmit} noValidate>
+      <div className="flex flex-col gap-1">
+        <input
+          type="text"
+          name="name"
+          value={form.name}
+          onChange={handleChange}
+          className={fieldClass(showError("name"))}
+          placeholder="Name"
+          autoComplete="name"
+          aria-invalid={showError("name")}
+        />
+        {showError("name") ? <span className="text-xs text-rose-300">{fieldErrors.name}</span> : null}
+      </div>
+      <div className="flex flex-col gap-1">
+        <input
+          type="email"
+          name="email"
+          value={form.email}
+          onChange={handleChange}
+          className={fieldClass(showError("email"))}
+          placeholder="Email"
+          autoComplete="email"
+          aria-invalid={showError("email")}
+        />
+        {showError("email") ? <span className="text-xs text-rose-300">{fieldErrors.email}</span> : null}
+      </div>
+      <div className="flex flex-col gap-1 md:col-span-2">
+        <input
+          type="text"
+          name="company"
+          value={form.company}
+          onChange={handleChange}
+          className={fieldClass(false)}
+          placeholder="Company / website"
+          autoComplete="organization"
+        />
+      </div>
+      <div className="flex flex-col gap-1 md:col-span-2">
+        <textarea
+          name="message"
+          value={form.message}
+          onChange={handleChange}
+          rows={5}
+          className={fieldClass(showError("message"))}
+          placeholder="Describe the project: goals, deadlines, key features"
+          aria-invalid={showError("message")}
+        />
+        {showError("message") ? <span className="text-xs text-rose-300">{fieldErrors.message}</span> : null}
+      </div>
+      {status.message ? (
+        <div
+          className={`md:col-span-2 text-sm ${status.state === "success" ? "text-emerald-300" : "text-rose-300"}`}
+          role="status"
+          aria-live="polite"
+        >
+          {status.message}
+        </div>
+      ) : null}
+      <div className="flex flex-wrap items-center gap-4 md:col-span-2">
+        <a href="mailto:hello@studio.dev" className="inline-flex items-center gap-2 text-sm text-zinc-300 hover:text-white"><Mail className="h-4 w-4"/> hello@studio.dev</a>
+        <a href="tel:+10000000000" className="inline-flex items-center gap-2 text-sm text-zinc-300 hover:text-white"><Phone className="h-4 w-4"/> +1 (000) 000-0000</a>
+        <a href="#" className="inline-flex items-center gap-2 text-sm text-zinc-300 hover:text-white"><Globe className="h-4 w-4"/> @studio</a>
+        <Btn
+          as="button"
+          type="submit"
+          disabled={isSubmitting}
+          className={`ml-auto bg-white text-black hover:bg-zinc-200 ${isSubmitting ? "cursor-not-allowed opacity-70" : ""}`}
+        >
+          {isSubmitting ? "Sending..." : "Send brief"}
+        </Btn>
+      </div>
+    </form>
+  );
+};
+
 const CTABox = ({ title, subtitle, primaryLabel = "Start a project", primaryTo = "/contact", secondaryLabel = "See pricing", secondaryTo = "/pricing" }) => (
   <Section className="pt-8">
     <div className="relative">
@@ -766,7 +942,7 @@ const RaccoonPop = ({ gif, targetId }) => {
 };
 
 /* ===================== Pages ===================== */
-const HomePage = ({ projectsData, pricingData }) => {
+const HomePage = ({ projectsData, pricingData, apiBase }) => {
   const [showAll, setShowAll] = useState(false);
   const [showAllProjects, setShowAllProjects] = useState(false);
   const [activeProject, setActiveProject] = useState(null);
@@ -1203,18 +1379,7 @@ const HomePage = ({ projectsData, pricingData }) => {
         <H2>Contact</H2>
         <motion.p {...fade} className="mb-8 max-w-2xl text-zinc-300">Tell us about your challenge — we'll return with architecture, timeline and budget within 24 hours.</motion.p>
         <Card>
-          <form className="grid grid-cols-1 gap-4 md:grid-cols-2" onSubmit={(e) => e.preventDefault()}>
-            <input className="rounded-xl border border-white/10 bg-zinc-900/60 px-4 py-3 outline-none placeholder:text-zinc-500" placeholder="Name" />
-            <input className="rounded-xl border border-white/10 bg-zinc-900/60 px-4 py-3 outline-none placeholder:text-zinc-500" placeholder="Email" />
-            <input className="rounded-xl border border-white/10 bg-zinc-900/60 px-4 py-3 outline-none placeholder:text-zinc-500 md:col-span-2" placeholder="Company / website" />
-            <textarea rows={5} className="rounded-xl border border-white/10 bg-zinc-900/60 px-4 py-3 outline-none placeholder:text-zinc-500 md:col-span-2" placeholder="Describe the project: goals, deadlines, key features" />
-            <div className="flex flex-wrap items-center gap-4 md:col-span-2">
-              <a href="mailto:hello@studio.dev" className="inline-flex items-center gap-2 text-sm text-zinc-300 hover:text-white"><Mail className="h-4 w-4"/> hello@studio.dev</a>
-              <a href="tel:+10000000000" className="inline-flex items-center gap-2 text-sm text-zinc-300 hover:text-white"><Phone className="h-4 w-4"/> +1 (000) 000-0000</a>
-              <a href="#" className="inline-flex items-center gap-2 text-sm text-zinc-300 hover:text-white"><Globe className="h-4 w-4"/> @studio</a>
-              <Btn as="button" type="submit" className="ml-auto bg-white text-black hover:bg-zinc-200">Send brief</Btn>
-            </div>
-          </form>
+          <ContactForm apiBase={apiBase} source="home-contact" />
         </Card>
       </Section>
     </>
@@ -1646,7 +1811,7 @@ const TestimonialsPage = () => (
   </>
 );
 
-const ContactPage = () => (
+const ContactPage = ({ apiBase }) => (
   <>
     <PageHero
       kicker="Contact"
@@ -1664,18 +1829,7 @@ const ContactPage = () => (
       <H2>Project intake</H2>
       <div className="grid grid-cols-1 gap-6 md:grid-cols-[1.2fr_0.8fr]">
         <Card>
-          <form className="grid grid-cols-1 gap-4 md:grid-cols-2" onSubmit={(e) => e.preventDefault()}>
-            <input className="rounded-xl border border-white/10 bg-zinc-900/60 px-4 py-3 outline-none placeholder:text-zinc-500" placeholder="Name" />
-            <input className="rounded-xl border border-white/10 bg-zinc-900/60 px-4 py-3 outline-none placeholder:text-zinc-500" placeholder="Email" />
-            <input className="rounded-xl border border-white/10 bg-zinc-900/60 px-4 py-3 outline-none placeholder:text-zinc-500 md:col-span-2" placeholder="Company / website" />
-            <textarea rows={5} className="rounded-xl border border-white/10 bg-zinc-900/60 px-4 py-3 outline-none placeholder:text-zinc-500 md:col-span-2" placeholder="Describe the project: goals, deadlines, key features" />
-            <div className="flex flex-wrap items-center gap-4 md:col-span-2">
-              <a href="mailto:hello@studio.dev" className="inline-flex items-center gap-2 text-sm text-zinc-300 hover:text-white"><Mail className="h-4 w-4"/> hello@studio.dev</a>
-              <a href="tel:+10000000000" className="inline-flex items-center gap-2 text-sm text-zinc-300 hover:text-white"><Phone className="h-4 w-4"/> +1 (000) 000-0000</a>
-              <a href="#" className="inline-flex items-center gap-2 text-sm text-zinc-300 hover:text-white"><Globe className="h-4 w-4"/> @studio</a>
-              <Btn as="button" type="submit" className="ml-auto bg-white text-black hover:bg-zinc-200">Send brief</Btn>
-            </div>
-          </form>
+          <ContactForm apiBase={apiBase} source="contact-page" />
         </Card>
         <div className="space-y-4">
           {contactSteps.map((step, idx) => (
@@ -1756,7 +1910,7 @@ export default function PortfolioSite() {
         <ScrollToTop />
         <SiteNav />
         <Routes>
-          <Route path="/" element={<HomePage projectsData={projectsData} pricingData={pricingData} />} />
+          <Route path="/" element={<HomePage projectsData={projectsData} pricingData={pricingData} apiBase={apiBase} />} />
           <Route path="/services" element={<ServicesPage />} />
           <Route path="/projects" element={<ProjectsPage projectsData={projectsData} />} />
           <Route path="/process" element={<ProcessPage />} />
@@ -1764,7 +1918,7 @@ export default function PortfolioSite() {
           <Route path="/tech" element={<TechPage />} />
           <Route path="/about" element={<AboutPage />} />
           <Route path="/testimonials" element={<TestimonialsPage />} />
-          <Route path="/contact" element={<ContactPage />} />
+          <Route path="/contact" element={<ContactPage apiBase={apiBase} />} />
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
         <SiteFooter />
