@@ -37,6 +37,7 @@ const nav = [
   { id: "process", label: "Process", href: "/process", icon: Gauge, desc: "Delivery rituals" },
   { id: "pricing", label: "Pricing", href: "/pricing", icon: LineChart, desc: "Clear tiers" },
   { id: "stack", label: "Tech", href: "/tech", icon: Braces, desc: "Stack and tooling" },
+  { id: "engineering", label: "Engineering", href: "/engineering", icon: Braces, desc: "Advanced modules" },
   { id: "about", label: "About", href: "/about", icon: Sparkles, desc: "Studio story" },
   { id: "testimonials", label: "Testimonials", href: "/testimonials", icon: Star, desc: "Client proof" },
   { id: "contact", label: "Contact", href: "/contact", icon: Mail, desc: "Get estimate in 24h" },
