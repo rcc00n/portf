@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link, Route, Routes, useLocation } from "react-router-dom";
 import {
@@ -10,7 +10,6 @@ import {
   Gauge,
   Mail,
   Phone,
-  Globe,
   Sparkles,
   Star,
   ShieldCheck,
@@ -20,7 +19,6 @@ import {
   Menu,
   X,
 } from "lucide-react";
-import raccoonGif from "./assets/raccoon.gif";
 import raccoonLogo from "./assets/raccoon-logo.png";
 
 /* ===================== Data ===================== */
@@ -32,8 +30,15 @@ const nav = [
   { id: "stack", label: "Tech", href: "/tech", icon: Braces, desc: "Stack and tooling" },
   { id: "about", label: "About", href: "/about", icon: Sparkles, desc: "Studio story" },
   { id: "testimonials", label: "Testimonials", href: "/testimonials", icon: Star, desc: "Client proof" },
-  { id: "contact", label: "Contact", href: "/contact", icon: Mail, desc: "Start a project" },
+  { id: "contact", label: "Contact", href: "/contact", icon: Mail, desc: "Get proposal" },
 ];
+
+const CONTACT = {
+  email: "vadrud2016@gmail.com",
+  phone: "+15873227188",
+};
+
+const SALES_PROMISE = "Reply in 24h with scope, timeline, and budget.";
 
 const services = [
   { icon: Braces, title: "Software Development", desc: "Back-/front-end, mobile apps, integrations, microservices, DevOps.", tags: ["Django", "Node", "React", "Postgres", "Docker", "K8s"] },
@@ -285,7 +290,10 @@ const contactSteps = [
 ];
 
 /* ===================== UI helpers ===================== */
-const fade = { initial: { opacity: 0, y: 16 }, whileInView: { opacity: 1, y: 0 }, transition: { duration: 0.6, ease: "easeOut" }, viewport: { once: true, amount: 0.3 } };
+const PERFORMANCE_MODE = true;
+const fade = PERFORMANCE_MODE
+  ? { initial: false, transition: {} }
+  : { initial: { opacity: 0, y: 16 }, whileInView: { opacity: 1, y: 0 }, transition: { duration: 0.6, ease: "easeOut" }, viewport: { once: true, amount: 0.3 } };
 const collapsedFadeMask = {
   WebkitMaskImage: "linear-gradient(to bottom, rgba(255,255,255,1) 0%, rgba(255,255,255,1) 55%, rgba(255,255,255,0.4) 75%, rgba(255,255,255,0) 100%)",
   maskImage: "linear-gradient(to bottom, rgba(255,255,255,1) 0%, rgba(255,255,255,1) 55%, rgba(255,255,255,0.4) 75%, rgba(255,255,255,0) 100%)",
@@ -328,7 +336,7 @@ const Section = ({ id, children, className = "" }) => (
 );
 
 const Badge = ({ children, className = "" }) => (
-  <span className={`rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/70 backdrop-blur-sm ${className}`}>{children}</span>
+  <span className={`rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/70 ${className}`}>{children}</span>
 );
 
 const Card = ({ children, className = "", ...props }) => (
@@ -343,15 +351,19 @@ const H2 = ({ children }) => (
 
 const Btn = ({ as = "a", className = "", children, ...props }) => {
   const Comp = as === "button" ? motion.button : motion.a;
+  const motionProps = PERFORMANCE_MODE ? {} : { whileHover: { y: -2, scale: 1.02 }, whileTap: { scale: 0.98 } };
   return (
-    <Comp whileHover={{ y: -2, scale: 1.02 }} whileTap={{ scale: 0.98 }} {...props} className={`rounded-xl px-5 py-3 font-medium transition-colors ${className}`}>
+    <Comp {...motionProps} {...props} className={`rounded-xl px-5 py-3 font-medium transition-colors ${className}`}>
       {children}
     </Comp>
   );
 };
 
 const BtnLink = ({ to, className = "", children, ...props }) => (
-  <motion.span whileHover={{ y: -2, scale: 1.02 }} whileTap={{ scale: 0.98 }} className="inline-flex">
+  <motion.span
+    {...(PERFORMANCE_MODE ? {} : { whileHover: { y: -2, scale: 1.02 }, whileTap: { scale: 0.98 } })}
+    className="inline-flex"
+  >
     <Link to={to} className={`inline-flex items-center justify-center rounded-xl px-5 py-3 font-medium transition-colors ${className}`} {...props}>
       {children}
     </Link>
@@ -364,9 +376,28 @@ const Logo = ({ size = "h-12 w-12 sm:h-14 sm:w-14" }) => (
       src={raccoonLogo}
       alt="raccoon logo"
       className={`${size} -ml-1 select-none drop-shadow-[0_0_24px_rgba(56,189,248,.45)]`}
+      decoding="async"
+      loading="eager"
       draggable={false}
     />
     <span className="text-lg sm:text-xl font-semibold tracking-wide">studio</span>
+  </div>
+);
+
+const ContactInline = ({ className = "", linkClassName = "" }) => (
+  <div className={`flex flex-wrap items-center gap-4 ${className}`}>
+    <a
+      href={`mailto:${CONTACT.email}`}
+      className={`inline-flex items-center gap-2 text-xs sm:text-sm text-zinc-300 hover:text-white ${linkClassName}`}
+    >
+      <Mail className="h-4 w-4" /> {CONTACT.email}
+    </a>
+    <a
+      href={`tel:${CONTACT.phone}`}
+      className={`inline-flex items-center gap-2 text-xs sm:text-sm text-zinc-300 hover:text-white ${linkClassName}`}
+    >
+      <Phone className="h-4 w-4" /> {CONTACT.phone}
+    </a>
   </div>
 );
 
@@ -428,6 +459,8 @@ const PageHero = ({ kicker, title, subtitle, primary, secondary, stats = [] }) =
           ) : null}
         </motion.div>
       ) : null}
+      <div className="mt-4 text-xs text-zinc-400">{SALES_PROMISE}</div>
+      <ContactInline className="mt-3 justify-center" />
       {stats.length ? (
         <div className="mx-auto mt-6 grid w-full max-w-4xl grid-cols-1 gap-4 sm:grid-cols-3">
           {stats.map((stat, idx) => (
@@ -604,23 +637,21 @@ const ContactForm = ({ apiBase = "", source = "" }) => {
         </div>
       ) : null}
       <div className="flex flex-wrap items-center gap-4 md:col-span-2">
-        <a href="mailto:hello@studio.dev" className="inline-flex items-center gap-2 text-sm text-zinc-300 hover:text-white"><Mail className="h-4 w-4"/> hello@studio.dev</a>
-        <a href="tel:+10000000000" className="inline-flex items-center gap-2 text-sm text-zinc-300 hover:text-white"><Phone className="h-4 w-4"/> +1 (000) 000-0000</a>
-        <a href="#" className="inline-flex items-center gap-2 text-sm text-zinc-300 hover:text-white"><Globe className="h-4 w-4"/> @studio</a>
+        <ContactInline />
         <Btn
           as="button"
           type="submit"
           disabled={isSubmitting}
           className={`ml-auto bg-white text-black hover:bg-zinc-200 ${isSubmitting ? "cursor-not-allowed opacity-70" : ""}`}
         >
-          {isSubmitting ? "Sending..." : "Send brief"}
+          {isSubmitting ? "Sending..." : "Get proposal"}
         </Btn>
       </div>
     </form>
   );
 };
 
-const CTABox = ({ title, subtitle, primaryLabel = "Start a project", primaryTo = "/contact", secondaryLabel = "See pricing", secondaryTo = "/pricing" }) => (
+const CTABox = ({ title, subtitle, primaryLabel = "Get proposal", primaryTo = "/contact", secondaryLabel = "See pricing", secondaryTo = "/pricing" }) => (
   <Section className="pt-8">
     <div className="relative">
       <div className="absolute inset-0 -z-10 rounded-3xl bg-[radial-gradient(80%_120%_at_50%_-20%,rgba(99,102,241,0.35),transparent)]" />
@@ -631,6 +662,8 @@ const CTABox = ({ title, subtitle, primaryLabel = "Start a project", primaryTo =
             <div className="text-xs uppercase tracking-[0.3em] text-zinc-500">Next step</div>
             <div className="mt-2 text-2xl font-semibold text-white">{title}</div>
             <p className="mt-2 max-w-xl text-sm text-zinc-300">{subtitle}</p>
+            <div className="mt-4 text-xs text-zinc-400">{SALES_PROMISE}</div>
+            <ContactInline className="mt-3" />
           </div>
           <div className="flex flex-wrap gap-3">
             <BtnLink to={primaryTo} className="bg-white text-black hover:bg-zinc-200">{primaryLabel}</BtnLink>
@@ -667,7 +700,16 @@ const FaviconPreview = ({ url, className = "", heightClass = "h-44", iconClassNa
 
   return (
     <div className={`mb-4 w-full rounded-xl border border-white/10 bg-zinc-950/60 flex flex-col items-center justify-center text-zinc-400 ${heightClass} ${className}`}>
-      <img src={chain[0]} data-i="0" onError={onErr} alt="" className={`${iconClassName} rounded`} />
+      <img
+        src={chain[0]}
+        data-i="0"
+        onError={onErr}
+        alt=""
+        loading="lazy"
+        decoding="async"
+        fetchPriority="low"
+        className={`${iconClassName} rounded`}
+      />
       <div style={{ display: "none" }} className={`${iconClassName} items-center justify-center rounded bg-white/5 text-sm`}>
         {initials}
       </div>
@@ -681,19 +723,24 @@ const ImageCarousel = ({ images, alt = "Preview", heightClass = "h-44", showInde
   const [i, setI] = useState(0);
   const len = images.length;
   const go = (d) => setI((v) => (v + d + len) % len);
+  const Img = PERFORMANCE_MODE ? "img" : motion.img;
+  const motionProps = PERFORMANCE_MODE
+    ? {}
+    : { initial: { opacity: 0, scale: 1.02 }, animate: { opacity: 1, scale: 1 }, transition: { duration: 0.35, ease: "easeOut" } };
 
   return (
     <div className={`mb-4 relative select-none ${className}`}>
       <div className={`${heightClass} w-full overflow-hidden rounded-xl border border-white/10 bg-zinc-950/60`}>
-        <motion.img
+        <Img
           key={i}
           src={images[i]}
           alt={alt}
-          initial={{ opacity: 0, scale: 1.02 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.35, ease: "easeOut" }}
+          loading="lazy"
+          decoding="async"
+          fetchPriority="low"
           draggable={false}
           className={`${heightClass} w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]`}
+          {...motionProps}
         />
       </div>
 
@@ -756,83 +803,120 @@ const MobileNav = ({ open, onClose }) => {
     if (open) onClose();
   }, [location.pathname]);
 
+  if (!open) return null;
+
+  const panel = (
+    <>
+      <div className="flex items-center justify-between">
+        <Link to="/" className="flex items-center gap-2" onClick={onClose}>
+          <Logo size="h-10 w-10" />
+        </Link>
+        <button
+          type="button"
+          onClick={onClose}
+          className="rounded-full border border-white/10 bg-white/5 p-2 text-white/80 hover:bg-white/10"
+          aria-label="Close menu"
+        >
+          <X className="h-5 w-5" />
+        </button>
+      </div>
+
+      <div className="mt-8 space-y-3">
+        {nav.map((item, idx) => {
+          const active = location.pathname === item.href;
+          const Icon = item.icon;
+          const entry = (
+            <Link
+              to={item.href}
+              onClick={onClose}
+              className={`group flex items-center gap-4 rounded-2xl border border-white/10 px-4 py-3 transition ${active ? "bg-white/10" : "bg-white/5 hover:bg-white/10"}`}
+            >
+              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-black/40">
+                <Icon className="h-5 w-5" />
+              </span>
+              <span className="flex flex-col">
+                <span className="text-sm font-semibold text-white">{item.label}</span>
+                <span className="text-xs text-zinc-400">{item.desc}</span>
+              </span>
+            </Link>
+          );
+
+          return PERFORMANCE_MODE ? (
+            <div key={item.id}>{entry}</div>
+          ) : (
+            <motion.div
+              key={item.id}
+              initial={{ opacity: 0, x: 16 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: idx * 0.05 }}
+            >
+              {entry}
+            </motion.div>
+          );
+        })}
+      </div>
+
+      <div className="mt-10 rounded-2xl border border-white/10 bg-white/5 p-5">
+        <div className="text-xs uppercase tracking-[0.3em] text-zinc-500">Availability</div>
+        <div className="mt-3 text-xl font-semibold text-white">Next slot in 2-3 weeks</div>
+        <p className="mt-2 text-sm text-zinc-300">Limited slots per quarter. Reserve yours now.</p>
+        <div className="mt-4">
+          <BtnLink to="/contact" className="w-full bg-white text-black hover:bg-zinc-200">Get proposal</BtnLink>
+        </div>
+        <div className="mt-4 text-xs text-zinc-400">{SALES_PROMISE}</div>
+        <ContactInline className="mt-3" />
+      </div>
+    </>
+  );
+
+  if (PERFORMANCE_MODE) {
+    return (
+      <>
+        <div
+          onClick={onClose}
+          className="fixed inset-0 z-[60] bg-black/75"
+        />
+        <aside
+          className="fixed right-0 top-0 z-[70] h-full w-[86vw] max-w-sm overflow-y-auto border-l border-white/10 bg-zinc-950/95 p-6 shadow-2xl"
+          aria-label="Mobile navigation"
+        >
+          {panel}
+        </aside>
+      </>
+    );
+  }
+
   return (
     <AnimatePresence>
-      {open ? (
-        <>
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={onClose}
-            className="fixed inset-0 z-[60] bg-black/70 backdrop-blur-sm"
-          />
-          <motion.aside
-            initial={{ x: "100%" }}
-            animate={{ x: 0 }}
-            exit={{ x: "100%" }}
-            transition={{ type: "spring", stiffness: 260, damping: 30 }}
-            className="fixed right-0 top-0 z-[70] h-full w-[86vw] max-w-sm overflow-y-auto border-l border-white/10 bg-zinc-950/95 p-6 shadow-2xl"
-            aria-label="Mobile navigation"
-          >
-            <div className="flex items-center justify-between">
-              <Link to="/" className="flex items-center gap-2" onClick={onClose}>
-                <Logo size="h-10 w-10" />
-              </Link>
-              <button
-                type="button"
-                onClick={onClose}
-                className="rounded-full border border-white/10 bg-white/5 p-2 text-white/80 hover:bg-white/10"
-                aria-label="Close menu"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-
-            <div className="mt-8 space-y-3">
-              {nav.map((item, idx) => {
-                const active = location.pathname === item.href;
-                const Icon = item.icon;
-                return (
-                  <motion.div
-                    key={item.id}
-                    initial={{ opacity: 0, x: 16 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: idx * 0.05 }}
-                  >
-                    <Link
-                      to={item.href}
-                      onClick={onClose}
-                      className={`group flex items-center gap-4 rounded-2xl border border-white/10 px-4 py-3 transition ${active ? "bg-white/10" : "bg-white/5 hover:bg-white/10"}`}
-                    >
-                      <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-black/40">
-                        <Icon className="h-5 w-5" />
-                      </span>
-                      <span className="flex flex-col">
-                        <span className="text-sm font-semibold text-white">{item.label}</span>
-                        <span className="text-xs text-zinc-400">{item.desc}</span>
-                      </span>
-                    </Link>
-                  </motion.div>
-                );
-              })}
-            </div>
-
-            <div className="mt-10 rounded-2xl border border-white/10 bg-white/5 p-5">
-              <div className="text-xs uppercase tracking-[0.3em] text-zinc-500">Availability</div>
-              <div className="mt-3 text-xl font-semibold text-white">Next slot in 2-3 weeks</div>
-              <p className="mt-2 text-sm text-zinc-300">We take a limited number of partners per quarter.</p>
-              <div className="mt-4">
-                <BtnLink to="/contact" className="w-full bg-white text-black hover:bg-zinc-200">Start a project</BtnLink>
-              </div>
-              <div className="mt-4 text-xs text-zinc-400">hello@studio.dev</div>
-            </div>
-          </motion.aside>
-        </>
-      ) : null}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onClick={onClose}
+        className="fixed inset-0 z-[60] bg-black/75"
+      />
+      <motion.aside
+        initial={{ x: "100%" }}
+        animate={{ x: 0 }}
+        exit={{ x: "100%" }}
+        transition={{ type: "spring", stiffness: 260, damping: 30 }}
+        className="fixed right-0 top-0 z-[70] h-full w-[86vw] max-w-sm overflow-y-auto border-l border-white/10 bg-zinc-950/95 p-6 shadow-2xl"
+        aria-label="Mobile navigation"
+      >
+        {panel}
+      </motion.aside>
     </AnimatePresence>
   );
 };
+
+const TopContactBar = () => (
+  <div className="border-b border-white/10 bg-black/85">
+    <div className="mx-auto flex max-w-7xl flex-col gap-2 px-6 py-2 text-xs text-zinc-400 sm:flex-row sm:items-center sm:justify-between">
+      <span>{SALES_PROMISE}</span>
+      <ContactInline />
+    </div>
+  </div>
+);
 
 const SiteNav = () => {
   const location = useLocation();
@@ -840,37 +924,40 @@ const SiteNav = () => {
 
   return (
     <>
-      <div className="sticky top-0 z-50 border-b border-white/10 bg-black/70 backdrop-blur supports-[backdrop-filter]:bg-black/55">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-          <Link to="/" className="flex items-center gap-2 font-semibold tracking-wide">
-            <Logo />
-          </Link>
-          <nav className="hidden gap-6 md:flex">
-            {nav.map((n) => {
-              const active = location.pathname === n.href;
-              return (
-                <Link
-                  key={n.id}
-                  to={n.href}
-                  className={`text-sm transition-colors ${active ? "text-white" : "text-zinc-300 hover:text-white"}`}
-                >
-                  {n.label}
-                </Link>
-              );
-            })}
-          </nav>
-          <div className="flex items-center gap-3">
-            <div className="hidden md:block">
-              <BtnLink to="/contact" className="bg-white text-black hover:bg-zinc-200 px-4 py-2 text-sm">Start a project</BtnLink>
+      <div className="sticky top-0 z-50">
+        <TopContactBar />
+        <div className="border-b border-white/10 bg-black/85">
+          <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
+            <Link to="/" className="flex items-center gap-2 font-semibold tracking-wide">
+              <Logo />
+            </Link>
+            <nav className="hidden gap-6 md:flex">
+              {nav.map((n) => {
+                const active = location.pathname === n.href;
+                return (
+                  <Link
+                    key={n.id}
+                    to={n.href}
+                    className={`text-sm transition-colors ${active ? "text-white" : "text-zinc-300 hover:text-white"}`}
+                  >
+                    {n.label}
+                  </Link>
+                );
+              })}
+            </nav>
+            <div className="flex items-center gap-3">
+              <div className="hidden md:block">
+                <BtnLink to="/contact" className="bg-white text-black hover:bg-zinc-200 px-4 py-2 text-sm">Get proposal</BtnLink>
+              </div>
+              <button
+                type="button"
+                onClick={() => setOpen(true)}
+                className="inline-flex items-center justify-center rounded-full border border-white/10 bg-white/5 p-2 text-white/80 hover:bg-white/10 md:hidden"
+                aria-label="Open menu"
+              >
+                <Menu className="h-5 w-5" />
+              </button>
             </div>
-            <button
-              type="button"
-              onClick={() => setOpen(true)}
-              className="inline-flex items-center justify-center rounded-full border border-white/10 bg-white/5 p-2 text-white/80 hover:bg-white/10 md:hidden"
-              aria-label="Open menu"
-            >
-              <Menu className="h-5 w-5" />
-            </button>
           </div>
         </div>
       </div>
@@ -883,6 +970,7 @@ const SiteFooter = () => (
   <footer className="border-t border-white/10 py-10">
     <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-6 sm:flex-row">
       <div className="text-sm text-zinc-400">© {new Date().getFullYear()} studio — CRM, Software, SMM, Marketing</div>
+      <ContactInline linkClassName="text-zinc-400 hover:text-white" />
       <div className="flex items-center gap-3 text-xs text-zinc-500">
         <a href="#" className="hover:text-zinc-300">Privacy Policy</a>
         <span className="opacity-50">•</span>
@@ -891,57 +979,6 @@ const SiteFooter = () => (
     </div>
   </footer>
 );
-
-const RaccoonPop = ({ gif, targetId }) => {
-  const [visible, setVisible] = React.useState(false);
-  const timers = React.useRef([]);
-  const cooling = React.useRef(false);
-
-  React.useEffect(() => {
-    const el = document.getElementById(targetId);
-    if (!el) return;
-
-    const onHit = (entries) => {
-      const hit = entries.some((e) => e.isIntersecting);
-      if (!hit || cooling.current) return;
-
-      cooling.current = true;
-      timers.current.push(
-        setTimeout(() => setVisible(true), 1000)
-      );
-      timers.current.push(
-        setTimeout(() => setVisible(false), 6000)
-      );
-      timers.current.push(
-        setTimeout(() => { cooling.current = false; }, 20000)
-      );
-    };
-
-    const io = new IntersectionObserver(onHit, { threshold: 0.8 });
-    io.observe(el);
-    return () => {
-      io.disconnect();
-      timers.current.forEach(clearTimeout);
-      timers.current = [];
-    };
-  }, [targetId]);
-
-  return (
-    <motion.div
-      initial={{ x: 200, y: 200, opacity: 0 }}
-      animate={visible ? { x: 0, y: 0, opacity: 1 } : { x: 200, y: 200, opacity: 0 }}
-      transition={{ type: "spring", stiffness: 260, damping: 22 }}
-      className="fixed bottom-4 right-4 z-[60] pointer-events-none"
-    >
-      <img
-        src={gif}
-        alt="raccoon"
-        className="h-44 w-auto drop-shadow-[0_8px_30px_rgba(0,0,0,.6)] select-none"
-        draggable={false}
-      />
-    </motion.div>
-  );
-};
 
 /* ===================== Pages ===================== */
 const HomePage = ({ projectsData, pricingData, apiBase }) => {
@@ -989,15 +1026,17 @@ const HomePage = ({ projectsData, pricingData, apiBase }) => {
       <header id="top" className="relative overflow-hidden">
         <div className="mx-auto flex max-w-7xl flex-col items-center gap-8 px-6 pb-20 pt-24 text-center">
           <motion.div {...fade} className="flex items-center gap-3">
-            <Badge>CRM · Software · SMM · Marketing</Badge>
-            <Badge><ShieldCheck className="mr-1 inline h-4 w-4" /> Senior-level craft</Badge>
+            <Badge>Revenue-first CRM · Software · Marketing</Badge>
+            <Badge><ShieldCheck className="mr-1 inline h-4 w-4" /> Senior-only delivery</Badge>
           </motion.div>
-          <motion.h1 {...fade} className="bg-gradient-to-b from-white to-zinc-400 bg-clip-text text-4xl font-semibold leading-tight text-transparent sm:text-6xl">Products that look premium<br />and perform even better</motion.h1>
-          <motion.p {...fade} className="max-w-2xl text-lg text-zinc-300">We design, build and grow digital products — from custom CRMs to performance marketing with end-to-end analytics.</motion.p>
+          <motion.h1 {...fade} className="bg-gradient-to-b from-white to-zinc-400 bg-clip-text text-4xl font-semibold leading-tight text-transparent sm:text-6xl">CRM and growth systems<br />that turn traffic into revenue</motion.h1>
+          <motion.p {...fade} className="max-w-2xl text-lg text-zinc-300">We design, build, and optimize digital products so every lead converts and every campaign is measurable.</motion.p>
           <motion.div {...fade} className="flex flex-wrap items-center justify-center gap-3">
-            <Btn href="#projects" className="bg-white text-black hover:bg-zinc-200">See our work</Btn>
-            <Btn href="#pricing" className="border border-white/15 text-white hover:bg-white/5">Pricing</Btn>
+            <Btn href="#contact" className="bg-white text-black hover:bg-zinc-200">Get proposal</Btn>
+            <Btn href="#projects" className="border border-white/15 text-white hover:bg-white/5">See case studies</Btn>
           </motion.div>
+          <div className="text-xs text-zinc-400">{SALES_PROMISE}</div>
+          <ContactInline className="justify-center" />
         </div>
       </header>
 
@@ -1021,7 +1060,7 @@ const HomePage = ({ projectsData, pricingData, apiBase }) => {
           </div>
           {!showAll && (
             <div
-              className="pointer-events-none absolute inset-x-0 bottom-0 h-36 bg-gradient-to-t from-black/90 via-black/40 to-transparent backdrop-blur-sm"
+              className="pointer-events-none absolute inset-x-0 bottom-0 h-36 bg-gradient-to-t from-black/90 via-black/40 to-transparent"
               style={collapsedOverlayMask}
             />
           )}
@@ -1122,7 +1161,7 @@ const HomePage = ({ projectsData, pricingData, apiBase }) => {
 
           {!showAllProjects && (
             <div
-              className="pointer-events-none absolute inset-x-0 bottom-0 h-36 bg-gradient-to-t from-black/90 via-black/40 to-transparent backdrop-blur-sm"
+              className="pointer-events-none absolute inset-x-0 bottom-0 h-36 bg-gradient-to-t from-black/90 via-black/40 to-transparent"
               style={collapsedOverlayMask}
             />
           )}
@@ -1154,7 +1193,7 @@ const HomePage = ({ projectsData, pricingData, apiBase }) => {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="absolute inset-0 bg-black/70 backdrop-blur-md"
+                className="absolute inset-0 bg-black/70"
                 onClick={() => setActiveProject(null)}
               />
               <motion.div
@@ -1309,7 +1348,7 @@ const HomePage = ({ projectsData, pricingData, apiBase }) => {
                       </ul>
                     </div>
                     <div className="mt-auto pt-6">
-                      <Btn href="#contact" className="w-full bg-white text-black hover:bg-zinc-200">Choose</Btn>
+                      <Btn href="#contact" className="w-full bg-white text-black hover:bg-zinc-200">Get proposal</Btn>
                     </div>
                   </div>
                 </TierCardClean>
@@ -1379,7 +1418,8 @@ const HomePage = ({ projectsData, pricingData, apiBase }) => {
       {/* Contact */}
       <Section id="contact">
         <H2>Contact</H2>
-        <motion.p {...fade} className="mb-8 max-w-2xl text-zinc-300">Tell us about your challenge — we'll return with architecture, timeline and budget within 24 hours.</motion.p>
+        <motion.p {...fade} className="mb-4 max-w-2xl text-zinc-300">Tell us about your challenge and we will return with scope, timeline, and budget within 24 hours.</motion.p>
+        <ContactInline className="mb-8" />
         <Card>
           <ContactForm apiBase={apiBase} source="home-contact" />
         </Card>
@@ -1394,7 +1434,7 @@ const ServicesPage = () => (
       kicker="Services"
       title="Senior teams that ship product, not slides"
       subtitle="We lead end-to-end delivery from discovery to growth. Expect sharp decisions, modern craft, and measurable outcomes."
-      primary={{ label: "Start a project", to: "/contact" }}
+      primary={{ label: "Get proposal", to: "/contact" }}
       secondary={{ label: "See projects", to: "/projects" }}
       stats={[
         { label: "Avg. delivery", value: "10-14 w" },
@@ -1471,7 +1511,7 @@ const ProjectsPage = ({ projectsData }) => (
       kicker="Projects"
       title="Case studies with measurable impact"
       subtitle="We design, build, and grow digital products that move real metrics. Here is a selection of recent work."
-      primary={{ label: "Start a project", to: "/contact" }}
+      primary={{ label: "Get proposal", to: "/contact" }}
       secondary={{ label: "See services", to: "/services" }}
       stats={[
         { label: "Launches", value: "120+" },
@@ -1558,7 +1598,7 @@ const ProcessPage = () => (
       kicker="Process"
       title="A delivery engine built for clarity"
       subtitle="Our process keeps stakeholders aligned, risks visible, and releases predictable. It is calm, transparent, and senior-led."
-      primary={{ label: "Start a project", to: "/contact" }}
+      primary={{ label: "Get proposal", to: "/contact" }}
       secondary={{ label: "See pricing", to: "/pricing" }}
       stats={[
         { label: "Cadence", value: "2-week" },
@@ -1608,7 +1648,7 @@ const PricingPage = ({ pricingData }) => (
       kicker="Pricing"
       title="Transparent tiers with senior delivery"
       subtitle="Choose a fixed scope or a dedicated squad. Every tier comes with senior-only execution and clear reporting."
-      primary={{ label: "Start a project", to: "/contact" }}
+      primary={{ label: "Get proposal", to: "/contact" }}
       secondary={{ label: "See process", to: "/process" }}
       stats={[
         { label: "Quote time", value: "24h" },
@@ -1643,7 +1683,7 @@ const PricingPage = ({ pricingData }) => (
                     </ul>
                   </div>
                   <div className="mt-auto pt-6">
-                    <BtnLink to="/contact" className="w-full bg-white text-black hover:bg-zinc-200">Choose</BtnLink>
+                    <BtnLink to="/contact" className="w-full bg-white text-black hover:bg-zinc-200">Get proposal</BtnLink>
                   </div>
                 </div>
               </TierCardClean>
@@ -1680,7 +1720,7 @@ const TechPage = () => (
       kicker="Tech"
       title="Modern stack, engineered for reliability"
       subtitle="We pick proven tools that ship fast and scale without drama. Every layer is optimized for performance and observability."
-      primary={{ label: "Start a project", to: "/contact" }}
+      primary={{ label: "Get proposal", to: "/contact" }}
       secondary={{ label: "See projects", to: "/projects" }}
       stats={[
         { label: "Stack maturity", value: "Battle-tested" },
@@ -1733,7 +1773,7 @@ const AboutPage = () => (
       kicker="About"
       title="Senior-only studio with a product mindset"
       subtitle="We are a compact team of senior operators. We move fast, stay calm, and own outcomes with you."
-      primary={{ label: "Start a project", to: "/contact" }}
+      primary={{ label: "Get proposal", to: "/contact" }}
       secondary={{ label: "See testimonials", to: "/testimonials" }}
       stats={[
         { label: "Years in product", value: "14+" },
@@ -1792,7 +1832,7 @@ const TestimonialsPage = () => (
       kicker="Testimonials"
       title="Proof from teams that ship with us"
       subtitle="We are trusted by leaders who want speed, clarity, and premium craft. Here is what they say."
-      primary={{ label: "Start a project", to: "/contact" }}
+      primary={{ label: "Get proposal", to: "/contact" }}
       secondary={{ label: "See projects", to: "/projects" }}
       stats={testimonialHighlights}
     />
@@ -1856,7 +1896,7 @@ const NotFoundPage = () => (
       title="This page does not exist"
       subtitle="The page you are looking for moved or was never published."
       primary={{ label: "Back home", to: "/" }}
-      secondary={{ label: "Start a project", to: "/contact" }}
+      secondary={{ label: "Get proposal", to: "/contact" }}
       stats={[]}
     />
   </>
@@ -1906,7 +1946,7 @@ export default function PortfolioSite() {
   }, [apiBase]);
 
   return (
-    <div className="relative min-h-screen scroll-smooth text-zinc-100 antialiased">
+    <div className="relative min-h-screen text-zinc-100 antialiased">
       <InfiniteBackground />
       <div className="relative z-10">
         <ScrollToTop />
@@ -1924,8 +1964,6 @@ export default function PortfolioSite() {
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
         <SiteFooter />
-        <div id="page-end-sentinel" className="h-2 w-full" />
-        <RaccoonPop gif={raccoonGif} targetId="page-end-sentinel" />
       </div>
     </div>
   );
