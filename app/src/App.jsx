@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link, Route, Routes, useLocation } from "react-router-dom";
 import {
@@ -20,6 +20,15 @@ import {
   X,
 } from "lucide-react";
 import raccoonLogo from "./assets/raccoon-logo.png";
+import { trackCtaClick, trackPageView } from "./utils/analytics";
+import { getMetaForPath } from "./utils/seo";
+
+const EngineeringLandingPage = lazy(() => import("./pages/engineering/EngineeringLanding.jsx"));
+const ArchitecturePreviewPage = lazy(() => import("./pages/engineering/ArchitecturePreview.jsx"));
+const AdminFirstPage = lazy(() => import("./pages/engineering/AdminFirst.jsx"));
+const ProductionReadyPage = lazy(() => import("./pages/engineering/ProductionReady.jsx"));
+const EstimatePage = lazy(() => import("./pages/engineering/Estimate.jsx"));
+const RenterArchitectureCasePage = lazy(() => import("./pages/cases/RenterArchitectureCase.jsx"));
 
 /* ===================== Data ===================== */
 const nav = [
@@ -378,16 +387,30 @@ const Btn = ({ as = "a", className = "", children, ...props }) => {
   );
 };
 
-const BtnLink = ({ to, className = "", children, ...props }) => (
-  <motion.span
-    {...(PERFORMANCE_MODE ? {} : { whileHover: { y: -2, scale: 1.02 }, whileTap: { scale: 0.98 } })}
-    className="inline-flex"
-  >
-    <Link to={to} className={`inline-flex items-center justify-center text-center rounded-xl px-5 py-3 font-medium transition-colors ${className}`} {...props}>
-      {children}
-    </Link>
-  </motion.span>
-);
+const BtnLink = ({ to, className = "", children, analyticsLabel = "", analyticsMeta, onClick, ...props }) => {
+  const handleClick = (event) => {
+    if (analyticsLabel) {
+      trackCtaClick(analyticsLabel, to, analyticsMeta);
+    }
+    if (onClick) onClick(event);
+  };
+
+  return (
+    <motion.span
+      {...(PERFORMANCE_MODE ? {} : { whileHover: { y: -2, scale: 1.02 }, whileTap: { scale: 0.98 } })}
+      className="inline-flex"
+    >
+      <Link
+        to={to}
+        onClick={handleClick}
+        className={`inline-flex items-center justify-center text-center rounded-xl px-5 py-3 font-medium transition-colors ${className}`}
+        {...props}
+      >
+        {children}
+      </Link>
+    </motion.span>
+  );
+};
 
 const Logo = ({ size = "h-12 w-12 sm:h-14 sm:w-14" }) => (
   <div className="flex items-center gap-3">
@@ -467,12 +490,12 @@ const PageHero = ({ kicker, title, subtitle, primary, secondary, stats = [] }) =
       {(primary || secondary) ? (
         <motion.div {...fade} className="flex flex-wrap items-center justify-center gap-3">
           {primary ? (
-            <BtnLink to={primary.to} className="bg-white text-black hover:bg-zinc-200">
+            <BtnLink to={primary.to} analyticsLabel={primary.label} analyticsMeta={{ context: "hero" }} className="bg-white text-black hover:bg-zinc-200">
               {primary.label}
             </BtnLink>
           ) : null}
           {secondary ? (
-            <BtnLink to={secondary.to} className="border border-white/15 text-white hover:bg-white/5">
+            <BtnLink to={secondary.to} analyticsLabel={secondary.label} analyticsMeta={{ context: "hero" }} className="border border-white/15 text-white hover:bg-white/5">
               {secondary.label}
             </BtnLink>
           ) : null}
@@ -688,8 +711,8 @@ const CTABox = ({ title, subtitle, primaryLabel = "Get estimate in 24h", primary
             <div className="mt-4 text-xs text-zinc-400">{SALES_PROMISE}</div>
           </div>
           <div className="flex flex-wrap gap-3">
-            <BtnLink to={primaryTo} className="bg-white text-black hover:bg-zinc-200">{primaryLabel}</BtnLink>
-            <BtnLink to={secondaryTo} className="border border-white/15 text-white hover:bg-white/5">{secondaryLabel}</BtnLink>
+            <BtnLink to={primaryTo} analyticsLabel={primaryLabel} analyticsMeta={{ context: "cta_box" }} className="bg-white text-black hover:bg-zinc-200">{primaryLabel}</BtnLink>
+            <BtnLink to={secondaryTo} analyticsLabel={secondaryLabel} analyticsMeta={{ context: "cta_box" }} className="border border-white/15 text-white hover:bg-white/5">{secondaryLabel}</BtnLink>
           </div>
         </div>
       </Card>
@@ -883,7 +906,7 @@ const MobileNav = ({ open, onClose }) => {
         <div className="mt-3 text-xl font-semibold text-white">Next slot in 2-3 weeks</div>
         <p className="mt-2 text-sm text-zinc-300">Limited slots per quarter. Reserve yours now.</p>
         <div className="mt-4">
-          <BtnLink to="/contact" className="w-full bg-white text-black hover:bg-zinc-200">Get estimate in 24h</BtnLink>
+          <BtnLink to="/contact" analyticsLabel="Get estimate in 24h" analyticsMeta={{ context: "mobile_nav" }} className="w-full bg-white text-black hover:bg-zinc-200">Get estimate in 24h</BtnLink>
         </div>
         <div className="mt-4 text-xs text-zinc-400">{SALES_PROMISE}</div>
       </div>
@@ -934,6 +957,8 @@ const FloatingContactButton = () => (
   <div className="fixed bottom-6 left-6 z-40 sm:bottom-8 sm:left-8">
     <BtnLink
       to="/contact"
+      analyticsLabel="Get estimate in 24h"
+      analyticsMeta={{ context: "floating_cta" }}
       className="gap-2 bg-white px-4 py-3 text-sm text-black shadow-lg shadow-black/40 ring-1 ring-white/10 hover:bg-zinc-200"
       aria-label="Get estimate in 24h"
     >
@@ -977,7 +1002,7 @@ const SiteNav = () => {
             </nav>
             <div className="flex items-center gap-3">
               <div className="hidden md:block">
-                <BtnLink to="/contact" className="bg-white text-black hover:bg-zinc-200 px-4 py-2 text-sm">Get estimate in 24h</BtnLink>
+                <BtnLink to="/contact" analyticsLabel="Get estimate in 24h" analyticsMeta={{ context: "nav" }} className="bg-white text-black hover:bg-zinc-200 px-4 py-2 text-sm">Get estimate in 24h</BtnLink>
               </div>
               <button
                 type="button"
@@ -1008,6 +1033,48 @@ const SiteFooter = () => (
       </div>
     </div>
   </footer>
+);
+
+const setMetaTag = (attribute, key, content) => {
+  if (typeof document === "undefined") return;
+  const selector = `meta[${attribute}="${key}"]`;
+  let tag = document.head.querySelector(selector);
+  if (!tag) {
+    tag = document.createElement("meta");
+    tag.setAttribute(attribute, key);
+    document.head.appendChild(tag);
+  }
+  tag.setAttribute("content", content);
+};
+
+const applyMeta = (meta) => {
+  if (typeof document === "undefined") return;
+  document.title = meta.title;
+  const origin = window.location.origin;
+  const imageUrl = meta.image.startsWith("http") ? meta.image : `${origin}${meta.image}`;
+
+  setMetaTag("name", "description", meta.description);
+  setMetaTag("property", "og:title", meta.title);
+  setMetaTag("property", "og:description", meta.description);
+  setMetaTag("property", "og:type", "website");
+  setMetaTag("property", "og:url", window.location.href);
+  setMetaTag("property", "og:image", imageUrl);
+  setMetaTag("name", "twitter:card", "summary_large_image");
+  setMetaTag("name", "twitter:title", meta.title);
+  setMetaTag("name", "twitter:description", meta.description);
+  setMetaTag("name", "twitter:image", imageUrl);
+};
+
+const RouteFallback = () => (
+  <div className="mx-auto flex min-h-[40vh] max-w-6xl items-center justify-center px-6 py-16 text-sm text-zinc-400">
+    Loading module...
+  </div>
+);
+
+const LazyRoute = ({ children }) => (
+  <Suspense fallback={<RouteFallback />}>
+    {children}
+  </Suspense>
 );
 
 /* ===================== Pages ===================== */
@@ -1652,7 +1719,12 @@ const ProjectsPage = ({ projectsData }) => (
         ))}
       </div>
     </Section>
-    <CTABox title="Want your project here next?" subtitle="We can move fast on discovery and give you a clear roadmap within days." />
+    <CTABox
+      title="Want your project here next?"
+      subtitle="We can move fast on discovery and give you a clear roadmap within days."
+      secondaryLabel="Read renter architecture"
+      secondaryTo="/cases/renter-architecture"
+    />
   </>
 );
 
@@ -1756,7 +1828,7 @@ const PricingPage = ({ pricingData }) => (
                     </ul>
                   </div>
                   <div className="mt-auto pt-6">
-                    <BtnLink to="/contact" className="w-full bg-white text-black hover:bg-zinc-200">Get estimate in 24h</BtnLink>
+                    <BtnLink to="/contact" analyticsLabel="Get estimate in 24h" analyticsMeta={{ context: "pricing_tier" }} className="w-full bg-white text-black hover:bg-zinc-200">Get estimate in 24h</BtnLink>
                   </div>
                 </div>
               </TierCardClean>
@@ -1783,7 +1855,12 @@ const PricingPage = ({ pricingData }) => (
         ))}
       </div>
     </Section>
-    <CTABox title="Need a custom scope?" subtitle="Share your goals and we will craft a plan that fits budget and timeline." secondaryLabel="See tech" secondaryTo="/tech" />
+    <CTABox
+      title="Need a custom scope?"
+      subtitle="Share your goals and we will craft a plan that fits budget and timeline."
+      secondaryLabel="Use estimator"
+      secondaryTo="/estimate"
+    />
   </>
 );
 
@@ -1980,6 +2057,19 @@ export default function PortfolioSite() {
   const apiBase = (import.meta.env.VITE_API_BASE || "").replace(/\/$/, "");
   const [projectsData, setProjectsData] = useState(projectSeed);
   const [pricingData, setPricingData] = useState(pricingSeed);
+  const location = useLocation();
+  const lastTrackedPath = useRef("");
+
+  useEffect(() => {
+    if (lastTrackedPath.current === location.pathname) return;
+    lastTrackedPath.current = location.pathname;
+    trackPageView(location.pathname);
+  }, [location.pathname]);
+
+  useEffect(() => {
+    const meta = getMetaForPath(location.pathname);
+    applyMeta(meta);
+  }, [location.pathname]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -2031,6 +2121,12 @@ export default function PortfolioSite() {
           <Route path="/process" element={<ProcessPage />} />
           <Route path="/pricing" element={<PricingPage pricingData={pricingData} />} />
           <Route path="/tech" element={<TechPage />} />
+          <Route path="/engineering" element={<LazyRoute><EngineeringLandingPage /></LazyRoute>} />
+          <Route path="/architecture-preview" element={<LazyRoute><ArchitecturePreviewPage /></LazyRoute>} />
+          <Route path="/admin-first" element={<LazyRoute><AdminFirstPage /></LazyRoute>} />
+          <Route path="/production-ready" element={<LazyRoute><ProductionReadyPage /></LazyRoute>} />
+          <Route path="/estimate" element={<LazyRoute><EstimatePage /></LazyRoute>} />
+          <Route path="/cases/renter-architecture" element={<LazyRoute><RenterArchitectureCasePage /></LazyRoute>} />
           <Route path="/about" element={<AboutPage />} />
           <Route path="/testimonials" element={<TestimonialsPage />} />
           <Route path="/contact" element={<ContactPage apiBase={apiBase} />} />
