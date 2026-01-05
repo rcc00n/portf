@@ -108,9 +108,12 @@ if FRONTEND_DIST_DIR.exists():
     STATICFILES_DIRS.append(FRONTEND_DIST_DIR)
 
 STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
     "staticfiles": {
         "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
-    }
+    },
 }
 
 MEDIA_URL = os.getenv("DJANGO_MEDIA_URL", "/media/")
