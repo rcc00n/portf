@@ -299,7 +299,7 @@ const ImageCarousel = ({ images, alt = "Preview" }) => {
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.35, ease: "easeOut" }}
           draggable={false}
-          className="h-44 w-full object-cover"
+          className="h-44 w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
         />
       </div>
 
@@ -472,40 +472,92 @@ export default function PortfolioSite() {
               showAllProjects ? "" : "max-h-[560px] overflow-hidden pb-10"
             }`}
           >
-            {(showAllProjects ? projectsData : projectsData.slice(0, 3)).map((c, idx) => (
-              <motion.div key={c.title} {...fade} transition={{ ...fade.transition, delay: idx * 0.03 }} className="h-full">
-                <Card className="h-full flex flex-col">
-                  <div className="mb-3 flex items-center justify-between">
-                    <h3 className="text-xl font-semibold">{c.title}</h3>
-                    <span className="text-sm text-emerald-400/90">{c.impact}</span>
-                  </div>
+            {(showAllProjects ? projectsData : projectsData.slice(0, 3)).map((c, idx) => {
+              const rawLinks = Array.isArray(c.links) ? c.links.filter((l) => l?.href) : [];
+              const primaryUrl = c.url || c.website || c.link || rawLinks[0]?.href;
+              const hasPrimaryLink = primaryUrl && rawLinks.some((l) => l.href === primaryUrl);
+              const actionLinks = primaryUrl && !hasPrimaryLink
+                ? [{ label: "Visit site", href: primaryUrl }, ...rawLinks]
+                : rawLinks;
+              const isPrimaryExternal = primaryUrl ? /^https?:\/\//i.test(primaryUrl) : false;
+              const previewUrl = isPrimaryExternal ? primaryUrl : null;
 
-                  {c.images?.length ? (
-                    <ImageCarousel images={c.images} alt={c.title} />
-                  ) : c.url ? (
-                    <FaviconPreview url={c.url} />
-                  ) : (
-                    <div className="mb-4 h-44 w-full rounded-xl border border-white/10 bg-zinc-950/60 flex items-center justify-center text-zinc-500">Project preview</div>
-                  )}
-
-                  <p className="text-sm text-zinc-300">{c.blurb}</p>
-
-                  {c.tags?.length ? (
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      {c.tags.map((t) => <Badge key={t}>{t}</Badge>)}
+              return (
+                <motion.div key={c.title} {...fade} transition={{ ...fade.transition, delay: idx * 0.03 }} className="h-full">
+                  <Card
+                    className={[
+                      "group relative h-full overflow-hidden flex flex-col",
+                      "border-white/10 bg-zinc-900/60",
+                      "shadow-[0_18px_60px_rgba(0,0,0,.45)]",
+                      "transition-all duration-500 hover:-translate-y-1 hover:border-white/20 hover:shadow-[0_28px_90px_rgba(0,0,0,.55)]",
+                      primaryUrl ? "cursor-pointer focus-within:ring-2 focus-within:ring-white/20" : ""
+                    ].join(" ")}
+                  >
+                    {primaryUrl ? (
+                      <a
+                        href={primaryUrl}
+                        target={isPrimaryExternal ? "_blank" : undefined}
+                        rel={isPrimaryExternal ? "noreferrer" : undefined}
+                        aria-label={c.title ? `Open ${c.title}` : "Open project"}
+                        className="absolute inset-0 z-0"
+                      />
+                    ) : null}
+                    <div className="pointer-events-none absolute inset-0 z-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100">
+                      <div className="absolute -top-24 right-[-20%] h-56 w-56 rounded-full bg-emerald-500/10 blur-3xl" />
+                      <div className="absolute -bottom-24 left-[-20%] h-56 w-56 rounded-full bg-cyan-500/10 blur-3xl" />
                     </div>
-                  ) : null}
 
-                  <div className="mt-auto flex flex-wrap gap-3 pt-4">
-                    {c.links?.map((l) => (
-                      <Btn key={l.label} href={l.href} className="border border-white/15 text-white hover:bg-white/5 px-3 py-1.5 text-xs">
-                        {l.label}
-                      </Btn>
-                    ))}
-                  </div>
-                </Card>
-              </motion.div>
-            ))}
+                    <div className="relative z-10 flex h-full flex-col">
+                      <div className="mb-3 flex items-center justify-between gap-3">
+                        <h3 className="text-xl font-semibold">{c.title}</h3>
+                        {c.impact ? (
+                          <span className="rounded-full border border-emerald-400/20 bg-emerald-500/10 px-3 py-1 text-[11px] uppercase tracking-wide text-emerald-200/90">
+                            {c.impact}
+                          </span>
+                        ) : null}
+                      </div>
+
+                      {c.images?.length ? (
+                        <ImageCarousel images={c.images} alt={c.title} />
+                      ) : previewUrl ? (
+                        <FaviconPreview url={previewUrl} />
+                      ) : (
+                        <div className="mb-4 h-44 w-full rounded-xl border border-white/10 bg-zinc-950/60 flex items-center justify-center text-zinc-500">Project preview</div>
+                      )}
+
+                      <p className="text-sm text-zinc-300">{c.blurb}</p>
+
+                      {c.tags?.length ? (
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          {c.tags.map((t) => <Badge key={t}>{t}</Badge>)}
+                        </div>
+                      ) : null}
+
+                      <div className="mt-auto flex flex-wrap gap-3 pt-4">
+                        {actionLinks.map((l) => {
+                          const isExternal = l?.href ? /^https?:\/\//i.test(l.href) : false;
+                          const isPrimary = primaryUrl && l?.href === primaryUrl;
+                          return (
+                            <Btn
+                              key={`${l.label}-${l.href}`}
+                              href={l.href}
+                              target={isExternal ? "_blank" : undefined}
+                              rel={isExternal ? "noreferrer" : undefined}
+                              className={[
+                                "px-3 py-1.5 text-xs",
+                                isPrimary ? "bg-white text-black hover:bg-zinc-200" : "border border-white/15 text-white hover:bg-white/5"
+                              ].join(" ")}
+                            >
+                              {l.label}
+                            </Btn>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </Card>
+                </motion.div>
+              );
+            })}
           </div>
 
           {!showAllProjects && (
@@ -683,5 +735,3 @@ export default function PortfolioSite() {
     </div>
   );
 }
-
-
