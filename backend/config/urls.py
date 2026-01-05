@@ -4,11 +4,14 @@ from django.contrib import admin
 from django.urls import path, re_path
 
 from config.views import frontend_index, healthcheck
-from projects.views import project_list
+from leads.views import contact_request
+from projects.views import pricing_list, project_list
 
 urlpatterns = [
     path("admin/", admin.site.urls),
+    path("api/contacts/", contact_request, name="contact-request"),
     path("api/projects/", project_list, name="project-list"),
+    path("api/pricing/", pricing_list, name="pricing-list"),
     path("health/", healthcheck, name="healthcheck"),
 ]
 

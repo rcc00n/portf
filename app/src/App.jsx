@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Link, Route, Routes, useLocation } from "react-router-dom";
 import {
   Rocket,
   Workflow,
@@ -16,20 +17,22 @@ import {
   Bot,
   ChevronLeft,
   ChevronRight,
+  Menu,
+  X,
 } from "lucide-react";
 import raccoonGif from "./assets/raccoon.gif";
-import raccoonLogo from "./assets/raccoon-logo.png"; // наверху файла
+import raccoonLogo from "./assets/raccoon-logo.png";
 
 /* ===================== Data ===================== */
 const nav = [
-  { id: "services", label: "Services" },
-  { id: "projects", label: "Projects" },
-  { id: "process", label: "Process" },
-  { id: "pricing", label: "Pricing" },
-  { id: "stack", label: "Tech" },
-  { id: "about", label: "About" },
-  { id: "testimonials", label: "Testimonials" },
-  { id: "contact", label: "Contact" },
+  { id: "services", label: "Services", href: "/services", icon: Workflow, desc: "Product build + growth" },
+  { id: "projects", label: "Projects", href: "/projects", icon: Rocket, desc: "Selected case studies" },
+  { id: "process", label: "Process", href: "/process", icon: Gauge, desc: "Delivery rituals" },
+  { id: "pricing", label: "Pricing", href: "/pricing", icon: LineChart, desc: "Clear tiers" },
+  { id: "stack", label: "Tech", href: "/tech", icon: Braces, desc: "Stack and tooling" },
+  { id: "about", label: "About", href: "/about", icon: Sparkles, desc: "Studio story" },
+  { id: "testimonials", label: "Testimonials", href: "/testimonials", icon: Star, desc: "Client proof" },
+  { id: "contact", label: "Contact", href: "/contact", icon: Mail, desc: "Start a project" },
 ];
 
 const services = [
@@ -135,7 +138,7 @@ const projectSeed = [
   },
 ];
 
-const pricing = [
+const pricingSeed = [
   { tier: "CRM Basic", price: "$6k", info: "4–6 weeks · core features", points: ["Architecture & UX", "Main CRM features", "Basic analytics", "Deploy & docs"] },
   { tier: "CRM Standard", price: "$11k", info: "6–10 weeks · 2+ integrations", points: ["Advanced roles & reports", "Custom dashboards", "Sales pipeline automation", "Observability & alerts"], featured: true },
   { tier: "CRM Pro", price: "$18k", info: "10–14 weeks · scale", points: ["Complex integrations", "Full analytics suite", "Marketing funnels", "Support & SLA"] },
@@ -157,6 +160,128 @@ const testimonials = [
   { name: "CEO, FinTech", quote: "The team mapped our domains, wired the CRM to our services and delivered the reporting we always lacked." },
   { name: "CMO, D2C", quote: "Creative + performance + analytics — the puzzle finally clicked and growth became predictable." },
   { name: "COO, Logistics", quote: "We cut idle time and empty rides; dashboards are clear even for drivers — magic." },
+];
+
+const engagementModels = [
+  {
+    title: "Product Squad",
+    desc: "Cross-functional team to ship roadmap in weeks, not quarters.",
+    points: ["PM + Tech Lead", "Design system", "Weekly demos"],
+  },
+  {
+    title: "CRM Transformation",
+    desc: "Audit, rebuild, and integrate the operations layer of your business.",
+    points: ["Data migration", "Role-based access", "SLA + observability"],
+  },
+  {
+    title: "Growth Pod",
+    desc: "Performance marketing with analytics that ties spend to revenue.",
+    points: ["Channel strategy", "Experiment cadence", "LTV/CAC modeling"],
+  },
+];
+
+const serviceStandards = [
+  "Senior-only delivery team",
+  "Security and compliance reviews",
+  "QA automation in every sprint",
+  "Product analytics from day one",
+  "Production-grade monitoring",
+  "Clear documentation and handoff",
+];
+
+const projectOutcomes = [
+  { title: "Revenue acceleration", metric: "3.1x", desc: "Average uplift from CRM and growth revamps." },
+  { title: "Operational efficiency", metric: "27%", desc: "Shorter sales cycles with automation." },
+  { title: "Conversion lift", metric: "38%", desc: "UX and performance improvements in funnels." },
+];
+
+const processSteps = [
+  {
+    title: "Discovery",
+    desc: "Align on outcomes, constraints, and technical risk early.",
+    points: ["Stakeholder interviews", "Success metrics", "Risk map"],
+  },
+  {
+    title: "Strategy",
+    desc: "Define the product shape and the measurable win.",
+    points: ["Roadmap", "Information architecture", "Technical plan"],
+  },
+  {
+    title: "Design",
+    desc: "Prototype fast, lock the system, test with real users.",
+    points: ["UX flows", "Design system", "Usability tests"],
+  },
+  {
+    title: "Build",
+    desc: "Ship with velocity and quality controls in every sprint.",
+    points: ["2-week sprints", "QA automation", "Security review"],
+  },
+  {
+    title: "Launch + Grow",
+    desc: "Release, monitor, and optimize the metrics that matter.",
+    points: ["Analytics setup", "Experiments", "Support playbooks"],
+  },
+];
+
+const processRituals = [
+  { title: "Weekly demos", desc: "Stakeholder alignment every 7 days." },
+  { title: "Decision log", desc: "Clear records for scope, risks, and trade-offs." },
+  { title: "Release cadence", desc: "Predictable launches without crunch." },
+];
+
+const pricingPrinciples = [
+  { title: "Fixed scope or squad", desc: "Choose milestones or a dedicated team." },
+  { title: "Transparent change control", desc: "No surprises when scope shifts." },
+  { title: "Launch support included", desc: "Stabilization and monitoring post-launch." },
+  { title: "Value-based options", desc: "Tie budgets to measurable outcomes." },
+];
+
+const pricingAddOns = [
+  "Growth experiments and media buying",
+  "24/7 on-call and SLA",
+  "Security and compliance audits",
+  "Data warehouse + BI",
+];
+
+const stackGroups = [
+  { title: "Product", items: ["TypeScript", "React/Next.js", "Tailwind", "Framer Motion", "Radix UI"] },
+  { title: "Backend", items: ["Node", "Python/Django", "Go", "Ruby/Rails", "gRPC"] },
+  { title: "Data", items: ["Postgres", "MySQL", "MongoDB", "Redis", "Elasticsearch", "Kafka"] },
+  { title: "Infra", items: ["Docker", "K8s", "Terraform", "AWS/GCP/Azure", "Vercel/Netlify"] },
+  { title: "Quality", items: ["Cypress", "Playwright", "Vitest/Jest", "Storybook", "OpenAPI/Swagger"] },
+  { title: "AI", items: ["LangChain", "RAG", "Vector DBs", "Prompt evals"] },
+];
+
+const engineeringPrinciples = [
+  { title: "Performance budgets", desc: "Every screen ships with clear speed targets." },
+  { title: "Security by default", desc: "Threat modeling and least-privilege access." },
+  { title: "Observability first", desc: "Logs, traces, and metrics wired in from day one." },
+];
+
+const aboutValues = [
+  { title: "Ownership", desc: "We act like partners, not vendors." },
+  { title: "Signal over noise", desc: "Decisions backed by data and user insight." },
+  { title: "Design with intent", desc: "Every pixel has a reason." },
+  { title: "Calm execution", desc: "Senior teams keep the pace sustainable." },
+];
+
+const testimonialsExtended = [
+  ...testimonials,
+  { name: "VP Product, SaaS", quote: "They shipped a full redesign and reduced churn within one quarter." },
+  { name: "Founder, HealthTech", quote: "Fast discovery, sharp decisions, and a product the team loves to run." },
+  { name: "Head of Growth, Marketplace", quote: "Performance spend became predictable thanks to their analytics stack." },
+];
+
+const testimonialHighlights = [
+  { label: "Avg. NPS", value: "68" },
+  { label: "ROI in 6 mo", value: "3.4x" },
+  { label: "Client retention", value: "92%" },
+];
+
+const contactSteps = [
+  { title: "Intro call", desc: "30 minutes to align on goals." },
+  { title: "Scope brief", desc: "We map features, tech, and risks." },
+  { title: "Proposal", desc: "Timeline, budget, and team in 3-5 days." },
 ];
 
 /* ===================== UI helpers ===================== */
@@ -199,8 +324,8 @@ const Section = ({ id, children, className = "" }) => (
   </section>
 );
 
-const Badge = ({ children }) => (
-  <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/70 backdrop-blur-sm">{children}</span>
+const Badge = ({ children, className = "" }) => (
+  <span className={`rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/70 backdrop-blur-sm ${className}`}>{children}</span>
 );
 
 const Card = ({ children, className = "", ...props }) => (
@@ -213,12 +338,22 @@ const H2 = ({ children }) => (
   </motion.h2>
 );
 
-const Btn = ({ as: As = 'a', className = '', children, ...props }) => (
-  <motion.a whileHover={{ y: -2, scale: 1.02 }} whileTap={{ scale: 0.98 }} {...props} className={`rounded-xl px-5 py-3 font-medium transition-colors ${className}`}>
-    {children}
-  </motion.a>
-);
+const Btn = ({ as = "a", className = "", children, ...props }) => {
+  const Comp = as === "button" ? motion.button : motion.a;
+  return (
+    <Comp whileHover={{ y: -2, scale: 1.02 }} whileTap={{ scale: 0.98 }} {...props} className={`rounded-xl px-5 py-3 font-medium transition-colors ${className}`}>
+      {children}
+    </Comp>
+  );
+};
 
+const BtnLink = ({ to, className = "", children, ...props }) => (
+  <motion.span whileHover={{ y: -2, scale: 1.02 }} whileTap={{ scale: 0.98 }} className="inline-flex">
+    <Link to={to} className={`inline-flex items-center justify-center rounded-xl px-5 py-3 font-medium transition-colors ${className}`} {...props}>
+      {children}
+    </Link>
+  </motion.span>
+);
 
 const Logo = ({ size = "h-12 w-12 sm:h-14 sm:w-14" }) => (
   <div className="flex items-center gap-3">
@@ -232,18 +367,7 @@ const Logo = ({ size = "h-12 w-12 sm:h-14 sm:w-14" }) => (
   </div>
 );
 
-
 /* ===== Pricing card variants ===== */
-const TierCard = ({ children, featured = false }) => (
-  <div className={`group relative h-full rounded-2xl p-[1px] bg-gradient-to-b from-white/15 via-white/8 to-transparent ${featured ? 'ring-2 ring-white/30' : ''}`}>
-    <div className="absolute inset-0 -z-10 rounded-2xl opacity-0 blur-2xl transition-opacity duration-700 group-hover:opacity-100 bg-[radial-gradient(600px_200px_at_50%_-10%,rgba(147,197,253,0.35),transparent)]" />
-    <Card className="relative h-full bg-zinc-950/70">
-      <div className="absolute -top-24 left-1/2 h-48 w-[110%] -translate-x-1/2 bg-[radial-gradient(closest-side,rgba(255,255,255,.07),transparent)]" />
-      <div className="relative z-10">{children}</div>
-    </Card>
-  </div>
-);
-
 const TierCardClean = ({ children, featured = false }) => (
   <div
     className={[
@@ -270,6 +394,74 @@ const StatPill = ({ icon: Icon, children }) => (
   <li className="flex items-center gap-2 rounded-xl bg-white/6 p-3 text-sm text-zinc-200">
     <Icon className="h-4 w-4 opacity-90" /> {children}
   </li>
+);
+
+const PageHero = ({ kicker, title, subtitle, primary, secondary, stats = [] }) => (
+  <header className="relative overflow-hidden">
+    <Glow />
+    <div className="mx-auto flex max-w-7xl flex-col items-center gap-6 px-6 pb-16 pt-20 text-center sm:pb-20">
+      {kicker ? (
+        <motion.div {...fade} className="flex flex-wrap items-center justify-center gap-3">
+          <Badge>{kicker}</Badge>
+          <Badge className="border-white/15 text-white/80">Senior-only delivery</Badge>
+        </motion.div>
+      ) : null}
+      <motion.h1 {...fade} className="bg-gradient-to-b from-white to-zinc-400 bg-clip-text text-4xl font-semibold leading-tight text-transparent sm:text-6xl">
+        {title}
+      </motion.h1>
+      <motion.p {...fade} className="max-w-2xl text-lg text-zinc-300">
+        {subtitle}
+      </motion.p>
+      {(primary || secondary) ? (
+        <motion.div {...fade} className="flex flex-wrap items-center justify-center gap-3">
+          {primary ? (
+            <BtnLink to={primary.to} className="bg-white text-black hover:bg-zinc-200">
+              {primary.label}
+            </BtnLink>
+          ) : null}
+          {secondary ? (
+            <BtnLink to={secondary.to} className="border border-white/15 text-white hover:bg-white/5">
+              {secondary.label}
+            </BtnLink>
+          ) : null}
+        </motion.div>
+      ) : null}
+      {stats.length ? (
+        <div className="mx-auto mt-6 grid w-full max-w-4xl grid-cols-1 gap-4 sm:grid-cols-3">
+          {stats.map((stat, idx) => (
+            <motion.div key={`${stat.label}-${idx}`} {...fade} transition={{ ...fade.transition, delay: idx * 0.05 }}>
+              <div className="rounded-2xl border border-white/10 bg-white/5 px-5 py-4 text-left">
+                <div className="text-2xl font-semibold text-white">{stat.value}</div>
+                <div className="text-xs uppercase tracking-wide text-zinc-400">{stat.label}</div>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      ) : null}
+    </div>
+  </header>
+);
+
+const CTABox = ({ title, subtitle, primaryLabel = "Start a project", primaryTo = "/contact", secondaryLabel = "See pricing", secondaryTo = "/pricing" }) => (
+  <Section className="pt-8">
+    <div className="relative">
+      <div className="absolute inset-0 -z-10 rounded-3xl bg-[radial-gradient(80%_120%_at_50%_-20%,rgba(99,102,241,0.35),transparent)]" />
+      <Card className="relative overflow-hidden bg-zinc-950/70">
+        <div className="absolute inset-0 opacity-60 bg-[radial-gradient(circle_at_10%_10%,rgba(56,189,248,0.15),transparent_45%),radial-gradient(circle_at_90%_0%,rgba(168,85,247,0.18),transparent_50%)]" />
+        <div className="relative z-10 flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+          <div>
+            <div className="text-xs uppercase tracking-[0.3em] text-zinc-500">Next step</div>
+            <div className="mt-2 text-2xl font-semibold text-white">{title}</div>
+            <p className="mt-2 max-w-xl text-sm text-zinc-300">{subtitle}</p>
+          </div>
+          <div className="flex flex-wrap gap-3">
+            <BtnLink to={primaryTo} className="bg-white text-black hover:bg-zinc-200">{primaryLabel}</BtnLink>
+            <BtnLink to={secondaryTo} className="border border-white/15 text-white hover:bg-white/5">{secondaryLabel}</BtnLink>
+          </div>
+        </div>
+      </Card>
+    </div>
+  </Section>
 );
 
 /* ===== Favicon fallback preview ===== */
@@ -362,6 +554,166 @@ const ImageCarousel = ({ images, alt = "Preview", heightClass = "h-44", showInde
   );
 };
 
+const ScrollToTop = () => {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+  return null;
+};
+
+const MobileNav = ({ open, onClose }) => {
+  const location = useLocation();
+
+  useEffect(() => {
+    if (!open) return undefined;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [open]);
+
+  useEffect(() => {
+    if (open) onClose();
+  }, [location.pathname]);
+
+  return (
+    <AnimatePresence>
+      {open ? (
+        <>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={onClose}
+            className="fixed inset-0 z-[60] bg-black/70 backdrop-blur-sm"
+          />
+          <motion.aside
+            initial={{ x: "100%" }}
+            animate={{ x: 0 }}
+            exit={{ x: "100%" }}
+            transition={{ type: "spring", stiffness: 260, damping: 30 }}
+            className="fixed right-0 top-0 z-[70] h-full w-[86vw] max-w-sm overflow-y-auto border-l border-white/10 bg-zinc-950/95 p-6 shadow-2xl"
+            aria-label="Mobile navigation"
+          >
+            <div className="flex items-center justify-between">
+              <Link to="/" className="flex items-center gap-2" onClick={onClose}>
+                <Logo size="h-10 w-10" />
+              </Link>
+              <button
+                type="button"
+                onClick={onClose}
+                className="rounded-full border border-white/10 bg-white/5 p-2 text-white/80 hover:bg-white/10"
+                aria-label="Close menu"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="mt-8 space-y-3">
+              {nav.map((item, idx) => {
+                const active = location.pathname === item.href;
+                const Icon = item.icon;
+                return (
+                  <motion.div
+                    key={item.id}
+                    initial={{ opacity: 0, x: 16 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: idx * 0.05 }}
+                  >
+                    <Link
+                      to={item.href}
+                      onClick={onClose}
+                      className={`group flex items-center gap-4 rounded-2xl border border-white/10 px-4 py-3 transition ${active ? "bg-white/10" : "bg-white/5 hover:bg-white/10"}`}
+                    >
+                      <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-black/40">
+                        <Icon className="h-5 w-5" />
+                      </span>
+                      <span className="flex flex-col">
+                        <span className="text-sm font-semibold text-white">{item.label}</span>
+                        <span className="text-xs text-zinc-400">{item.desc}</span>
+                      </span>
+                    </Link>
+                  </motion.div>
+                );
+              })}
+            </div>
+
+            <div className="mt-10 rounded-2xl border border-white/10 bg-white/5 p-5">
+              <div className="text-xs uppercase tracking-[0.3em] text-zinc-500">Availability</div>
+              <div className="mt-3 text-xl font-semibold text-white">Next slot in 2-3 weeks</div>
+              <p className="mt-2 text-sm text-zinc-300">We take a limited number of partners per quarter.</p>
+              <div className="mt-4">
+                <BtnLink to="/contact" className="w-full bg-white text-black hover:bg-zinc-200">Start a project</BtnLink>
+              </div>
+              <div className="mt-4 text-xs text-zinc-400">hello@studio.dev</div>
+            </div>
+          </motion.aside>
+        </>
+      ) : null}
+    </AnimatePresence>
+  );
+};
+
+const SiteNav = () => {
+  const location = useLocation();
+  const [open, setOpen] = useState(false);
+
+  return (
+    <>
+      <div className="sticky top-0 z-50 border-b border-white/10 bg-black/70 backdrop-blur supports-[backdrop-filter]:bg-black/55">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
+          <Link to="/" className="flex items-center gap-2 font-semibold tracking-wide">
+            <Logo />
+          </Link>
+          <nav className="hidden gap-6 md:flex">
+            {nav.map((n) => {
+              const active = location.pathname === n.href;
+              return (
+                <Link
+                  key={n.id}
+                  to={n.href}
+                  className={`text-sm transition-colors ${active ? "text-white" : "text-zinc-300 hover:text-white"}`}
+                >
+                  {n.label}
+                </Link>
+              );
+            })}
+          </nav>
+          <div className="flex items-center gap-3">
+            <div className="hidden md:block">
+              <BtnLink to="/contact" className="bg-white text-black hover:bg-zinc-200 px-4 py-2 text-sm">Start a project</BtnLink>
+            </div>
+            <button
+              type="button"
+              onClick={() => setOpen(true)}
+              className="inline-flex items-center justify-center rounded-full border border-white/10 bg-white/5 p-2 text-white/80 hover:bg-white/10 md:hidden"
+              aria-label="Open menu"
+            >
+              <Menu className="h-5 w-5" />
+            </button>
+          </div>
+        </div>
+      </div>
+      <MobileNav open={open} onClose={() => setOpen(false)} />
+    </>
+  );
+};
+
+const SiteFooter = () => (
+  <footer className="border-t border-white/10 py-10">
+    <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-6 sm:flex-row">
+      <div className="text-sm text-zinc-400">© {new Date().getFullYear()} studio — CRM, Software, SMM, Marketing</div>
+      <div className="flex items-center gap-3 text-xs text-zinc-500">
+        <a href="#" className="hover:text-zinc-300">Privacy Policy</a>
+        <span className="opacity-50">•</span>
+        <a href="#" className="hover:text-zinc-300">Terms</a>
+      </div>
+    </div>
+  </footer>
+);
+
 const RaccoonPop = ({ gif, targetId }) => {
   const [visible, setVisible] = React.useState(false);
   const timers = React.useRef([]);
@@ -377,13 +729,13 @@ const RaccoonPop = ({ gif, targetId }) => {
 
       cooling.current = true;
       timers.current.push(
-        setTimeout(() => setVisible(true), 1000)   // show через 1с
+        setTimeout(() => setVisible(true), 1000)
       );
       timers.current.push(
-        setTimeout(() => setVisible(false), 6000)  // hide через 5с
+        setTimeout(() => setVisible(false), 6000)
       );
       timers.current.push(
-        setTimeout(() => { cooling.current = false; }, 20000) // кулдаун
+        setTimeout(() => { cooling.current = false; }, 20000)
       );
     };
 
@@ -413,28 +765,11 @@ const RaccoonPop = ({ gif, targetId }) => {
   );
 };
 
-/* ===================== Page ===================== */
-export default function PortfolioSite() {
-  const [showAll, setShowAll] = useState(false);            // Services
-  const [showAllProjects, setShowAllProjects] = useState(false); // Projects
+/* ===================== Pages ===================== */
+const HomePage = ({ projectsData, pricingData }) => {
+  const [showAll, setShowAll] = useState(false);
+  const [showAllProjects, setShowAllProjects] = useState(false);
   const [activeProject, setActiveProject] = useState(null);
-  const apiBase = (import.meta.env.VITE_API_BASE || "").replace(/\/$/, "");
-  const [projectsData, setProjectsData] = useState(projectSeed);
-
-  useEffect(() => {
-    const controller = new AbortController();
-    fetch(`${apiBase}/api/projects/`, { signal: controller.signal })
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => {
-        const payload = Array.isArray(data) ? data : data?.projects;
-        if (Array.isArray(payload) && payload.length > 0) {
-          setProjectsData(payload);
-        }
-      })
-      .catch(() => {});
-
-    return () => controller.abort();
-  }, [apiBase]);
 
   useEffect(() => {
     if (!activeProject) return undefined;
@@ -471,21 +806,7 @@ export default function PortfolioSite() {
   };
 
   return (
-    <div className="min-h-screen scroll-smooth bg-black text-zinc-100 antialiased">
-      {/* Nav */}
-      
-      <div className="sticky top-0 z-50 border-b border-white/10 bg-black/70 backdrop-blur supports-[backdrop-filter]:bg-black/55">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-          <a href="#top" className="flex items-center gap-2 font-semibold tracking-wide"><Logo /></a>
-          <nav className="hidden gap-6 md:flex">
-            {nav.map((n) => (
-              <a key={n.id} href={`#${n.id}`} className="text-sm text-zinc-300 hover:text-white transition-colors">{n.label}</a>
-            ))}
-          </nav>
-          <Btn href="#contact" className="bg-white text-black hover:bg-zinc-200 px-4 py-2 text-sm">Start a project</Btn>
-        </div>
-      </div>
-
+    <>
       {/* Hero */}
       <header id="top" className="relative overflow-hidden">
         <Glow />
@@ -791,34 +1112,37 @@ export default function PortfolioSite() {
         <Glow />
         <H2>Pricing</H2>
         <div className="grid grid-cols-1 gap-6 md:grid-cols-5">
-          {pricing.map((p, i) => (
-            <motion.div key={p.tier} {...fade} transition={{ ...fade.transition, delay: i * 0.04 }} className="h-full">
-              <TierCardClean featured={p.featured}>
-                <div className="flex h-full flex-col">
-                  <div>
-                    <div className="mb-2 flex items-center justify-between">
-                      <div className="text-xs uppercase tracking-wide text-zinc-400">{p.tier}</div>
-                      {p.featured && (<span className="rounded-full bg-white/12 px-2 py-0.5 text-[10px] text-white/95">Most popular</span>)}
+          {pricingData.map((p, i) => {
+            const points = Array.isArray(p.points) ? p.points : [];
+            return (
+              <motion.div key={`${p.tier}-${i}`} {...fade} transition={{ ...fade.transition, delay: i * 0.04 }} className="h-full">
+                <TierCardClean featured={p.featured}>
+                  <div className="flex h-full flex-col">
+                    <div>
+                      <div className="mb-2 flex items-center justify-between">
+                        <div className="text-xs uppercase tracking-wide text-zinc-400">{p.tier}</div>
+                        {p.featured && (<span className="rounded-full bg-white/12 px-2 py-0.5 text-[10px] text-white/95">Most popular</span>)}
+                      </div>
+                      <div className="mb-1 text-5xl font-extrabold tracking-tight bg-gradient-to-b from-white to-zinc-300 bg-clip-text text-transparent">{p.price}</div>
+                      <div className="mb-5 text-sm text-zinc-400">{p.info}</div>
+                      <div className="mb-6 h-px w-full bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+                      <ul className="space-y-2 text-sm text-zinc-300">
+                        {points.map((pt, idx) => (
+                          <li key={`${p.tier}-${idx}`} className="flex items-start gap-2">
+                            <ShieldCheck className="mt-0.5 h-4 w-4 opacity-90" />
+                            <span>{pt}</span>
+                          </li>
+                        ))}
+                      </ul>
                     </div>
-                    <div className="mb-1 text-5xl font-extrabold tracking-tight bg-gradient-to-b from-white to-zinc-300 bg-clip-text text-transparent">{p.price}</div>
-                    <div className="mb-5 text-sm text-zinc-400">{p.info}</div>
-                    <div className="mb-6 h-px w-full bg-gradient-to-r from-transparent via-white/20 to-transparent" />
-                    <ul className="space-y-2 text-sm text-zinc-300">
-                      {p.points.map((pt) => (
-                        <li key={pt} className="flex items-start gap-2">
-                          <ShieldCheck className="mt-0.5 h-4 w-4 opacity-90" />
-                          <span>{pt}</span>
-                        </li>
-                      ))}
-                    </ul>
+                    <div className="mt-auto pt-6">
+                      <Btn href="#contact" className="w-full bg-white text-black hover:bg-zinc-200">Choose</Btn>
+                    </div>
                   </div>
-                  <div className="mt-auto pt-6">
-                    <Btn href="#contact" className="w-full bg-white text-black hover:bg-zinc-200">Choose</Btn>
-                  </div>
-                </div>
-              </TierCardClean>
-            </motion.div>
-          ))}
+                </TierCardClean>
+              </motion.div>
+            );
+          })}
         </div>
       </Section>
 
@@ -902,22 +1226,570 @@ export default function PortfolioSite() {
           </form>
         </Card>
       </Section>
+    </>
+  );
+};
 
-      <footer className="border-t border-white/10 py-10">
-        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-6 sm:flex-row">
-          <div className="text-sm text-zinc-400">© {new Date().getFullYear()} studio — CRM, Software, SMM, Marketing</div>
-          <div className="flex items-center gap-3 text-xs text-zinc-500">
-            <a href="#" className="hover:text-zinc-300">Privacy Policy</a>
-            <span className="opacity-50">•</span>
-            <a href="#" className="hover:text-zinc-300">Terms</a>
-          
+const ServicesPage = () => (
+  <>
+    <PageHero
+      kicker="Services"
+      title="Senior teams that ship product, not slides"
+      subtitle="We lead end-to-end delivery from discovery to growth. Expect sharp decisions, modern craft, and measurable outcomes."
+      primary={{ label: "Start a project", to: "/contact" }}
+      secondary={{ label: "See projects", to: "/projects" }}
+      stats={[
+        { label: "Avg. delivery", value: "10-14 w" },
+        { label: "Senior specialists", value: "15+" },
+        { label: "Uptime targets", value: "99.95%" },
+      ]}
+    />
+    <Section>
+      <Glow />
+      <H2>Service tracks</H2>
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+        {services.map((s, idx) => (
+          <motion.div key={s.title} {...fade} transition={{ ...fade.transition, delay: idx * 0.04 }}>
+            <Card className="h-full">
+              <div className="mb-4 flex items-center gap-3"><s.icon className="h-6 w-6 text-white" /><h3 className="text-lg font-semibold">{s.title}</h3></div>
+              <p className="mb-4 text-sm text-zinc-300">{s.desc}</p>
+              <div className="flex flex-wrap gap-2">{s.tags.map((t) => (<Badge key={t}>{t}</Badge>))}</div>
+            </Card>
+          </motion.div>
+        ))}
+      </div>
+    </Section>
+    <Section>
+      <Glow />
+      <H2>Engagement models</H2>
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+        {engagementModels.map((model, idx) => (
+          <motion.div key={model.title} {...fade} transition={{ ...fade.transition, delay: idx * 0.05 }}>
+            <Card className="h-full">
+              <div className="text-xs uppercase tracking-[0.3em] text-zinc-500">Model</div>
+              <h3 className="mt-3 text-xl font-semibold">{model.title}</h3>
+              <p className="mt-3 text-sm text-zinc-300">{model.desc}</p>
+              <ul className="mt-5 space-y-2 text-sm text-zinc-300">
+                {model.points.map((pt) => (
+                  <li key={pt} className="flex items-center gap-2"><ShieldCheck className="h-4 w-4 opacity-80" /> {pt}</li>
+                ))}
+              </ul>
+            </Card>
+          </motion.div>
+        ))}
+      </div>
+    </Section>
+    <Section>
+      <Glow />
+      <H2>Delivery standards</H2>
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+        <Card className="h-full">
+          <p className="text-sm text-zinc-300">Every engagement ships with a senior-only team, strict QA, and a performance baseline. You get reliable releases and documentation that makes handoff painless.</p>
+          <ul className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
+            {serviceStandards.map((item) => (
+              <li key={item} className="flex items-center gap-2 text-sm text-zinc-200"><ShieldCheck className="h-4 w-4 opacity-80" /> {item}</li>
+            ))}
+          </ul>
+        </Card>
+        <Card className="h-full">
+          <div className="text-xs uppercase tracking-[0.3em] text-zinc-500">Guarantees</div>
+          <div className="mt-4 space-y-3 text-sm text-zinc-300">
+            <p>Weekly demos and a decision log keep stakeholders aligned.</p>
+            <p>Clear risk tracking with mitigation steps visible in every sprint.</p>
+            <p>We stay on the roadmap and surface trade-offs early.</p>
           </div>
+          <div className="mt-6 flex flex-wrap gap-2">
+            <Badge>Senior QA</Badge>
+            <Badge>Security review</Badge>
+            <Badge>Analytics setup</Badge>
+          </div>
+        </Card>
+      </div>
+    </Section>
+    <CTABox title="Ready to map scope and timelines?" subtitle="Share your goals and we will return with a plan, budget, and launch date." />
+  </>
+);
+
+const ProjectsPage = ({ projectsData }) => (
+  <>
+    <PageHero
+      kicker="Projects"
+      title="Case studies with measurable impact"
+      subtitle="We design, build, and grow digital products that move real metrics. Here is a selection of recent work."
+      primary={{ label: "Start a project", to: "/contact" }}
+      secondary={{ label: "See services", to: "/services" }}
+      stats={[
+        { label: "Launches", value: "120+" },
+        { label: "Industries", value: "6" },
+        { label: "Avg. uplift", value: "38%" },
+      ]}
+    />
+    <Section>
+      <Glow />
+      <H2>Selected work</H2>
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+        {projectsData.map((project, idx) => {
+          const { primaryUrl, actionLinks, previewUrl } = getProjectMeta(project);
+          return (
+            <motion.div key={project.title} {...fade} transition={{ ...fade.transition, delay: idx * 0.04 }}>
+              <Card className="group relative h-full overflow-hidden">
+                <div className="mb-3 flex items-center justify-between gap-3">
+                  <h3 className="text-xl font-semibold">{project.title}</h3>
+                  {project.impact ? (
+                    <span className="rounded-full border border-emerald-400/20 bg-emerald-500/10 px-3 py-1 text-[11px] uppercase tracking-wide text-emerald-200/90">
+                      {project.impact}
+                    </span>
+                  ) : null}
+                </div>
+                {project.images?.length ? (
+                  <ImageCarousel images={project.images} alt={project.title} />
+                ) : previewUrl ? (
+                  <FaviconPreview url={previewUrl} />
+                ) : (
+                  <div className="mb-4 h-44 w-full rounded-xl border border-white/10 bg-zinc-950/60 flex items-center justify-center text-zinc-500">Project preview</div>
+                )}
+                <p className="text-sm text-zinc-300">{project.blurb}</p>
+                {project.tags?.length ? (
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {project.tags.map((t) => <Badge key={t}>{t}</Badge>)}
+                  </div>
+                ) : null}
+                <div className="mt-4 flex flex-wrap gap-3">
+                  {actionLinks.map((l) => {
+                    const isExternal = l?.href ? isExternalUrl(l.href) : false;
+                    const isPrimary = primaryUrl && l?.href === primaryUrl;
+                    return (
+                      <Btn
+                        key={`${l.label}-${l.href}`}
+                        href={l.href}
+                        target={isExternal ? "_blank" : undefined}
+                        rel={isExternal ? "noreferrer" : undefined}
+                        className={[
+                          "px-3 py-1.5 text-xs",
+                          isPrimary ? "bg-white text-black hover:bg-zinc-200" : "border border-white/15 text-white hover:bg-white/5"
+                        ].join(" ")}
+                      >
+                        {l.label}
+                      </Btn>
+                    );
+                  })}
+                </div>
+              </Card>
+            </motion.div>
+          );
+        })}
+      </div>
+    </Section>
+    <Section>
+      <Glow />
+      <H2>Outcomes we optimize for</H2>
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+        {projectOutcomes.map((outcome, idx) => (
+          <motion.div key={outcome.title} {...fade} transition={{ ...fade.transition, delay: idx * 0.05 }}>
+            <Card className="h-full">
+              <div className="text-3xl font-semibold text-white">{outcome.metric}</div>
+              <div className="mt-2 text-sm uppercase tracking-wide text-zinc-400">{outcome.title}</div>
+              <p className="mt-3 text-sm text-zinc-300">{outcome.desc}</p>
+            </Card>
+          </motion.div>
+        ))}
+      </div>
+    </Section>
+    <CTABox title="Want your project here next?" subtitle="We can move fast on discovery and give you a clear roadmap within days." />
+  </>
+);
+
+const ProcessPage = () => (
+  <>
+    <PageHero
+      kicker="Process"
+      title="A delivery engine built for clarity"
+      subtitle="Our process keeps stakeholders aligned, risks visible, and releases predictable. It is calm, transparent, and senior-led."
+      primary={{ label: "Start a project", to: "/contact" }}
+      secondary={{ label: "See pricing", to: "/pricing" }}
+      stats={[
+        { label: "Cadence", value: "2-week" },
+        { label: "Demo rhythm", value: "Weekly" },
+        { label: "Launches", value: "On time" },
+      ]}
+    />
+    <Section>
+      <Glow />
+      <H2>Five phases, no surprises</H2>
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-5">
+        {processSteps.map((step, idx) => (
+          <motion.div key={step.title} {...fade} transition={{ ...fade.transition, delay: idx * 0.04 }}>
+            <Card className="h-full">
+              <div className="text-xs uppercase tracking-[0.3em] text-zinc-500">Step {idx + 1}</div>
+              <h3 className="mt-3 text-lg font-semibold">{step.title}</h3>
+              <p className="mt-3 text-sm text-zinc-300">{step.desc}</p>
+              <ul className="mt-4 space-y-2 text-sm text-zinc-300">
+                {step.points.map((pt) => (
+                  <li key={pt} className="flex items-center gap-2"><ShieldCheck className="h-4 w-4 opacity-80" /> {pt}</li>
+                ))}
+              </ul>
+            </Card>
+          </motion.div>
+        ))}
+      </div>
+    </Section>
+    <Section>
+      <Glow />
+      <H2>Operating rhythm</H2>
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+        {processRituals.map((ritual, idx) => (
+          <motion.div key={ritual.title} {...fade} transition={{ ...fade.transition, delay: idx * 0.05 }}>
+            <Card className="h-full">
+              <div className="text-xl font-semibold">{ritual.title}</div>
+              <p className="mt-3 text-sm text-zinc-300">{ritual.desc}</p>
+            </Card>
+          </motion.div>
+        ))}
+      </div>
+    </Section>
+    <CTABox title="Ready to kick off discovery?" subtitle="We can start with a 1-week sprint to align goals, risks, and roadmap." secondaryLabel="See services" secondaryTo="/services" />
+  </>
+);
+
+const PricingPage = ({ pricingData }) => (
+  <>
+    <PageHero
+      kicker="Pricing"
+      title="Transparent tiers with senior delivery"
+      subtitle="Choose a fixed scope or a dedicated squad. Every tier comes with senior-only execution and clear reporting."
+      primary={{ label: "Start a project", to: "/contact" }}
+      secondary={{ label: "See process", to: "/process" }}
+      stats={[
+        { label: "Quote time", value: "24h" },
+        { label: "Scoping", value: "Fixed" },
+        { label: "Support", value: "Included" },
+      ]}
+    />
+    <Section>
+      <Glow />
+      <H2>Pricing tiers</H2>
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-5">
+        {pricingData.map((p, i) => {
+          const points = Array.isArray(p.points) ? p.points : [];
+          return (
+            <motion.div key={`${p.tier}-${i}`} {...fade} transition={{ ...fade.transition, delay: i * 0.04 }} className="h-full">
+              <TierCardClean featured={p.featured}>
+                <div className="flex h-full flex-col">
+                  <div>
+                    <div className="mb-2 flex items-center justify-between">
+                      <div className="text-xs uppercase tracking-wide text-zinc-400">{p.tier}</div>
+                      {p.featured && (<span className="rounded-full bg-white/12 px-2 py-0.5 text-[10px] text-white/95">Most popular</span>)}
+                    </div>
+                    <div className="mb-1 text-5xl font-extrabold tracking-tight bg-gradient-to-b from-white to-zinc-300 bg-clip-text text-transparent">{p.price}</div>
+                    <div className="mb-5 text-sm text-zinc-400">{p.info}</div>
+                    <div className="mb-6 h-px w-full bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+                    <ul className="space-y-2 text-sm text-zinc-300">
+                      {points.map((pt, idx) => (
+                        <li key={`${p.tier}-${idx}`} className="flex items-start gap-2">
+                          <ShieldCheck className="mt-0.5 h-4 w-4 opacity-90" />
+                          <span>{pt}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                  <div className="mt-auto pt-6">
+                    <BtnLink to="/contact" className="w-full bg-white text-black hover:bg-zinc-200">Choose</BtnLink>
+                  </div>
+                </div>
+              </TierCardClean>
+            </motion.div>
+          );
+        })}
+      </div>
+    </Section>
+    <Section>
+      <Glow />
+      <H2>How pricing works</H2>
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+        {pricingPrinciples.map((item, idx) => (
+          <motion.div key={item.title} {...fade} transition={{ ...fade.transition, delay: idx * 0.05 }}>
+            <Card className="h-full">
+              <div className="text-xl font-semibold">{item.title}</div>
+              <p className="mt-3 text-sm text-zinc-300">{item.desc}</p>
+            </Card>
+          </motion.div>
+        ))}
+      </div>
+      <div className="mt-8 flex flex-wrap gap-2">
+        {pricingAddOns.map((item) => (
+          <Badge key={item}>{item}</Badge>
+        ))}
+      </div>
+    </Section>
+    <CTABox title="Need a custom scope?" subtitle="Share your goals and we will craft a plan that fits budget and timeline." secondaryLabel="See tech" secondaryTo="/tech" />
+  </>
+);
+
+const TechPage = () => (
+  <>
+    <PageHero
+      kicker="Tech"
+      title="Modern stack, engineered for reliability"
+      subtitle="We pick proven tools that ship fast and scale without drama. Every layer is optimized for performance and observability."
+      primary={{ label: "Start a project", to: "/contact" }}
+      secondary={{ label: "See projects", to: "/projects" }}
+      stats={[
+        { label: "Stack maturity", value: "Battle-tested" },
+        { label: "DevOps", value: "Automated" },
+        { label: "Security", value: "Built-in" },
+      ]}
+    />
+    <Section>
+      <Glow />
+      <H2>Stack by layer</H2>
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+        {stackGroups.map((group, idx) => (
+          <motion.div key={group.title} {...fade} transition={{ ...fade.transition, delay: idx * 0.04 }}>
+            <Card className="h-full">
+              <div className="text-xs uppercase tracking-[0.3em] text-zinc-500">{group.title}</div>
+              <div className="mt-4 flex flex-wrap gap-2">
+                {group.items.map((item) => (
+                  <Badge key={item}>{item}</Badge>
+                ))}
+              </div>
+            </Card>
+          </motion.div>
+        ))}
+      </div>
+    </Section>
+    <Section>
+      <Glow />
+      <H2>Engineering principles</H2>
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+        {engineeringPrinciples.map((item, idx) => (
+          <motion.div key={item.title} {...fade} transition={{ ...fade.transition, delay: idx * 0.05 }}>
+            <Card className="h-full">
+              <div className="text-xl font-semibold">{item.title}</div>
+              <p className="mt-3 text-sm text-zinc-300">{item.desc}</p>
+            </Card>
+          </motion.div>
+        ))}
+      </div>
+      <div className="mt-10 flex flex-wrap gap-3">
+        {stack.map((t) => (
+          <span key={t} className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/70">{t}</span>
+        ))}
+      </div>
+    </Section>
+    <CTABox title="Need a technical audit?" subtitle="We can review your architecture and propose a modernization plan." secondaryLabel="See process" secondaryTo="/process" />
+  </>
+);
+
+const AboutPage = () => (
+  <>
+    <PageHero
+      kicker="About"
+      title="Senior-only studio with a product mindset"
+      subtitle="We are a compact team of senior operators. We move fast, stay calm, and own outcomes with you."
+      primary={{ label: "Start a project", to: "/contact" }}
+      secondary={{ label: "See testimonials", to: "/testimonials" }}
+      stats={[
+        { label: "Years in product", value: "14+" },
+        { label: "Releases", value: "120+" },
+        { label: "Team model", value: "Senior" },
+      ]}
+    />
+    <Section>
+      <Glow />
+      <H2>Studio model</H2>
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+        <motion.div {...fade} className="md:col-span-2">
+          <Card className="bg-zinc-900/70">
+            <p className="text-lg text-zinc-300">
+              We are not a big agency. We are a tight senior crew that pairs product thinking with modern engineering. Our teams are built for focus, velocity, and accountability.
+            </p>
+            <ul className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <StatPill icon={LineChart}>↗ 38% avg. conversion uplift</StatPill>
+              <StatPill icon={Gauge}>↓ 27% shorter sales cycles</StatPill>
+              <StatPill icon={Rocket}>120+ releases across 6 industries</StatPill>
+              <StatPill icon={ShieldCheck}>99.95% uptime · SRE practices</StatPill>
+            </ul>
+          </Card>
+        </motion.div>
+        <motion.div {...fade}>
+          <Card className="h-full flex flex-col gap-3 bg-zinc-900/70">
+            <Badge>SOC2-ready</Badge>
+            <Badge>GDPR / ISO27001</Badge>
+            <Badge>Design systems</Badge>
+            <Badge>24/7 on-call</Badge>
+            <Badge>HIPAA-ready (PHI)</Badge>
+            <Badge>NDA & security reviews</Badge>
+          </Card>
+        </motion.div>
+      </div>
+    </Section>
+    <Section>
+      <Glow />
+      <H2>Values we build by</H2>
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-4">
+        {aboutValues.map((value, idx) => (
+          <motion.div key={value.title} {...fade} transition={{ ...fade.transition, delay: idx * 0.05 }}>
+            <Card className="h-full">
+              <div className="text-xl font-semibold">{value.title}</div>
+              <p className="mt-3 text-sm text-zinc-300">{value.desc}</p>
+            </Card>
+          </motion.div>
+        ))}
+      </div>
+    </Section>
+    <CTABox title="Looking for a senior partner?" subtitle="We can join discovery or take full delivery of your roadmap." secondaryLabel="See services" secondaryTo="/services" />
+  </>
+);
+
+const TestimonialsPage = () => (
+  <>
+    <PageHero
+      kicker="Testimonials"
+      title="Proof from teams that ship with us"
+      subtitle="We are trusted by leaders who want speed, clarity, and premium craft. Here is what they say."
+      primary={{ label: "Start a project", to: "/contact" }}
+      secondary={{ label: "See projects", to: "/projects" }}
+      stats={testimonialHighlights}
+    />
+    <Section>
+      <Glow />
+      <H2>Client voices</H2>
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-3 auto-rows-fr">
+        {testimonialsExtended.map((r, i) => (
+          <motion.div key={`${r.name}-${i}`} {...fade} transition={{ ...fade.transition, delay: i * 0.05 }} className="h-full">
+            <Card className="h-full flex flex-col">
+              <p className="mb-4 text-zinc-200">“{r.quote}”</p>
+              <div className="mt-auto text-sm text-zinc-400">— {r.name}</div>
+            </Card>
+          </motion.div>
+        ))}
+      </div>
+    </Section>
+    <CTABox title="Want results like these?" subtitle="We align metrics early and optimize for outcomes, not vanity launches." secondaryLabel="See pricing" secondaryTo="/pricing" />
+  </>
+);
+
+const ContactPage = () => (
+  <>
+    <PageHero
+      kicker="Contact"
+      title="Tell us what you want to build"
+      subtitle="Share your goals and we will return with architecture, timeline, and budget within 24 hours."
+      primary={{ label: "See process", to: "/process" }}
+      secondary={{ label: "See pricing", to: "/pricing" }}
+      stats={[
+        { label: "Response time", value: "24h" },
+        { label: "Discovery", value: "1 week" },
+        { label: "Launch", value: "10-14 w" },
+      ]}
+    />
+    <Section>
+      <Glow />
+      <H2>Project intake</H2>
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-[1.2fr_0.8fr]">
+        <Card>
+          <form className="grid grid-cols-1 gap-4 md:grid-cols-2" onSubmit={(e) => e.preventDefault()}>
+            <input className="rounded-xl border border-white/10 bg-zinc-900/60 px-4 py-3 outline-none placeholder:text-zinc-500" placeholder="Name" />
+            <input className="rounded-xl border border-white/10 bg-zinc-900/60 px-4 py-3 outline-none placeholder:text-zinc-500" placeholder="Email" />
+            <input className="rounded-xl border border-white/10 bg-zinc-900/60 px-4 py-3 outline-none placeholder:text-zinc-500 md:col-span-2" placeholder="Company / website" />
+            <textarea rows={5} className="rounded-xl border border-white/10 bg-zinc-900/60 px-4 py-3 outline-none placeholder:text-zinc-500 md:col-span-2" placeholder="Describe the project: goals, deadlines, key features" />
+            <div className="flex flex-wrap items-center gap-4 md:col-span-2">
+              <a href="mailto:hello@studio.dev" className="inline-flex items-center gap-2 text-sm text-zinc-300 hover:text-white"><Mail className="h-4 w-4"/> hello@studio.dev</a>
+              <a href="tel:+10000000000" className="inline-flex items-center gap-2 text-sm text-zinc-300 hover:text-white"><Phone className="h-4 w-4"/> +1 (000) 000-0000</a>
+              <a href="#" className="inline-flex items-center gap-2 text-sm text-zinc-300 hover:text-white"><Globe className="h-4 w-4"/> @studio</a>
+              <Btn as="button" type="submit" className="ml-auto bg-white text-black hover:bg-zinc-200">Send brief</Btn>
+            </div>
+          </form>
+        </Card>
+        <div className="space-y-4">
+          {contactSteps.map((step, idx) => (
+            <motion.div key={step.title} {...fade} transition={{ ...fade.transition, delay: idx * 0.05 }}>
+              <Card className="h-full">
+                <div className="text-xs uppercase tracking-[0.3em] text-zinc-500">Step {idx + 1}</div>
+                <div className="mt-3 text-lg font-semibold">{step.title}</div>
+                <p className="mt-2 text-sm text-zinc-300">{step.desc}</p>
+              </Card>
+            </motion.div>
+          ))}
         </div>
-      </footer>
-      
+      </div>
+    </Section>
+  </>
+);
 
+const NotFoundPage = () => (
+  <>
+    <PageHero
+      kicker="404"
+      title="This page does not exist"
+      subtitle="The page you are looking for moved or was never published."
+      primary={{ label: "Back home", to: "/" }}
+      secondary={{ label: "Start a project", to: "/contact" }}
+      stats={[]}
+    />
+  </>
+);
 
+/* ===================== App ===================== */
+export default function PortfolioSite() {
+  const apiBase = (import.meta.env.VITE_API_BASE || "").replace(/\/$/, "");
+  const [projectsData, setProjectsData] = useState(projectSeed);
+  const [pricingData, setPricingData] = useState(pricingSeed);
 
+  useEffect(() => {
+    const controller = new AbortController();
+    fetch(`${apiBase}/api/projects/`, { signal: controller.signal })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        const payload = Array.isArray(data) ? data : data?.projects;
+        if (Array.isArray(payload) && payload.length > 0) {
+          setProjectsData(payload);
+        }
+      })
+      .catch(() => {});
+
+    return () => controller.abort();
+  }, [apiBase]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    fetch(`${apiBase}/api/pricing/`, { signal: controller.signal })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        const payload = Array.isArray(data) ? data : data?.pricing;
+        if (Array.isArray(payload) && payload.length > 0) {
+          const normalized = payload.map((item) => ({
+            tier: item?.tier || "",
+            price: item?.price || "",
+            info: item?.info || "",
+            featured: Boolean(item?.featured),
+            points: Array.isArray(item?.points) ? item.points : [],
+          }));
+          setPricingData(normalized.slice(0, 5));
+        }
+      })
+      .catch(() => {});
+
+    return () => controller.abort();
+  }, [apiBase]);
+
+  return (
+    <div className="min-h-screen scroll-smooth bg-black text-zinc-100 antialiased">
+      <ScrollToTop />
+      <SiteNav />
+      <Routes>
+        <Route path="/" element={<HomePage projectsData={projectsData} pricingData={pricingData} />} />
+        <Route path="/services" element={<ServicesPage />} />
+        <Route path="/projects" element={<ProjectsPage projectsData={projectsData} />} />
+        <Route path="/process" element={<ProcessPage />} />
+        <Route path="/pricing" element={<PricingPage pricingData={pricingData} />} />
+        <Route path="/tech" element={<TechPage />} />
+        <Route path="/about" element={<AboutPage />} />
+        <Route path="/testimonials" element={<TestimonialsPage />} />
+        <Route path="/contact" element={<ContactPage />} />
+        <Route path="*" element={<NotFoundPage />} />
+      </Routes>
+      <SiteFooter />
       <div id="page-end-sentinel" className="h-2 w-full" />
       <RaccoonPop gif={raccoonGif} targetId="page-end-sentinel" />
     </div>
