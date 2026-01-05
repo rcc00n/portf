@@ -162,8 +162,12 @@ const testimonials = [
 /* ===================== UI helpers ===================== */
 const fade = { initial: { opacity: 0, y: 16 }, whileInView: { opacity: 1, y: 0 }, transition: { duration: 0.6, ease: "easeOut" }, viewport: { once: true, amount: 0.3 } };
 const collapsedFadeMask = {
-  WebkitMaskImage: "linear-gradient(to bottom, rgba(255,255,255,1) 0%, rgba(255,255,255,1) 70%, rgba(255,255,255,0) 100%)",
-  maskImage: "linear-gradient(to bottom, rgba(255,255,255,1) 0%, rgba(255,255,255,1) 70%, rgba(255,255,255,0) 100%)",
+  WebkitMaskImage: "linear-gradient(to bottom, rgba(255,255,255,1) 0%, rgba(255,255,255,1) 55%, rgba(255,255,255,0.4) 75%, rgba(255,255,255,0) 100%)",
+  maskImage: "linear-gradient(to bottom, rgba(255,255,255,1) 0%, rgba(255,255,255,1) 55%, rgba(255,255,255,0.4) 75%, rgba(255,255,255,0) 100%)",
+};
+const collapsedOverlayMask = {
+  WebkitMaskImage: "linear-gradient(to top, rgba(255,255,255,1) 0%, rgba(255,255,255,1) 55%, rgba(255,255,255,0) 100%)",
+  maskImage: "linear-gradient(to top, rgba(255,255,255,1) 0%, rgba(255,255,255,1) 55%, rgba(255,255,255,0) 100%)",
 };
 const isExternalUrl = (url) => /^https?:\/\//i.test(url || "");
 const getProjectMeta = (project) => {
@@ -519,7 +523,10 @@ export default function PortfolioSite() {
             ))}
           </div>
           {!showAll && (
-            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-black/90 via-black/60 to-transparent backdrop-blur-sm" />
+            <div
+              className="pointer-events-none absolute inset-x-0 bottom-0 h-36 bg-gradient-to-t from-black/90 via-black/40 to-transparent backdrop-blur-sm"
+              style={collapsedOverlayMask}
+            />
           )}
         </div>
         <div className="mt-8 flex justify-center">
@@ -618,7 +625,10 @@ export default function PortfolioSite() {
           </div>
 
           {!showAllProjects && (
-            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-black/90 via-black/60 to-transparent backdrop-blur-sm" />
+            <div
+              className="pointer-events-none absolute inset-x-0 bottom-0 h-36 bg-gradient-to-t from-black/90 via-black/40 to-transparent backdrop-blur-sm"
+              style={collapsedOverlayMask}
+            />
           )}
         </div>
 
