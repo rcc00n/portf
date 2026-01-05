@@ -154,6 +154,8 @@ raw.githubusercontent.com
 raw.githubusercontent.com
 . To deploy elsewhere (e.g. Netlify, Vercel), remove the base option and follow the respective provider’s instructions.
 
+TODO: Replace duckdns domain with production domain before marketing launch.
+
 🤝 Contributing
 
 Pull requests are welcome! If you find a bug or want to add a new feature (e.g. dark/light theme toggle or CMS integration), please open an issue first to discuss your proposal.

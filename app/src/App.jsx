@@ -155,6 +155,12 @@ const projectSeed = [
   },
 ];
 
+const projectOutcomeOverrides = {
+  "PDF Creator": "Automated contract generation for small teams",
+  "Renter": "Full marketplace with payments, disputes, and financial ledger",
+  "MeatDirect": "Production-ready e-commerce with admin-managed content",
+};
+
 const pricingSeed = [
   { tier: "CRM Basic", price: "$6k", info: "4–6 weeks · core features", points: ["Architecture & UX", "Main CRM features", "Basic analytics", "Deploy & docs"] },
   { tier: "CRM Standard", price: "$11k", info: "6–10 weeks · 2+ integrations", points: ["Advanced roles & reports", "Custom dashboards", "Sales pipeline automation", "Observability & alerts"], featured: true },
@@ -330,6 +336,7 @@ const getProjectMeta = (project) => {
     previewUrl: isExternalUrl(primaryUrl) ? primaryUrl : null,
   };
 };
+const getProjectOutcome = (project) => project?.outcome || projectOutcomeOverrides[project?.title] || "";
 
 const InfiniteBackground = () => (
   <div className="infinite-bg" aria-hidden>
@@ -472,7 +479,6 @@ const PageHero = ({ kicker, title, subtitle, primary, secondary, stats = [] }) =
         </motion.div>
       ) : null}
       <div className="mt-4 text-xs text-zinc-400">{SALES_PROMISE}</div>
-      <ContactInline className="mt-3 justify-center" />
       {stats.length ? (
         <div className="mx-auto mt-6 grid w-full max-w-4xl grid-cols-1 gap-4 sm:grid-cols-3">
           {stats.map((stat, idx) => (
@@ -680,7 +686,6 @@ const CTABox = ({ title, subtitle, primaryLabel = "Get estimate in 24h", primary
             <div className="mt-2 text-2xl font-semibold text-white">{title}</div>
             <p className="mt-2 max-w-xl text-sm text-zinc-300">{subtitle}</p>
             <div className="mt-4 text-xs text-zinc-400">{SALES_PROMISE}</div>
-            <ContactInline className="mt-3" />
           </div>
           <div className="flex flex-wrap gap-3">
             <BtnLink to={primaryTo} className="bg-white text-black hover:bg-zinc-200">{primaryLabel}</BtnLink>
@@ -881,7 +886,6 @@ const MobileNav = ({ open, onClose }) => {
           <BtnLink to="/contact" className="w-full bg-white text-black hover:bg-zinc-200">Get estimate in 24h</BtnLink>
         </div>
         <div className="mt-4 text-xs text-zinc-400">{SALES_PROMISE}</div>
-        <ContactInline className="mt-3" />
       </div>
     </>
   );
@@ -1049,7 +1053,7 @@ const HomePage = ({ projectsData, pricingData, apiBase }) => {
             <Badge>Revenue-first CRM · Software · Marketing</Badge>
             <Badge><ShieldCheck className="mr-1 inline h-4 w-4" /> Senior-only delivery</Badge>
           </motion.div>
-          <motion.h1 {...fade} className="bg-gradient-to-b from-white to-zinc-400 bg-clip-text text-4xl font-semibold leading-tight text-transparent sm:text-6xl">Custom software & CRMs that replace manual work and scale revenue</motion.h1>
+          <motion.h1 {...fade} className="bg-gradient-to-b from-white to-zinc-400 bg-clip-text text-4xl font-semibold leading-tight text-transparent sm:text-6xl">We build custom software & CRMs that replace manual work and scale revenue</motion.h1>
           <motion.p {...fade} className="max-w-2xl text-lg text-zinc-300">From internal CRMs to marketplaces and automation — built end-to-end with analytics and full admin control.</motion.p>
           <motion.div {...fade} className="flex flex-wrap items-center justify-center gap-3">
             <Btn href="#contact" className="bg-white text-black hover:bg-zinc-200">Get estimate in 24h</Btn>
@@ -1057,7 +1061,6 @@ const HomePage = ({ projectsData, pricingData, apiBase }) => {
             <Btn href="#pricing" className="border border-white/15 text-white hover:bg-white/5">Pricing</Btn>
           </motion.div>
           <div className="text-xs text-zinc-400">{SALES_PROMISE}</div>
-          <ContactInline className="justify-center" />
         </div>
       </header>
 
@@ -1123,6 +1126,7 @@ const HomePage = ({ projectsData, pricingData, apiBase }) => {
           >
             {(showAllProjects ? projectsData : projectsData.slice(0, 3)).map((c, idx) => {
               const { primaryUrl, actionLinks, previewUrl } = getProjectMeta(c);
+              const outcome = getProjectOutcome(c);
 
               return (
                 <motion.div key={c.title} {...fade} transition={{ ...fade.transition, delay: idx * 0.03 }} className="h-full">
@@ -1165,7 +1169,7 @@ const HomePage = ({ projectsData, pricingData, apiBase }) => {
                       )}
 
                       <p className="text-sm text-zinc-300">{c.blurb}</p>
-                      {c.outcome ? <p className="mt-3 text-sm text-zinc-400">{c.outcome}</p> : null}
+                      {outcome ? <p className="mt-3 text-sm text-zinc-400">{outcome}</p> : null}
 
                       {c.tags?.length ? (
                         <div className="mt-3 flex flex-wrap gap-2">
@@ -1398,7 +1402,7 @@ const HomePage = ({ projectsData, pricingData, apiBase }) => {
                       </ul>
                     </div>
                     <div className="mt-auto pt-6">
-                      <Btn href="#contact" className="w-full bg-white text-black hover:bg-zinc-200">Start with this</Btn>
+                      <Btn href="#contact" className="w-full bg-white text-black hover:bg-zinc-200">Get estimate in 24h</Btn>
                     </div>
                   </div>
                 </TierCardClean>
@@ -1411,6 +1415,9 @@ const HomePage = ({ projectsData, pricingData, apiBase }) => {
       {/* Tech */}
       <Section id="stack">
         <H2>Tech Stack</H2>
+        <motion.p {...fade} className="mb-6 max-w-2xl text-sm text-zinc-400">
+          We choose technology based on scale, security, and long-term maintainability — not trends.
+        </motion.p>
         <div className="flex flex-wrap gap-3">
           {stack.map((t, i) => (
             <motion.div key={t} {...fade} transition={{ ...fade.transition, delay: i * 0.02 }}>
@@ -1467,9 +1474,8 @@ const HomePage = ({ projectsData, pricingData, apiBase }) => {
 
       {/* Contact */}
       <Section id="contact">
-        <H2>Free estimate & architecture outline in 24 hours</H2>
+        <H2>Free estimate & architecture outline in 24 hours — no commitment.</H2>
         <motion.p {...fade} className="mb-4 max-w-2xl text-zinc-300">Share your goals and we will return with a free estimate, architecture outline, and timeline within 24 hours.</motion.p>
-        <ContactInline className="mb-8" />
         <Card>
           <ContactForm apiBase={apiBase} source="home-contact" />
         </Card>
@@ -1574,6 +1580,7 @@ const ProjectsPage = ({ projectsData }) => (
       <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
         {projectsData.map((project, idx) => {
           const { primaryUrl, actionLinks, previewUrl } = getProjectMeta(project);
+          const outcome = getProjectOutcome(project);
           return (
             <motion.div key={project.title} {...fade} transition={{ ...fade.transition, delay: idx * 0.04 }}>
               <Card className="group relative h-full overflow-hidden">
@@ -1593,7 +1600,7 @@ const ProjectsPage = ({ projectsData }) => (
                   <div className="mb-4 h-44 w-full rounded-xl border border-white/10 bg-zinc-950/60 flex items-center justify-center text-zinc-500">Project preview</div>
                 )}
                 <p className="text-sm text-zinc-300">{project.blurb}</p>
-                {project.outcome ? <p className="mt-3 text-sm text-zinc-400">{project.outcome}</p> : null}
+                {outcome ? <p className="mt-3 text-sm text-zinc-400">{outcome}</p> : null}
                 {project.tags?.length ? (
                   <div className="mt-3 flex flex-wrap gap-2">
                     {project.tags.map((t) => <Badge key={t}>{t}</Badge>)}
@@ -1743,7 +1750,7 @@ const PricingPage = ({ pricingData }) => (
                     </ul>
                   </div>
                   <div className="mt-auto pt-6">
-                    <BtnLink to="/contact" className="w-full bg-white text-black hover:bg-zinc-200">Start with this</BtnLink>
+                    <BtnLink to="/contact" className="w-full bg-white text-black hover:bg-zinc-200">Get estimate in 24h</BtnLink>
                   </div>
                 </div>
               </TierCardClean>
