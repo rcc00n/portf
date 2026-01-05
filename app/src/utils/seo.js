@@ -31,6 +31,14 @@ const ROUTE_META = {
     title: "Tech - studio",
     description: "Modern, reliable stack choices across frontend, backend, data, and DevOps.",
   },
+  "/journal": {
+    title: "Engineering Journal - studio",
+    description: "Short, opinionated notes on admin-first systems, scaling failure modes, and auditability.",
+  },
+  "/decisions": {
+    title: "Decisions - studio",
+    description: "Public decision records covering architecture defaults, trade-offs, and when we change course.",
+  },
   "/about": {
     title: "About - studio",
     description: "A senior-only team founded by engineers and focused on delivery quality.",
@@ -39,9 +47,25 @@ const ROUTE_META = {
     title: "Testimonials - studio",
     description: "Client feedback from product, growth, and CRM transformations.",
   },
+  "/not-for-everyone": {
+    title: "Not for everyone - studio",
+    description: "A calm fit check to help teams self-select before starting.",
+  },
+  "/start": {
+    title: "Start - studio",
+    description: "Qualification gate to align project type, complexity, budget, and timeline.",
+  },
   "/contact": {
     title: "Contact - studio",
     description: "Request a technical estimate with clear scope, timeline, and budget.",
+  },
+  "/pre-call": {
+    title: "Pre-call package - studio",
+    description: "Prep package covering workflow, resources, and what to bring to the call.",
+  },
+  "/summary": {
+    title: "Project summary - studio",
+    description: "Single-screen project one-pager with scope signals and next steps.",
   },
   "/engineering": {
     title: "Engineering Lab - studio",

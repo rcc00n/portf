@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import DataCard from "../../components/DataCard";
 import ToggleGroup from "../../components/ToggleGroup";
@@ -12,6 +12,8 @@ import {
   TEAM_OPTIONS,
 } from "./estimateData";
 
+const ESTIMATE_STORAGE_KEY = "estimateSnapshot";
+
 const Estimate = () => {
   const [product, setProduct] = useState(PRODUCT_OPTIONS[0].value);
   const [complexity, setComplexity] = useState(COMPLEXITY_OPTIONS[0].value);
@@ -23,8 +25,14 @@ const Estimate = () => {
     [product, complexity, team, integrations]
   );
 
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const snapshot = { product, complexity, team, integrations, updatedAt: new Date().toISOString() };
+    window.localStorage.setItem(ESTIMATE_STORAGE_KEY, JSON.stringify(snapshot));
+  }, [product, complexity, team, integrations]);
+
   const handleCtaClick = () => {
-    trackCtaClick("Get full estimate in 24h", "/contact", { context: "estimate" });
+    trackCtaClick("Get full estimate in 24h", "/start", { context: "estimate" });
   };
 
   return (
@@ -87,11 +95,17 @@ const Estimate = () => {
           </p>
           <div className="mt-4 flex flex-wrap gap-3">
             <Link
-              to="/contact"
+              to="/start"
               onClick={handleCtaClick}
               className="inline-flex items-center justify-center rounded-xl bg-white px-5 py-3 text-sm font-medium text-black transition hover:bg-zinc-200"
             >
               Get full estimate in 24h
+            </Link>
+            <Link
+              to="/summary"
+              className="inline-flex items-center justify-center rounded-xl border border-white/15 px-5 py-3 text-sm font-medium text-white transition hover:bg-white/5"
+            >
+              View one-pager
             </Link>
           </div>
         </div>
