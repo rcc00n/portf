@@ -1448,6 +1448,129 @@ const LazyRoute = ({ children }) => (
   </Suspense>
 );
 
+const ProjectDetailsModal = ({ project, onClose }) => (
+  <AnimatePresence>
+    {project ? (() => {
+      const { primaryUrl, actionLinks, previewUrl } = getProjectMeta(project);
+      return (
+        <motion.div
+          key={project.title || "project-details"}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-[70] flex items-center justify-center px-4 py-8"
+        >
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 bg-black/70"
+            onClick={onClose}
+          />
+          <motion.div
+            initial={{ opacity: 0, y: 24, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 24, scale: 0.98 }}
+            transition={{ type: "spring", stiffness: 200, damping: 22 }}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Project details"
+            className="relative z-10 w-full max-w-5xl overflow-hidden rounded-3xl border border-white/10 bg-zinc-950/90 shadow-[0_30px_120px_rgba(0,0,0,.65)]"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="max-h-[85vh] overflow-y-auto">
+              <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/10 px-6 py-5">
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-3">
+                    <h3 className="truncate text-2xl font-semibold">{project.title || "Project"}</h3>
+                    {project.impact ? (
+                      <span className="rounded-full border border-emerald-400/25 bg-emerald-500/15 px-3 py-1 text-[11px] uppercase tracking-wide text-emerald-200/90">
+                        {project.impact}
+                      </span>
+                    ) : null}
+                  </div>
+                  <p className="mt-1 text-sm text-zinc-400">Project details</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-medium uppercase tracking-wide text-white/80 transition hover:bg-white/10"
+                >
+                  Close
+                </button>
+              </div>
+
+              <div className="grid gap-6 px-6 pb-6 pt-5 lg:grid-cols-[1.2fr_0.8fr]">
+                <div className="space-y-4">
+                  {project.images?.length ? (
+                    <ImageCarousel
+                      images={project.images}
+                      alt={project.title}
+                      heightClass="h-64 sm:h-80"
+                      showIndex
+                      className="mb-0"
+                    />
+                  ) : previewUrl ? (
+                    <FaviconPreview url={previewUrl} heightClass="h-64 sm:h-80" iconClassName="h-16 w-16" className="mb-0" />
+                  ) : (
+                    <div className="h-64 w-full rounded-2xl border border-white/10 bg-zinc-950/60 flex items-center justify-center text-zinc-500">
+                      Project preview
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex h-full flex-col gap-6">
+                  <div>
+                    <div className="text-xs uppercase tracking-[0.2em] text-zinc-500">Overview</div>
+                    <p className="mt-3 text-sm leading-relaxed text-zinc-300">
+                      {project.blurb || "Detailed project notes will be published soon."}
+                    </p>
+                  </div>
+
+                  {project.tags?.length ? (
+                    <div>
+                      <div className="text-xs uppercase tracking-[0.2em] text-zinc-500">Tech stack</div>
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {project.tags.map((t) => <Badge key={t}>{t}</Badge>)}
+                      </div>
+                    </div>
+                  ) : null}
+
+                  {actionLinks?.length ? (
+                    <div>
+                      <div className="text-xs uppercase tracking-[0.2em] text-zinc-500">Links</div>
+                      <div className="mt-3 flex flex-wrap gap-3">
+                        {actionLinks.map((l) => {
+                          const isExternal = l?.href ? isExternalUrl(l.href) : false;
+                          const isPrimary = primaryUrl && l?.href === primaryUrl;
+                          return (
+                            <Btn
+                              key={`${l.label}-${l.href}`}
+                              href={l.href}
+                              target={isExternal ? "_blank" : undefined}
+                              rel={isExternal ? "noreferrer" : undefined}
+                              className={[
+                                "px-4 py-2 text-xs",
+                                isPrimary ? "bg-white text-black hover:bg-zinc-200" : "border border-white/15 text-white hover:bg-white/5"
+                              ].join(" ")}
+                            >
+                              {l.label}
+                            </Btn>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ) : null}
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
+      );
+    })() : null}
+  </AnimatePresence>
+);
+
 /* ===================== Pages ===================== */
 const HomePage = ({ projectsData, pricingData, apiBase }) => {
   const [showAll, setShowAll] = useState(false);
@@ -1667,126 +1790,7 @@ const HomePage = ({ projectsData, pricingData, apiBase }) => {
         </div>
       </Section>
 
-      <AnimatePresence>
-        {activeProject ? (() => {
-          const { primaryUrl, actionLinks, previewUrl } = getProjectMeta(activeProject);
-          return (
-            <motion.div
-              key={activeProject.title || "project-details"}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 z-[70] flex items-center justify-center px-4 py-8"
-            >
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="absolute inset-0 bg-black/70"
-                onClick={() => setActiveProject(null)}
-              />
-              <motion.div
-                initial={{ opacity: 0, y: 24, scale: 0.98 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: 24, scale: 0.98 }}
-                transition={{ type: "spring", stiffness: 200, damping: 22 }}
-                role="dialog"
-                aria-modal="true"
-                aria-label="Project details"
-                className="relative z-10 w-full max-w-5xl overflow-hidden rounded-3xl border border-white/10 bg-zinc-950/90 shadow-[0_30px_120px_rgba(0,0,0,.65)]"
-                onClick={(event) => event.stopPropagation()}
-              >
-                <div className="max-h-[85vh] overflow-y-auto">
-                  <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/10 px-6 py-5">
-                    <div className="min-w-0">
-                      <div className="flex flex-wrap items-center gap-3">
-                        <h3 className="truncate text-2xl font-semibold">{activeProject.title || "Project"}</h3>
-                        {activeProject.impact ? (
-                          <span className="rounded-full border border-emerald-400/25 bg-emerald-500/15 px-3 py-1 text-[11px] uppercase tracking-wide text-emerald-200/90">
-                            {activeProject.impact}
-                          </span>
-                        ) : null}
-                      </div>
-                      <p className="mt-1 text-sm text-zinc-400">Project details</p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setActiveProject(null)}
-                      className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-medium uppercase tracking-wide text-white/80 transition hover:bg-white/10"
-                    >
-                      Close
-                    </button>
-                  </div>
-
-                  <div className="grid gap-6 px-6 pb-6 pt-5 lg:grid-cols-[1.2fr_0.8fr]">
-                    <div className="space-y-4">
-                      {activeProject.images?.length ? (
-                        <ImageCarousel
-                          images={activeProject.images}
-                          alt={activeProject.title}
-                          heightClass="h-64 sm:h-80"
-                          showIndex
-                          className="mb-0"
-                        />
-                      ) : previewUrl ? (
-                        <FaviconPreview url={previewUrl} heightClass="h-64 sm:h-80" iconClassName="h-16 w-16" className="mb-0" />
-                      ) : (
-                        <div className="h-64 w-full rounded-2xl border border-white/10 bg-zinc-950/60 flex items-center justify-center text-zinc-500">
-                          Project preview
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="flex h-full flex-col gap-6">
-                      <div>
-                        <div className="text-xs uppercase tracking-[0.2em] text-zinc-500">Overview</div>
-                        <p className="mt-3 text-sm leading-relaxed text-zinc-300">
-                          {activeProject.blurb || "Detailed project notes will be published soon."}
-                        </p>
-                      </div>
-
-                      {activeProject.tags?.length ? (
-                        <div>
-                          <div className="text-xs uppercase tracking-[0.2em] text-zinc-500">Tech stack</div>
-                          <div className="mt-3 flex flex-wrap gap-2">
-                            {activeProject.tags.map((t) => <Badge key={t}>{t}</Badge>)}
-                          </div>
-                        </div>
-                      ) : null}
-
-                      {actionLinks?.length ? (
-                        <div>
-                          <div className="text-xs uppercase tracking-[0.2em] text-zinc-500">Links</div>
-                          <div className="mt-3 flex flex-wrap gap-3">
-                            {actionLinks.map((l) => {
-                              const isExternal = l?.href ? isExternalUrl(l.href) : false;
-                              const isPrimary = primaryUrl && l?.href === primaryUrl;
-                              return (
-                                <Btn
-                                  key={`${l.label}-${l.href}`}
-                                  href={l.href}
-                                  target={isExternal ? "_blank" : undefined}
-                                  rel={isExternal ? "noreferrer" : undefined}
-                                  className={[
-                                    "px-4 py-2 text-xs",
-                                    isPrimary ? "bg-white text-black hover:bg-zinc-200" : "border border-white/15 text-white hover:bg-white/5"
-                                  ].join(" ")}
-                                >
-                                  {l.label}
-                                </Btn>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      ) : null}
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            </motion.div>
-          );
-        })() : null}
-      </AnimatePresence>
+      <ProjectDetailsModal project={activeProject} onClose={() => setActiveProject(null)} />
 
       {/* Process */}
       <Section id="process">
@@ -1990,8 +1994,45 @@ const ServicesPage = () => (
   </>
 );
 
-const ProjectsPage = ({ projectsData }) => (
-  <>
+const ProjectsPage = ({ projectsData }) => {
+  const [activeProject, setActiveProject] = useState(null);
+
+  useEffect(() => {
+    if (!activeProject) return undefined;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [activeProject]);
+
+  useEffect(() => {
+    if (!activeProject) return undefined;
+    const onKeyDown = (event) => {
+      if (event.key === "Escape") {
+        setActiveProject(null);
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [activeProject]);
+
+  const handleProjectCardClick = (event, project) => {
+    if (event.defaultPrevented) return;
+    if (event.target.closest("a,button")) return;
+    setActiveProject(project);
+  };
+
+  const handleProjectCardKeyDown = (event, project) => {
+    if (event.currentTarget !== event.target) return;
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      setActiveProject(project);
+    }
+  };
+
+  return (
+    <>
     <PageHero
       kicker="Projects"
       title="Case studies with measurable impact"
@@ -2012,7 +2053,19 @@ const ProjectsPage = ({ projectsData }) => (
           const outcome = getProjectOutcome(project);
           return (
             <motion.div key={project.title} {...fade} transition={{ ...fade.transition, delay: idx * 0.04 }}>
-              <Card className="group relative h-full overflow-hidden">
+              <Card
+                role="button"
+                tabIndex={0}
+                aria-haspopup="dialog"
+                aria-label={`View ${project.title} details`}
+                onClick={(event) => handleProjectCardClick(event, project)}
+                onKeyDown={(event) => handleProjectCardKeyDown(event, project)}
+                className={[
+                  "group relative h-full overflow-hidden",
+                  "cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:border-white/20",
+                  "focus-visible:ring-2 focus-visible:ring-white/25"
+                ].join(" ")}
+              >
                 <div className="mb-3 flex items-center justify-between gap-3">
                   <h3 className="text-xl font-semibold">{project.title}</h3>
                   {project.impact ? (
@@ -2081,8 +2134,10 @@ const ProjectsPage = ({ projectsData }) => (
       secondaryLabel="Read renter architecture"
       secondaryTo="/cases/renter-architecture"
     />
+    <ProjectDetailsModal project={activeProject} onClose={() => setActiveProject(null)} />
   </>
-);
+  );
+};
 
 const ProcessPage = () => (
   <>

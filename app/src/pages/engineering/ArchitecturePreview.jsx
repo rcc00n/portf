@@ -94,6 +94,7 @@ const ArchitecturePreview = () => {
                   <DataCard
                     key={node.id}
                     compact
+                    fullWidth={false}
                     title={block.title}
                     subtitle={CARD_BLURBS[node.id]}
                     active={activeBlockId === node.id}
