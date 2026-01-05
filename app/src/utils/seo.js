@@ -1,9 +1,7 @@
 import ogImage from "../assets/raccoon-logo.png";
 
-const SITE_NAME = "studio";
-const SITE_TAGLINE = "Revenue-first software & CRM systems";
-const SITE_TITLE = `${SITE_NAME} - ${SITE_TAGLINE}`;
-const withSite = (pageTitle) => `${pageTitle} - ${SITE_TITLE}`;
+const SITE_TITLE = "Custom software & CRM delivery";
+const withSite = () => SITE_TITLE;
 
 const DEFAULT_META = {
   title: SITE_TITLE,
