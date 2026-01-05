@@ -314,7 +314,9 @@ const getProjectMeta = (project) => {
 const InfiniteBackground = () => (
   <div className="infinite-bg" aria-hidden>
     <div className="infinite-bg__mesh" />
+    <div className="infinite-bg__spectrum" />
     <div className="infinite-bg__aurora" />
+    <div className="infinite-bg__noise" />
     <div className="infinite-bg__vignette" />
   </div>
 );
