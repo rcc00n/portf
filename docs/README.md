@@ -2,6 +2,7 @@
 
 The approved application is in `app/` and `backend/`. Root CI and `scripts/` contain maintained regression checks. No deployment is authorized by these documents.
 
+- [Current hardening handoff](operations/REPOSITORY_OPERATIONS_HARDENING.md)
 - [Dependency decisions](operations/DEPENDENCIES.md)
 - [Verified legacy cleanup](operations/LEGACY_CLEANUP.md)
 - [Runtime / Dokku contract](../DOKKU.md)

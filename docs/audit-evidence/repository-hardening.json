@@ -1,0 +1,45 @@
+{
+  "date": "2026-09-24",
+  "baseline": "e1945b6ffb76ad788d9fbcf7e3452c3da0e12163",
+  "before": {
+    "source_files": 61,
+    "source_lines": 14504,
+    "source_bytes": 12454544,
+    "public_bytes": 10041231,
+    "js_bytes": 338565,
+    "css_bytes": 172959,
+    "dependencies": 257
+  },
+  "after": {
+    "source_files": 40,
+    "source_lines": 7412,
+    "source_bytes": 303907,
+    "public_bytes": 10039734,
+    "js_bytes": 389085,
+    "css_bytes": 126921,
+    "dependencies": 243
+  },
+  "npm_before": {
+    "info": 0,
+    "low": 1,
+    "moderate": 3,
+    "high": 13,
+    "critical": 1,
+    "total": 18
+  },
+  "npm_after": {
+    "info": 0,
+    "low": 0,
+    "moderate": 0,
+    "high": 0,
+    "critical": 0,
+    "total": 0
+  },
+  "python_pinned_packages_audited": 11,
+  "python_known_advisories": 0,
+  "visual_screenshot_pairs": 10,
+  "visual_pixel_difference": 0,
+  "docker_context_before_MB": 44.56,
+  "docker_context_after_MB": 10.95,
+  "context_scope": "Before is archived tracked baseline with original dockerignore; after is current working tree using new dockerignore. Decimal Docker CLI transfer figures; not image sizes."
+}
