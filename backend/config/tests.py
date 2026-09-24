@@ -1,5 +1,6 @@
 import tempfile
 from pathlib import Path
+from urllib.parse import parse_qs, urlsplit
 
 from django.test import SimpleTestCase
 
@@ -125,6 +126,17 @@ class FrontendRoutingTests(SimpleTestCase):
         self.assertEqual(contact["Location"], "/start?product=saas&complexity=medium&maturity=mvp&definition=1")
         invalid = self.client.get("/estimate?product=Invalid&team=Unknown")
         self.assertEqual(invalid["Location"], "/start/define")
+
+    def test_unknown_project_values_survive_legacy_definition_redirects(self):
+        for route in ("/contact", "/estimate", "/summary"):
+            for value in ("unsure", "unknown", "not sure", "Not sure"):
+                with self.subTest(route=route, value=value):
+                    response = self.client.get(route, {"product": value})
+                    self.assertEqual(response.status_code, 301)
+                    query = parse_qs(urlsplit(response["Location"]).query)
+                    self.assertEqual(query["product"], [value])
+                    if route == "/contact":
+                        self.assertEqual(query["definition"], ["1"])
 
     def test_invalid_case_and_prototype_paths_are_real_404s(self):
         for path in ("/work/not-a-case", "/systems/not-a-tool", "/prototype/not-a-study"):

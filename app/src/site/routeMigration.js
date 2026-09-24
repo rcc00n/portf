@@ -6,7 +6,7 @@ export const redirects={
   "/contact":"/start", "/estimate":"/start/define", "/summary":"/start/define#summary", "/pre-call":"/start#next-step",
 };
 export const queryValues={
-  product:["CRM","SaaS","Marketplace","E-commerce","crm","saas","marketplace","commerce","unsure"],
+  product:["CRM","SaaS","Marketplace","E-commerce","crm","saas","marketplace","commerce","unsure","unknown","not sure","Not sure","not sure yet"],
   complexity:["Lean","Balanced","Advanced","simple","medium","complex"], team:["Small","Core","Expanded"], integrations:["None","Standard","Heavy"],
   maturity:["idea","mvp","growth","scale","unknown"],source:["homepage"],definition:["1"],
 };

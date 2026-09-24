@@ -1,0 +1,2 @@
+# Browser regression tooling only; not a production dependency.
+playwright==1.55.0
