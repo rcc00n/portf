@@ -1,0 +1,250 @@
+/* One activation: contact, propagation, terminal confirmation, connected state.
+   Color follows the existing sequence; no geometry, movement, or timing changes.
+   Cobalt = contact, violet = processing, cyan = receipt, mineral = resolution. */
+.raccn-home svg.hp-control-plane {
+  --hp-control-cobalt: #344bea;
+  --hp-control-violet: #7461bd;
+  --hp-control-cyan: #518fa2;
+  --hp-control-mineral: #e7e8dd;
+  --hp-control-idle-fill: #5264ff;
+  --hp-control-active-fill: var(--hp-control-cobalt);
+  --hp-control-hover-fill: #6172ff;
+  --hp-control-active-hover-fill: #435bf7;
+  --hp-control-idle-edge: #2938b5;
+  --hp-control-active-edge: #172b99;
+  --hp-control-route-color: var(--hp-control-cobalt);
+  --hp-control-layer-fill: #20284b;
+  --hp-control-layer-edge: #6977bb;
+}
+/* Existing scroll states choose a signal color; their thresholds and movement
+   stay in useHomeMotion. The established fill/stroke transitions interpolate. */
+.raccn-home[data-route="policy"] svg.hp-control-plane {
+  --hp-control-idle-fill: var(--hp-control-violet);
+  --hp-control-active-fill: var(--hp-control-violet);
+  --hp-control-hover-fill: #8472cd;
+  --hp-control-active-hover-fill: #8472cd;
+  --hp-control-idle-edge: #433574;
+  --hp-control-active-edge: #433574;
+  --hp-control-route-color: var(--hp-control-violet);
+  --hp-control-layer-fill: #332d49;
+  --hp-control-layer-edge: #887ab2;
+}
+.raccn-home[data-route="output"] svg.hp-control-plane {
+  --hp-control-idle-fill: var(--hp-control-cyan);
+  --hp-control-active-fill: var(--hp-control-cyan);
+  --hp-control-hover-fill: #61a0b3;
+  --hp-control-active-hover-fill: #61a0b3;
+  --hp-control-idle-edge: #2c5268;
+  --hp-control-active-edge: #2c5268;
+  --hp-control-route-color: var(--hp-control-cyan);
+  --hp-control-layer-fill: #1f343b;
+  --hp-control-layer-edge: #7aa0aa;
+}
+.raccn-home[data-route="audit"] svg.hp-control-plane {
+  --hp-control-idle-fill: var(--hp-control-cobalt);
+  --hp-control-route-color: var(--hp-control-mineral);
+}
+.raccn-home svg.hp-control-plane .hp-plane__core-group {
+  transform: translateY(8px);
+  cursor: pointer;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+.raccn-home svg.hp-control-plane .hp-plane__core-group > :not(.hp-control-hit-area) { pointer-events: none; }
+.raccn-home svg.hp-control-plane .hp-control-hit-area { fill: transparent; }
+.raccn-home svg.hp-control-plane .hp-plane__core {
+  fill: var(--hp-control-idle-fill);
+  transition: fill 180ms ease;
+}
+.raccn-home svg.hp-control-plane .hp-plane__core-edge {
+  fill: var(--hp-control-idle-edge);
+  transition: fill 180ms ease;
+}
+.raccn-home svg.hp-control-plane .hp-plane__core-group:is(:hover,:focus-visible) .hp-plane__core { fill: var(--hp-control-hover-fill); }
+.raccn-home svg.hp-control-plane[data-control="active"] .hp-plane__core {
+  fill: var(--hp-control-active-fill);
+  animation: hp-control-color 850ms 220ms ease-out backwards;
+}
+.raccn-home svg.hp-control-plane[data-control="active"] .hp-plane__core-edge {
+  fill: var(--hp-control-active-edge);
+  animation: hp-control-edge-color 850ms 220ms ease-out backwards;
+}
+.raccn-home svg.hp-control-plane[data-control="active"] .hp-plane__core-group:is(:hover,:focus-visible) .hp-plane__core { fill: var(--hp-control-active-hover-fill); }
+.raccn-home svg.hp-control-plane .hp-control-focus {
+  fill: none;
+  stroke: #182362;
+  stroke-width: 3;
+  opacity: 0;
+  vector-effect: non-scaling-stroke;
+}
+.raccn-home svg.hp-control-plane .hp-plane__core-group:focus-visible .hp-control-focus { opacity: 1; }
+.raccn-home svg.hp-control-plane .hp-control-mechanism {
+  transform-box: fill-box;
+  transform-origin: center;
+  transition: transform 160ms ease;
+}
+.raccn-home svg.hp-control-plane .hp-plane__core-group:active .hp-control-mechanism { transform: translateY(3px); }
+.raccn-home svg.hp-control-plane .hp-control-mechanism__track {
+  fill: none;
+  stroke: #ecebe3;
+  stroke-width: 1;
+  opacity: .32;
+}
+.raccn-home svg.hp-control-plane .hp-control-mechanism__half {
+  fill: none;
+  stroke: #f5f2e9;
+  stroke-width: 3;
+  stroke-linecap: square;
+  stroke-linejoin: miter;
+  transition: transform 250ms cubic-bezier(.2,.7,.2,1), stroke-width 200ms ease;
+}
+.raccn-home svg.hp-control-plane .hp-control-mechanism__contact {
+  fill: #f5f2e9;
+  transform-box: fill-box;
+  transform-origin: center;
+  transform: scale(.45);
+  opacity: .65;
+  transition: transform 280ms cubic-bezier(.2,.7,.2,1), opacity 200ms ease;
+}
+.raccn-home svg.hp-control-plane[data-control="active"] .hp-control-mechanism__half--left { transform: translateX(7px); stroke-width: 4; }
+.raccn-home svg.hp-control-plane[data-control="active"] .hp-control-mechanism__half--right { transform: translateX(-7px); stroke-width: 4; }
+.raccn-home svg.hp-control-plane[data-control="active"] .hp-control-mechanism__contact { transform: scale(1); opacity: 1; }
+.raccn-home svg.hp-control-plane .hp-plane__core-signal { stroke: #f3efe5; stroke-width: 1.5; }
+.raccn-home svg.hp-control-plane[data-control="active"] .hp-plane__core-signal { stroke: var(--hp-control-mineral); }
+.raccn-home svg.hp-control-plane .hp-control-emission {
+  fill: none;
+  stroke: #344bea;
+  stroke-width: 5;
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+  vector-effect: non-scaling-stroke;
+}
+.raccn-home svg.hp-control-plane[data-control="active"] .hp-control-emission { animation: hp-contact-emission 680ms cubic-bezier(.2,.6,.2,1) both; }
+.raccn-home svg.hp-control-plane .hp-core-route { opacity: 1; }
+.raccn-home svg.hp-control-plane .hp-core-route__base { stroke: #7b7e8a; stroke-width: 1.5; }
+.raccn-home svg.hp-control-plane .hp-core-route__connected {
+  stroke: var(--hp-control-route-color);
+  stroke-width: 3;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  vector-effect: non-scaling-stroke;
+  transition: stroke-dashoffset 240ms ease;
+}
+.raccn-home svg.hp-control-plane[data-control="active"] .hp-core-route__connected {
+  stroke-dashoffset: 0;
+  transition: stroke-dashoffset 430ms var(--hp-signal-delay) cubic-bezier(.2,.6,.2,1);
+}
+.raccn-home svg.hp-control-plane .hp-core-route__signal {
+  stroke: #3049ff;
+  stroke-width: 7;
+  stroke-linecap: square;
+  stroke-dasharray: .24 .76;
+  stroke-dashoffset: .24;
+  opacity: 0;
+  vector-effect: non-scaling-stroke;
+  animation: none;
+}
+.raccn-home svg.hp-control-plane[data-control="ready"] .hp-core-route__signal { opacity: 0; animation: none; }
+.raccn-home svg.hp-control-plane[data-control="active"] .hp-core-route__signal {
+  animation: hp-connected-propagation 570ms var(--hp-signal-delay) cubic-bezier(.2,.6,.2,1) both;
+}
+.raccn-home svg.hp-control-plane .hp-plane-lock {
+  fill: #171914;
+  stroke: var(--hp-control-idle-fill);
+  stroke-width: 2;
+  transform: none;
+  opacity: 1;
+  transition: fill 180ms ease, stroke 180ms ease;
+}
+.raccn-home[data-route="policy"] svg.hp-control-plane .hp-plane-lock--policy,
+.raccn-home[data-route="output"] svg.hp-control-plane .hp-plane-lock--output,
+.raccn-home[data-route="audit"] svg.hp-control-plane .hp-plane-lock--audit {
+  fill: var(--hp-control-active-fill);
+  stroke: var(--hp-control-route-color);
+}
+.raccn-home svg.hp-control-plane[data-control="active"] .hp-plane-lock {
+  fill: var(--hp-control-active-fill);
+  stroke: var(--hp-control-active-fill);
+  transition-delay: calc(var(--hp-signal-delay) + 380ms);
+}
+.raccn-home svg.hp-control-plane .hp-control-terminal__contact {
+  stroke: #f3efe5;
+  stroke-width: 2;
+  opacity: 0;
+  transition: opacity 160ms ease;
+}
+.raccn-home svg.hp-control-plane[data-control="active"] .hp-control-terminal__contact { opacity: 1; transition-delay: calc(var(--hp-signal-delay) + 430ms); }
+.raccn-home svg.hp-control-plane .hp-control-terminal__response {
+  fill: #5264ff;
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.raccn-home svg.hp-control-plane[data-control="active"] .hp-control-terminal__response {
+  animation: hp-terminal-confirmation 470ms calc(var(--hp-signal-delay) + 350ms) ease-out both;
+}
+.raccn-home svg.hp-control-plane .hp-plane__middle-material { transition: fill 360ms ease, stroke 360ms ease; }
+.raccn-home svg.hp-control-plane[data-control="active"] .hp-plane__middle-material { fill: var(--hp-control-layer-fill); stroke: var(--hp-control-layer-edge); transition-delay: 360ms; }
+.raccn-home svg.hp-control-plane .hp-plane__material-response,
+.raccn-home svg.hp-control-plane .hp-plane__surface-response { opacity: 0; pointer-events: none; }
+.raccn-home svg.hp-control-plane .hp-plane__surface-response {
+  transform-box: fill-box;
+  transform-origin: center;
+  transform: translate3d(0, calc(var(--hp-hero-resolve) * -34px), 0);
+}
+.raccn-home svg.hp-control-plane[data-control="active"] .hp-plane__material-response { animation: hp-layer-confirmation 850ms 220ms ease-out both; }
+.raccn-home svg.hp-control-plane[data-control="active"] .hp-plane__surface-response { animation: hp-surface-confirmation 740ms 100ms ease-out both; }
+/* Color-only response shares the existing layer confirmation clock (850 / 220).
+   Backwards fill lets the approved hover color respond after resolution. */
+@keyframes hp-control-color {
+  0% { fill: var(--hp-control-cobalt); }
+  28% { fill: var(--hp-control-violet); }
+  64% { fill: var(--hp-control-cyan); }
+  100% { fill: var(--hp-control-active-fill); }
+}
+@keyframes hp-control-edge-color {
+  0% { fill: #172b99; }
+  28% { fill: #433574; }
+  64% { fill: #2c5268; }
+  100% { fill: var(--hp-control-active-edge); }
+}
+@keyframes hp-contact-emission {
+  0% { opacity: .8; transform: scale(1); stroke: var(--hp-control-cobalt); }
+  50% { stroke: var(--hp-control-violet); }
+  75% { opacity: .12; }
+  100% { opacity: 0; transform: scale(1.21); stroke: var(--hp-control-cyan); }
+}
+@keyframes hp-connected-propagation {
+  0% { opacity: 0; stroke-dashoffset: .24; stroke: var(--hp-control-cobalt); }
+  8%, 72% { opacity: 1; }
+  40% { stroke: var(--hp-control-violet); }
+  72% { stroke: var(--hp-control-cyan); }
+  100% { opacity: 0; stroke-dashoffset: -1; stroke: var(--hp-control-mineral); }
+}
+@keyframes hp-terminal-confirmation {
+  0% { opacity: .8; transform: scale(.6); fill: var(--hp-control-cyan); }
+  100% { opacity: 0; transform: scale(1.9); fill: var(--hp-control-mineral); }
+}
+@keyframes hp-layer-confirmation {
+  0% { opacity: 0; fill: var(--hp-control-cobalt); }
+  26% { opacity: .58; fill: var(--hp-control-violet); }
+  64% { fill: var(--hp-control-cyan); }
+  100% { opacity: 0; fill: var(--hp-control-cobalt); }
+}
+@keyframes hp-surface-confirmation {
+  0% { opacity: 0; fill: var(--hp-control-cobalt); }
+  35% { opacity: .22; fill: var(--hp-control-violet); }
+  70% { fill: var(--hp-control-cyan); }
+  100% { opacity: 0; fill: var(--hp-control-mineral); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .raccn-home svg.hp-control-plane *,
+  .raccn-home svg.hp-control-plane[data-control="active"] * { animation: none !important; transition: none !important; }
+  .raccn-home svg.hp-control-plane .hp-control-emission,
+  .raccn-home svg.hp-control-plane .hp-core-route__signal,
+  .raccn-home svg.hp-control-plane .hp-control-terminal__response,
+  .raccn-home svg.hp-control-plane .hp-plane__material-response,
+  .raccn-home svg.hp-control-plane .hp-plane__surface-response { opacity: 0 !important; }
+}

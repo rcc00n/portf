@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+Disallow: /prototype/
+Sitemap: https://raccncode.com/sitemap.xml

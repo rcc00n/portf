@@ -28,11 +28,11 @@ const Estimate = () => {
   useEffect(() => {
     if (typeof window === "undefined") return;
     const snapshot = { product, complexity, team, integrations, updatedAt: new Date().toISOString() };
-    window.localStorage.setItem(ESTIMATE_STORAGE_KEY, JSON.stringify(snapshot));
+    try { window.localStorage.setItem(ESTIMATE_STORAGE_KEY, JSON.stringify(snapshot)); } catch { /* Estimates still work when storage is unavailable. */ }
   }, [product, complexity, team, integrations]);
 
   const handleCtaClick = () => {
-    trackCtaClick("Get full estimate in 24h", "/start", { context: "estimate" });
+    trackCtaClick("Start a project", "/start", { context: "estimate" });
   };
 
   return (
@@ -42,6 +42,7 @@ const Estimate = () => {
       subtitle="Select scope inputs to receive range-based estimates. No fake precision, no sales pressure."
     >
       <div className="space-y-8">
+        <p className="text-sm leading-relaxed text-zinc-300">Your choices are saved in this browser and can inform a later project inquiry. <Link to="/privacy#browser-storage" className="underline underline-offset-4">Privacy and saved choices</Link>.</p>
         <div className="grid gap-4 lg:grid-cols-2">
           <ToggleGroup label="Product type" options={PRODUCT_OPTIONS} value={product} onChange={setProduct} />
           <ToggleGroup label="Complexity" options={COMPLEXITY_OPTIONS} value={complexity} onChange={setComplexity} />
@@ -89,7 +90,7 @@ const Estimate = () => {
 
         <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
           <div className="text-xs uppercase tracking-[0.3em] text-zinc-500">Next step</div>
-          <div className="mt-2 text-lg font-semibold text-white">Get a full estimate in 24 hours.</div>
+          <div className="mt-2 text-lg font-semibold text-white">Discuss a project estimate.</div>
           <p className="mt-2 text-sm text-zinc-300">
             Share requirements and we will return with a scope breakdown, timeline, and cost range.
           </p>
@@ -99,7 +100,7 @@ const Estimate = () => {
               onClick={handleCtaClick}
               className="inline-flex items-center justify-center rounded-xl bg-white px-5 py-3 text-sm font-medium text-black transition hover:bg-zinc-200"
             >
-              Get full estimate in 24h
+              Start a project
             </Link>
             <Link
               to="/summary"

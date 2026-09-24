@@ -1,7 +1,11 @@
+import ipaddress
 import json
+import math
 import os
 import urllib.request
 
+from django.core.exceptions import ValidationError
+from django.core.validators import validate_email
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
@@ -9,11 +13,17 @@ from django.views.decorators.http import require_POST
 from .models import ContactRequest, TelegramRecipient
 
 
+CONTACT_LIMITS = {"name": 120, "email": 254, "company": 200, "message": 5000}
+
+
 def _get_client_ip(request):
-    forwarded = request.META.get("HTTP_X_FORWARDED_FOR")
-    if forwarded:
-        return forwarded.split(",")[0].strip()
-    return request.META.get("REMOTE_ADDR")
+    forwarded = request.META.get("HTTP_X_FORWARDED_FOR", "").split(",")[0].strip()
+    for value in (forwarded, request.META.get("REMOTE_ADDR")):
+        try:
+            return str(ipaddress.ip_address(value))
+        except ValueError:
+            continue
+    return None
 
 
 def _clean_value(value):
@@ -28,7 +38,7 @@ def _clean_int(value):
     if isinstance(value, int):
         return value
     if isinstance(value, float):
-        return int(value)
+        return int(value) if math.isfinite(value) else None
     if isinstance(value, str):
         value = value.strip()
         if value.isdigit():
@@ -145,8 +155,9 @@ def _notify_telegram(lead):
                 sent_any = True
             else:
                 errors.append(f"{recipient.chat_id}: HTTP error")
-        except Exception as exc:
-            errors.append(f"{recipient.chat_id}: {exc}")
+        except Exception:
+            # Transport exceptions can contain the request URL and bot token.
+            errors.append(f"{recipient.chat_id}: Telegram delivery failed")
 
     if sent_any:
         return True, "; ".join(errors)
@@ -158,8 +169,10 @@ def _notify_telegram(lead):
 def contact_request(request):
     try:
         payload = json.loads(request.body.decode("utf-8") or "{}")
-    except json.JSONDecodeError:
+    except (json.JSONDecodeError, UnicodeDecodeError):
         return JsonResponse({"error": "Invalid JSON"}, status=400)
+    if not isinstance(payload, dict):
+        return JsonResponse({"error": "Expected a JSON object"}, status=400)
 
     name = _clean_value(payload.get("name"))
     email = _clean_value(payload.get("email"))
@@ -182,8 +195,17 @@ def contact_request(request):
     if not message:
         errors["message"] = "Required"
 
+    for field, value in (("name", name), ("email", email), ("company", company), ("message", message)):
+        if len(value) > CONTACT_LIMITS[field]:
+            errors[field] = f"Use {CONTACT_LIMITS[field]:,} characters or fewer."
+    if email and "email" not in errors:
+        try:
+            validate_email(email)
+        except ValidationError:
+            errors["email"] = "Use a valid email address."
+
     if errors:
-        return JsonResponse({"error": "Missing required fields", "fields": errors}, status=400)
+        return JsonResponse({"error": "Check the highlighted fields", "fields": errors}, status=400)
 
     lead = ContactRequest.objects.create(
         name=name,
