@@ -56,6 +56,8 @@ def _clean_qualification(payload):
             continue
         value = _clean_value(item.get("value"))
         label = _clean_value(item.get("label"))
+        if key == "projectType" and value.lower() in {"unsure", "unknown", "not sure", "not sure yet"}:
+            value, label = "unsure", "Not sure"
         rating = _clean_int(item.get("rating"))
         total = _clean_int(item.get("total"))
         if not any([value, label, rating, total]):

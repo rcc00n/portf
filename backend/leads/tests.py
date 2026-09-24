@@ -82,6 +82,45 @@ class ContactRequestTests(TestCase):
         self.assertEqual(lead.qualification, qualification)
         self.notify.assert_called_once_with(lead)
 
+    def test_unknown_project_intent_is_persisted_without_example_product(self):
+        for value in ("unsure", "unknown", "not sure", "Not sure", "not sure yet"):
+            with self.subTest(value=value):
+                response = self.post({
+                    **self.payload,
+                    "source": "site-start:unsure/Balanced/unspecified/unspecified",
+                    "qualification": {
+                        "projectType": {"value": value, "label": "Not sure"},
+                        "complexity": {"value": "Balanced", "label": "Balanced"},
+                    },
+                })
+                self.assertEqual(response.status_code, 200)
+                lead = ContactRequest.objects.get(pk=response.json()["id"])
+                self.assertEqual(lead.qualification["projectType"]["value"], "unsure")
+                self.assertEqual(lead.qualification["projectType"]["label"], "Not sure")
+                self.assertEqual(lead.qualification["complexity"]["value"], "Balanced")
+                self.assertIn("unsure", lead.source)
+                self.assertNotIn("CRM", json.dumps(lead.qualification))
+                self.assertEqual(lead.message, self.payload["message"])
+
+    def test_unknown_project_label_cannot_describe_an_example_product(self):
+        response = self.post({**self.payload, "qualification": {
+            "projectType": {"value": "unknown", "label": "CRM"},
+        }})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(ContactRequest.objects.get().qualification["projectType"]["label"], "Not sure")
+
+    def test_optional_preferences_do_not_imply_a_project_type(self):
+        response = self.post({**self.payload, "qualification": {
+            "budget": {"value": "10_25k", "label": "$10k–25k"},
+        }})
+        self.assertEqual(response.status_code, 200)
+        self.assertNotIn("projectType", ContactRequest.objects.get().qualification)
+
+    def test_inquiry_without_definition_requires_only_the_three_contact_fields(self):
+        response = self.post(self.payload)
+        self.assertEqual(response.status_code, 200)
+        self.assertIsNone(ContactRequest.objects.get().qualification)
+
     def test_accepts_limit_boundaries(self):
         response = self.post({**self.payload, "name": "n" * 120, "company": "c" * 200, "message": "m" * 5000})
         self.assertEqual(response.status_code, 200)
