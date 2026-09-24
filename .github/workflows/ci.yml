@@ -42,10 +42,12 @@ jobs:
             sleep 1
           done
           python app/tests/definition_browser.py
-      - name: Production-like CMS and media regression
+          python app/tests/contact_browser.py
+      - name: Production-like CMS, media and inquiry regression
         run: |
           python -m pip install -r backend/requirements.txt
           python scripts/cms_media_smoke.py
+          python scripts/contact_reliability_smoke.py
 
   backend:
     runs-on: ubuntu-latest

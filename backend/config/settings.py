@@ -3,6 +3,7 @@ import os
 
 import dj_database_url
 from django.core.management.utils import get_random_secret_key
+from corsheaders.defaults import default_headers
 
 
 def env_bool(name, default=False):
@@ -135,3 +136,10 @@ CSRF_COOKIE_SECURE = env_bool("DJANGO_CSRF_COOKIE_SECURE", not DEBUG)
 SECURE_HSTS_SECONDS = int(os.getenv("DJANGO_SECURE_HSTS_SECONDS", "0")) if not DEBUG else 0
 SECURE_HSTS_INCLUDE_SUBDOMAINS = env_bool("DJANGO_SECURE_HSTS_INCLUDE_SUBDOMAINS", False)
 SECURE_HSTS_PRELOAD = env_bool("DJANGO_SECURE_HSTS_PRELOAD", False)
+
+# Public inquiries: one shared-network budget per hour, socket peer only.
+INQUIRY_RATE_LIMIT = int(os.getenv("INQUIRY_RATE_LIMIT", "60"))
+INQUIRY_ALLOWED_ORIGINS = [value.strip() for value in os.getenv("INQUIRY_ALLOWED_ORIGINS", "").split(",") if value.strip()]
+
+# Required only for an explicitly configured cross-origin frontend.
+CORS_ALLOW_HEADERS = (*default_headers, "idempotency-key")

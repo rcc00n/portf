@@ -1,229 +1,125 @@
-import ipaddress
+import hashlib
 import json
-import math
-import os
-import urllib.request
+import logging
+from functools import wraps
+import uuid
 
-from django.core.exceptions import ValidationError
+from django.conf import settings
+from django.core.exceptions import RequestDataTooBig, ValidationError
 from django.core.validators import validate_email
+from django.db import DatabaseError, IntegrityError, transaction
 from django.http import JsonResponse
+from django.utils.crypto import constant_time_compare
 from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_POST
 
-from .models import ContactRequest, TelegramRecipient
+from .abuse import allow_request, client_ip
+from .models import ContactRequest, InquiryNotification, TelegramRecipient
+from .validation import CONTACT_LIMITS, _clean_qualification, _clean_value
+
+MAX_BODY_BYTES = 32768
 
 
-CONTACT_LIMITS = {"name": 120, "email": 254, "company": 200, "message": 5000}
+def error_response(code, status=400, fields=None):
+    errors = fields or {"request": code}
+    response = JsonResponse({"ok": False, "errors": errors, "fields": errors, "error": code}, status=status)
+    response["Cache-Control"] = "no-store"
+    if status == 429:
+        response["Retry-After"] = "3600"
+    return response
 
 
-def _get_client_ip(request):
-    forwarded = request.META.get("HTTP_X_FORWARDED_FOR", "").split(",")[0].strip()
-    for value in (forwarded, request.META.get("REMOTE_ADDR")):
+def accepted(lead, digest):
+    if not constant_time_compare(lead.submission_digest, digest):
+        return error_response("Submission key already used for different content.", 409)
+    response = JsonResponse({"ok": True, "id": lead.pk})
+    response["Cache-Control"] = "no-store"
+    return response
+
+
+def database_failure_boundary(view):
+    @wraps(view)
+    def wrapped(request):
         try:
-            return str(ipaddress.ip_address(value))
-        except ValueError:
-            continue
-    return None
-
-
-def _clean_value(value):
-    if isinstance(value, str):
-        return value.strip()
-    return ""
-
-
-def _clean_int(value):
-    if isinstance(value, bool):
-        return None
-    if isinstance(value, int):
-        return value
-    if isinstance(value, float):
-        return int(value) if math.isfinite(value) else None
-    if isinstance(value, str):
-        value = value.strip()
-        if value.isdigit():
-            return int(value)
-    return None
-
-
-def _clean_qualification(payload):
-    if not isinstance(payload, dict):
-        return None
-    cleaned = {}
-    for key in ("projectType", "complexity", "budget", "timeline"):
-        item = payload.get(key)
-        if not isinstance(item, dict):
-            continue
-        value = _clean_value(item.get("value"))
-        label = _clean_value(item.get("label"))
-        if key == "projectType" and value.lower() in {"unsure", "unknown", "not sure", "not sure yet"}:
-            value, label = "unsure", "Not sure"
-        rating = _clean_int(item.get("rating"))
-        total = _clean_int(item.get("total"))
-        if not any([value, label, rating, total]):
-            continue
-        cleaned[key] = {
-            "value": value,
-            "label": label,
-            "rating": rating,
-            "total": total,
-        }
-    return cleaned or None
-
-
-def _truncate(text, limit=3500):
-    if len(text) <= limit:
-        return text
-    return text[: max(limit - 3, 0)] + "..."
-
-
-def _format_qualification_lines(qualification):
-    if not isinstance(qualification, dict):
-        return []
-    labels = {
-        "projectType": "Project type",
-        "complexity": "Complexity",
-        "budget": "Budget",
-        "timeline": "Timeline",
-    }
-    ordered_keys = ("projectType", "complexity", "budget", "timeline")
-    lines = []
-    for key in ordered_keys:
-        item = qualification.get(key)
-        if not isinstance(item, dict):
-            continue
-        rating = item.get("rating")
-        rating_part = "-"
-        if isinstance(rating, int):
-            rating_part = str(rating)
-        label = item.get("label") or item.get("value")
-        title = labels.get(key, key)
-        if label:
-            lines.append(f"{title}: {rating_part} ({label})")
-        else:
-            lines.append(f"{title}: {rating_part}")
-    return lines
-
-
-def _format_message(lead):
-    lines = [
-        "New order received",
-        f"ID: {lead.id}",
-        f"Name: {lead.name}",
-        f"Email: {lead.email}",
-    ]
-    if lead.company:
-        lines.append(f"Company: {lead.company}")
-    if lead.message:
-        lines.append("Message:")
-        lines.append(lead.message)
-    if lead.qualification:
-        lines.append("Qualification:")
-        lines.extend(_format_qualification_lines(lead.qualification))
-    if lead.source:
-        lines.append(f"Source: {lead.source}")
-    return _truncate("\n".join(lines))
-
-
-def _send_telegram_message(token, chat_id, text):
-    url = f"https://api.telegram.org/bot{token}/sendMessage"
-    payload = {"chat_id": chat_id, "text": text}
-    data = json.dumps(payload).encode("utf-8")
-    request = urllib.request.Request(
-        url,
-        data=data,
-        headers={"Content-Type": "application/json"},
-    )
-    with urllib.request.urlopen(request, timeout=10) as response:
-        return 200 <= response.status < 300
-
-
-def _notify_telegram(lead):
-    token = os.getenv("TELEGRAM_BOT_TOKEN")
-    if not token:
-        return False, "Missing TELEGRAM_BOT_TOKEN"
-
-    recipients = list(TelegramRecipient.objects.filter(is_active=True))
-    if not recipients:
-        return False, "No active Telegram recipients"
-
-    text = _format_message(lead)
-    errors = []
-    sent_any = False
-
-    for recipient in recipients:
-        try:
-            if _send_telegram_message(token, recipient.chat_id, text):
-                sent_any = True
-            else:
-                errors.append(f"{recipient.chat_id}: HTTP error")
-        except Exception:
-            # Transport exceptions can contain the request URL and bot token.
-            errors.append(f"{recipient.chat_id}: Telegram delivery failed")
-
-    if sent_any:
-        return True, "; ".join(errors)
-    return False, "; ".join(errors) if errors else "Unknown error"
+            return view(request)
+        except DatabaseError:
+            logging.getLogger(__name__).error("Inquiry database operation failed; acceptance unconfirmed.")
+            return error_response("Acceptance could not be confirmed. Retry with the same submission key.", 503)
+    return wrapped
 
 
 @csrf_exempt
-@require_POST
+@database_failure_boundary
 def contact_request(request):
+    if request.method != "POST":
+        response = error_response("Use POST.", 405)
+        response["Allow"] = "POST"
+        return response
+    if request.content_type != "application/json":
+        return error_response("Use application/json.", 415)
+    # Bounded read also applies when Content-Length is missing or dishonest.
     try:
-        payload = json.loads(request.body.decode("utf-8") or "{}")
-    except (json.JSONDecodeError, UnicodeDecodeError):
-        return JsonResponse({"error": "Invalid JSON"}, status=400)
+        raw = request.read(MAX_BODY_BYTES + 1)
+    except RequestDataTooBig:
+        return error_response("Request is too large.", 413)
+    if len(raw) > MAX_BODY_BYTES:
+        return error_response("Request is too large.", 413)
+    try:
+        payload = json.loads(raw.decode("utf-8"), parse_constant=lambda _: None, parse_int=lambda value: int(value) if len(value) < 32 else None)
+    except (ValueError, UnicodeError, RecursionError):
+        return error_response("Invalid JSON.")
     if not isinstance(payload, dict):
-        return JsonResponse({"error": "Expected a JSON object"}, status=400)
+        return error_response("Expected a JSON object.")
+    origin = request.META.get("HTTP_ORIGIN")
+    if origin and settings.INQUIRY_ALLOWED_ORIGINS and origin not in settings.INQUIRY_ALLOWED_ORIGINS:
+        return error_response("Origin is not allowed.", 403)
+    try:
+        raw_key = request.headers.get("Idempotency-Key", "")
+        key = uuid.UUID(raw_key)
+        if len(raw_key) != 36 or key.version != 4 or str(key) != raw_key.lower():
+            raise ValueError
+    except (ValueError, AttributeError):
+        return error_response("A UUID v4 Idempotency-Key header is required.")
+    # Honeypot never gives a false acceptance and cannot enqueue a notification.
+    if payload.get("website") not in (None, ""):
+        return error_response("Submission could not be accepted.")
 
-    name = _clean_value(payload.get("name"))
-    email = _clean_value(payload.get("email"))
-    company = _clean_value(payload.get("company"))
-    message = _clean_value(payload.get("message"))
-    source = _clean_value(
-        payload.get("source")
-        or request.META.get("HTTP_ORIGIN")
-        or request.META.get("HTTP_REFERER")
-    )
-    qualification = _clean_qualification(payload.get("qualification"))
-    if source:
-        source = source[:120]
-
-    errors = {}
-    if not name:
-        errors["name"] = "Required"
-    if not email:
-        errors["email"] = "Required"
-    if not message:
-        errors["message"] = "Required"
-
-    for field, value in (("name", name), ("email", email), ("company", company), ("message", message)):
-        if len(value) > CONTACT_LIMITS[field]:
-            errors[field] = f"Use {CONTACT_LIMITS[field]:,} characters or fewer."
-    if email and "email" not in errors:
+    values = {field: _clean_value(payload.get(field)) for field in CONTACT_LIMITS}
+    errors = {field: "Required" for field in ("name", "email", "message") if not values[field]}
+    for field, limit in CONTACT_LIMITS.items():
+        if len(values[field]) > limit:
+            errors[field] = f"Use {limit:,} characters or fewer."
+    if values["email"] and "email" not in errors:
         try:
-            validate_email(email)
+            validate_email(values["email"])
         except ValidationError:
             errors["email"] = "Use a valid email address."
-
     if errors:
-        return JsonResponse({"error": "Check the highlighted fields", "fields": errors}, status=400)
-
-    lead = ContactRequest.objects.create(
-        name=name,
-        email=email,
-        company=company,
-        message=message,
-        source=source,
-        qualification=qualification,
-        ip_address=_get_client_ip(request),
-        user_agent=_clean_value(request.META.get("HTTP_USER_AGENT", ""))[:255],
+        return error_response("Check the highlighted fields.", fields=errors)
+    values.update(
+        source=_clean_value(payload.get("source") or origin or request.META.get("HTTP_REFERER"))[:120],
+        qualification=_clean_qualification(payload.get("qualification")),
     )
-
-    sent, error = _notify_telegram(lead)
-    if sent or error:
-        lead.telegram_sent = sent
-        lead.telegram_error = error or ""
-        lead.save(update_fields=["telegram_sent", "telegram_error", "updated_at"])
-
-    return JsonResponse({"ok": True, "id": lead.id})
+    digest = hashlib.sha256(json.dumps(values, sort_keys=True, ensure_ascii=True).encode()).hexdigest()
+    existing = ContactRequest.objects.filter(submission_key=key).first()
+    if existing:
+        return accepted(existing, digest)
+    ip = client_ip(request)
+    if not allow_request(ip):
+        return error_response("Please wait before sending another inquiry.", 429)
+    try:
+        with transaction.atomic():
+            lead = ContactRequest.objects.create(
+                **values, submission_key=key, submission_digest=digest,
+                ip_address=ip, user_agent=_clean_value(request.META.get("HTTP_USER_AGENT"))[:255],
+            )
+            # Snapshot configured destinations, not any user-supplied URL or chat ID.
+            destinations = {chat: {"status": "pending", "error": ""} for chat in
+                            TelegramRecipient.objects.filter(is_active=True).values_list("chat_id", flat=True)}
+            InquiryNotification.objects.create(lead=lead, deliveries=destinations)
+    except IntegrityError:
+        # Unique database constraint serializes simultaneous retries across workers.
+        existing = ContactRequest.objects.filter(submission_key=key).first()
+        if existing:
+            return accepted(existing, digest)
+        raise
+    return accepted(lead, digest)

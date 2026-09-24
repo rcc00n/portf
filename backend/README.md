@@ -25,7 +25,8 @@ Frontend dev
 
 Notes
 - The API endpoints are /api/projects/, /api/pricing/, /api/contacts/ and the admin is /admin/.
-- Set TELEGRAM_BOT_TOKEN to enable Telegram notifications and add chat IDs in the admin.
+- Inquiry acceptance is database-backed and independent of Telegram. Set TELEGRAM_BOT_TOKEN, add active recipients in admin, and run the separate `python manage.py process_inquiry_notifications` worker from `backend/`. See [contact reliability contract](../CONTACT_RELIABILITY.md) and [Dokku runtime](../DOKKU.md).
+- Settings read process environment; copying `.env` alone does not load it. Export the reviewed values through your shell/process manager without committing them.
 - Uploaded images are stored under backend/media/.
 - Set DJANGO_SERVE_MEDIA=true if you want Django to serve uploads without a CDN.
 - For a production build, the Dockerfile builds the frontend and copies it into backend/frontend_dist.

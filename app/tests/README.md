@@ -62,3 +62,19 @@ contact abuse control/durable notifications, prototype asset migration, raw rout
 metadata, dependency triage, operations, broader accessibility and legacy cleanup.
 No production or staging deployment was performed. Owner/legal/infrastructure
 verification remains required before a release-readiness claim.
+
+Contact reliability regression:
+
+```sh
+RACCN_TEST_URL=http://127.0.0.1:4173 python3 app/tests/contact_browser.py
+python3 scripts/contact_reliability_smoke.py
+```
+
+The seven browser cases intercept every inquiry and check success, validation,
+server failure, lost response, virtual-clock timeout, key reuse/new edited intent,
+retained text and mobile native field focus. Existing definition browser cases
+retain metadata opt-in/opt-out coverage. The smoke script starts two Gunicorn web
+workers against a temporary SQLite database, deliberately loses the response after
+persistence, restarts the server, retries, and exercises a duplicate HTTP race.
+It never starts a notification worker and removes synthetic records with its temp DB.
+All worker/Telegram tests use mocked transport in `backend/leads/test_reliability.py`.
