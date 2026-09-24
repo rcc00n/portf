@@ -1,5 +1,8 @@
 import { useMemo, useState } from "react";
 import { ClosingAction, ChoiceGroup, Evidence, PageLead, SignalLink } from "./SiteShell.jsx";
+import useProjectCatalog from "../projects/useProjectCatalog.js";
+import CatalogStatus from "../projects/CatalogStatus.jsx";
+import { imageAlt } from "../projects/catalog.js";
 import SystemGraph from "./SystemGraph.jsx";
 import { PRODUCT_OPTIONS, SCALE_OPTIONS, buildPreset } from "../pages/engineering/architectureData.js";
 import { CHECKLIST_ITEMS } from "../pages/engineering/productionReadyData.js";
@@ -7,12 +10,16 @@ import { CHECKLIST_ITEMS } from "../pages/engineering/productionReadyData.js";
 export function SystemsPage() {
   const [active,setActive]=useState("backend");
   const [view,setView]=useState("customer");
+  const catalog=useProjectCatalog();
+  const renter=catalog.projects.find(project=>project.slug==="renter");
+  const evidenceIndex=view==="customer"?0:1;
+  const evidence=renter?.media[evidenceIndex];
   const preset=useMemo(()=>buildPreset("Marketplace","MVP"),[]);
   const block=preset.blocks[active];
   return <>
     <PageLead index="03 / Systems" title={<>The interface.<br /><em>And everything<br />behind it.</em></>} intro="Architecture, operator controls, and production decisions shape whether a product can be understood, changed, and run."><SignalLink to="/systems/architecture">Explore the architecture</SignalLink></PageLead>
     <section className="site-system-overview site-section"><div><span className="site-label">Architecture / Follow the responsibility</span><SystemGraph active={active} onSelect={setActive} product="Marketplace" /></div><aside aria-live="polite"><span className="site-label">Selected layer</span><h2>{block.title}</h2><p>{block.summary}</p><SignalLink to="/systems/architecture">Explore this system</SignalLink></aside></section>
-    <section className="site-control-comparison site-section" id="control"><header className="site-editorial"><span className="site-label">Control / Admin-first</span><h2>One product.<br />Different decisions.</h2><p>The customer needs a clear next step. The operator needs context, permissions, and a way to handle exceptions.</p></header><div className="site-comparison-select"><ChoiceGroup legend="View the product through" name="control-view" options={[{value:"customer",label:"Customer"},{value:"admin",label:"Operator"}]} value={view} onChange={setView} /><p aria-live="polite">{view==="customer" ? "Discovery, availability, and a path to booking." : "Disputes, ledger activity, and a trace of what changed."}</p></div><Evidence key={view} src={`/prototype/media/renter-${view==="customer" ? "market" : "control"}.webp`} alt={view==="customer" ? "Renter customer marketplace" : "Renter operational control surface"} label={`Renter / ${view==="customer" ? "Customer" : "Operator"} evidence`} note="Two sides of the same product" /><SignalLink to="/systems/demo" className="site-comparison-link">Try the operational demo</SignalLink></section>
+    <section className="site-control-comparison site-section" id="control"><header className="site-editorial"><span className="site-label">Control / Admin-first</span><h2>One product.<br />Different decisions.</h2><p>The customer needs a clear next step. The operator needs context, permissions, and a way to handle exceptions.</p></header><div className="site-comparison-select"><ChoiceGroup legend="View the product through" name="control-view" options={[{value:"customer",label:"Customer"},{value:"admin",label:"Operator"}]} value={view} onChange={setView} /><p aria-live="polite">{view==="customer" ? "Discovery, availability, and a path to booking." : "Disputes, ledger activity, and a trace of what changed."}</p></div>{evidence?<Evidence key={view} src={evidence.url} alt={imageAlt(renter,evidence,evidenceIndex)} label={`${renter.title} / ${view==="customer"?"Customer":"Operator"} evidence`} note="Two sides of the same product"/>:catalog.status==="ready"?<p className="site-caption">Project comparison is not currently published.</p>:<CatalogStatus catalog={catalog}/>}<SignalLink to="/systems/demo" className="site-comparison-link">Try the operational demo</SignalLink></section>
     <section className="site-production site-section" id="production"><div><span className="site-label">Production / Plan for what follows</span><h2>A release is<br />a beginning.</h2><p>These are the operational questions we bring into scope. The appropriate controls and targets depend on the product.</p></div><div>{CHECKLIST_ITEMS.map((item,i)=><details key={item.id} className="site-disclosure"><summary><span className="site-disclosure-number">0{i+1}</span>{item.title}<span aria-hidden="true">+</span></summary><div><p>{item.why}</p><ul>{item.includes.map(line=><li key={line}>{line}</li>)}</ul></div></details>)}</div></section>
     <section className="site-editorial site-section"><span className="site-label">Decisions / Make the trade-off explicit</span><h2>Every choice<br />has a cost.</h2><div><p>The useful record includes the context, the decision, the trade-off, and the condition that would make us change it.</p><SignalLink to="/systems/decisions">Read the decision records</SignalLink></div></section>
     <ClosingAction title={<>Make your system<br />easier to operate.</>} detail="Bring the workflow, the constraint, or the part that keeps breaking." />

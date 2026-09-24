@@ -1,11 +1,14 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import ControlPlane, { RaccnGlyph } from "./ControlPlane.jsx";
 import HomeStartForm from "./HomeStartForm.jsx";
 import SystemsInstrument from "./SystemsInstrument.jsx";
 import useHomeMotion from "./useHomeMotion.js";
-import { approachSteps, loadHomepageProjects, selectHomepageProjects, systemModes } from "./homeData.js";
+import { approachSteps, selectHomepageProjects, systemModes } from "./homeData.js";
 import { trackCtaClick, trackPageView } from "../utils/analytics.js";
+import useProjectCatalog from "../projects/useProjectCatalog.js";
+import CatalogStatus from "../projects/CatalogStatus.jsx";
+import { casePath, imageAlt, presentProject, selectProjectEvidence } from "../projects/catalog.js";
 import "./home.css";
 import "./home-refinement.css";
 import "./home-journey.css";
@@ -57,10 +60,10 @@ const HomeHeader = () => (
 const SecondaryProject = ({ project, index }) => {
   const content = (
     <>
-      <figure data-home-evidence>
+      {project.image && <figure data-home-evidence>
         <DeferredImage src={project.image} alt={project.imageAlt} width="1800" height={project.key === "worlddoc" ? "858" : "810"} />
         <figcaption><span>0{index + 2}</span><span>Interface evidence</span></figcaption>
-      </figure>
+      </figure>}
       <div className="hp-secondary-project__copy">
         <span className="hp-system-label">{project.type}</span>
         <h3>{project.title}</h3>
@@ -71,15 +74,16 @@ const SecondaryProject = ({ project, index }) => {
   );
 
   return project.href ? (
-    <a className="hp-secondary-project" href={project.href} target="_blank" rel="noreferrer" aria-label={`${project.title} — open project in a new tab`}>{content}</a>
+    <a data-project-slug={project.slug} className="hp-secondary-project" href={project.href} target="_blank" rel="noreferrer" aria-label={`${project.title} — open project in a new tab`}>{content}</a>
   ) : (
-    <article className="hp-secondary-project">{content}</article>
+    <article data-project-slug={project.slug} className="hp-secondary-project">{content}</article>
   );
 };
 
 export default function HomePage() {
   const rootRef = useRef(null);
-  const [cmsProjects, setCmsProjects] = useState([]);
+  const catalog = useProjectCatalog();
+  const lead = selectProjectEvidence(catalog.projects).lead;
   useHomeMotion(rootRef);
   const apiBase = (import.meta.env.VITE_API_BASE || "").replace(/\/$/, "");
 
@@ -100,15 +104,7 @@ export default function HomePage() {
     return () => window.removeEventListener("hashchange", syncHashTarget);
   }, []);
 
-  useEffect(() => {
-    const controller = new AbortController();
-    loadHomepageProjects({ apiBase, signal: controller.signal })
-      .then(setCmsProjects)
-      .catch(() => {});
-    return () => controller.abort();
-  }, [apiBase]);
-
-  const secondaryProjects = useMemo(() => selectHomepageProjects(cmsProjects), [cmsProjects]);
+  const secondaryProjects = selectHomepageProjects(catalog.projects);
 
   const skipToWork = (event) => {
     event.preventDefault();
@@ -148,29 +144,27 @@ export default function HomePage() {
           <p>Evidence over inventory.</p>
         </header>
 
-        <article className="hp-flagship">
+        <CatalogStatus catalog={catalog} />
+        {catalog.status==="ready"&&!lead&&!secondaryProjects.length&&<p>Explore published projects in the project index.</p>}
+        {lead && <article className="hp-flagship" data-project-slug={lead.slug}>
           <div className="hp-flagship__copy">
-            <span className="hp-system-label">Flagship system / Renter</span>
-            <h2><span>One market.</span><span>Two control</span><span>surfaces.</span></h2>
-            <p><strong>A two-sided rental marketplace</strong> with verification, availability, payments, disputes, and operator controls.</p>
-            <Link to="/work/renter">Explore the Renter case <span aria-hidden="true">↗</span></Link>
+            <span className="hp-system-label">{lead.impact}{lead.status ? ` / ${lead.status}` : ""}</span>
+            <h2>{(lead.headline || lead.title).split("\n").map((line,i)=><span key={i}>{line}</span>)}</h2>
+            <p>{lead.blurb}</p>
+            {casePath(lead) ? <Link to={casePath(lead)}>Explore {lead.title} <span aria-hidden="true">↗</span></Link> : presentProject(lead).href ? <a href={presentProject(lead).href} target="_blank" rel="noreferrer">Explore {lead.title} ↗</a> : null}
           </div>
           <div className="hp-flagship__evidence">
-            <figure className="hp-evidence hp-evidence--market" data-home-evidence>
-              <DeferredImage src="/prototype/media/renter-market.webp" alt="Renter customer marketplace" width="2555" height="1229" />
-              <figcaption><span>01 / Customer market</span><span>Discovery · trust · booking</span></figcaption>
-            </figure>
-            <figure className="hp-evidence hp-evidence--control" data-home-evidence>
-              <DeferredImage src="/prototype/media/renter-control.webp" alt="Renter operations dashboard" width="2566" height="1238" />
-              <figcaption><span>02 / Operator control</span><span>Disputes · ledger · audit</span></figcaption>
-            </figure>
+            {lead.media.slice(0,2).map((image,i)=><figure key={image.id} className={`hp-evidence hp-evidence--${i===0?"market":"control"}`} data-home-evidence>
+              <DeferredImage src={image.url} alt={imageAlt(lead,image,i)} width={i===0?"2555":"2566"} height={i===0?"1229":"1238"} />
+              <figcaption><span>0{i+1} / {lead.title}</span><span>{image.alt}</span></figcaption>
+            </figure>)}
           </div>
-          <div className="hp-flagship__architecture" aria-label="Renter system layers">
+          {lead.slug === "renter" && <div className="hp-flagship__architecture" aria-label={`${lead.title} system layers`}>
             {[
               ["01", "Customer"], ["02", "Provider"], ["03", "Admin"], ["04", "API"], ["05", "Ledger"],
             ].map(([index, label]) => <span key={label}><i>{index}</i>{label}</span>)}
-          </div>
-        </article>
+          </div>}
+        </article>}
 
         <div className="hp-secondary-work">
           {secondaryProjects.map((project, index) => <SecondaryProject key={project.key} project={project} index={index} />)}

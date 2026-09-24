@@ -26,10 +26,11 @@ class PricingPointInline(admin.TabularInline):
 
 @admin.register(Project)
 class ProjectAdmin(admin.ModelAdmin):
-    list_display = ("title", "impact", "is_published", "order", "updated_at")
-    list_filter = ("is_published",)
-    search_fields = ("title", "blurb")
-    ordering = ("order", "-updated_at")
+    list_display = ("title", "slug", "is_published", "featured_placement", "featured_order", "order", "updated_at")
+    list_filter = ("is_published", "featured_placement")
+    list_editable = ("is_published", "featured_placement", "featured_order", "order")
+    search_fields = ("title", "slug", "blurb")
+    ordering = ("order", "id")
     inlines = [ProjectImageInline, ProjectLinkInline]
     fieldsets = (
         (
@@ -37,6 +38,11 @@ class ProjectAdmin(admin.ModelAdmin):
             {
                 "fields": (
                     "title",
+                    "slug",
+                    "headline",
+                    "status",
+                    "featured_placement",
+                    "featured_order",
                     "impact",
                     "blurb",
                     "url",
