@@ -188,7 +188,7 @@ Monitor old pending jobs as well as failures: an absent worker creates no attemp
 until it runs. `/health/` remains independent of Telegram and does not prove queue health.
 Queue age alerts, log routing, database backups and restore rehearsals remain operator
 checks. Backups must include inquiries, notification state, and idempotency keys.
-See [the complete acceptance/retry contract](CONTACT_RELIABILITY.md).
+See [the complete acceptance/retry contract](docs/hardening/CONTACT_RELIABILITY.md).
 
 ## Canonical metadata, crawlers and bundled assets
 
@@ -229,4 +229,4 @@ Before staging, verify target-image construction, proxy/CDN route precedence and
 cache invalidation, reviewed canonical origin, externally reachable social preview
 and font MIME types, actual published CMS metadata, and staged access/indexing rules.
 No production search engine recrawl, social-provider refresh or infrastructure
-configuration was verified locally. See [migration and metadata handoff](ASSETS_METADATA_HARDENING.md).
+configuration was verified locally. See [migration and metadata handoff](docs/hardening/ASSETS_METADATA_HARDENING.md).
