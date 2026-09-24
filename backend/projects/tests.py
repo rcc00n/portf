@@ -30,7 +30,7 @@ class ProjectContractTests(TestCase):
         self.root = Path(self.temp.name)
         (self.root / "dist").mkdir()
         (self.root / "static").mkdir()
-        (self.root / "dist/index.html").write_text('<title>RACCN</title><div id="root"></div>')
+        (self.root / "dist/index.html").write_text('<head><!--raccn-head:start--><!--raccn-head:end--></head><div id="root"></div>')
         self.settings_override = override_settings(MEDIA_ROOT=self.root / "uploads", FRONTEND_DIST_DIR=self.root / "dist", STATIC_ROOT=self.root / "static")
         self.settings_override.enable()
         self.addCleanup(self.settings_override.disable)
@@ -159,7 +159,7 @@ class ProjectContractTests(TestCase):
         self.assertEqual(self.client.get('/api/projects/').json(), [])
         response = self.client.get('/work/renter')
         self.assertEqual(response.status_code, 404)
-        self.assertEqual(response['X-Robots-Tag'], 'noindex')
+        self.assertIn('noindex', response['X-Robots-Tag'])
         self.assertEqual(response['Cache-Control'], 'no-store')
 
     def test_default_draft_and_unique_lead(self):
@@ -171,7 +171,7 @@ class ProjectContractTests(TestCase):
 
     def test_case_database_failure_is_503_not_false_404(self):
         from django.db import OperationalError
-        with patch('config.views.published_case_exists', side_effect=OperationalError):
+        with patch('config.views.case_project', side_effect=OperationalError):
             self.assertEqual(self.client.get('/work/renter').status_code, 503)
 
 

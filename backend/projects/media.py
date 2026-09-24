@@ -59,4 +59,4 @@ def project_media(request, path):
     try:
         return _project_media(request, path)
     except Http404:
-        return HttpResponse("Image not found", status=404, content_type="text/plain", headers={"Cache-Control":"no-store", "X-Content-Type-Options":"nosniff"})
+        return HttpResponse("Image not found", status=404, content_type="text/plain", headers={"Cache-Control":"no-store", "X-Content-Type-Options":"nosniff", "X-Robots-Tag":"noindex"})

@@ -3,6 +3,7 @@ WORKDIR /app
 COPY app/package*.json ./
 RUN npm ci
 COPY app/ ./
+COPY backend/config/route_metadata.json /backend/config/route_metadata.json
 ARG VITE_BASE=/
 ARG VITE_API_BASE=
 ENV VITE_BASE=$VITE_BASE

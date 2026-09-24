@@ -10,24 +10,22 @@ from .views import FRONTEND_ROUTES, FRONTEND_REDIRECTS
 
 class FrontendRoutingTests(SimpleTestCase):
     def setUp(self):
-        case = patch("config.views.published_case_exists", return_value=True)
+        case = patch("config.views.case_project", return_value={"slug":"renter", "title":"Renter", "blurb":"Reviewed evidence", "is_published":True})
         case.start()
         self.addCleanup(case.stop)
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name) / "frontend_dist"
         self.root.mkdir()
-        (self.root / "index.html").write_text('<!doctype html><title>RACCN Code</title><div id="root"></div>')
+        (self.root / "index.html").write_text('<!doctype html><head><!--raccn-head:start--><!--raccn-head:end--></head><div id="root"></div>')
         self.override = self.settings(FRONTEND_DIST_DIR=self.root)
         self.override.enable()
         self.addCleanup(self.override.disable)
         self.assets = {
-            "robots.txt": (b"User-agent: *\n", "text/plain"),
-            "sitemap.xml": (b"<urlset></urlset>", "application/xml"),
             "raccn-mark.svg": (b'<svg xmlns="http://www.w3.org/2000/svg"/>', "image/svg+xml"),
             "favicon.ico": (b"icon", "image/vnd.microsoft.icon"),
             "social/raccn-code.png": (b"social image", "image/png"),
-            "prototype/fonts/instrument-sans-latin.woff2": (b"font", "font/woff2"),
+            "fonts/instrument-sans-latin.woff2": (b"font", "font/woff2"),
             "home/media/worlddoc.webp": (b"webp", "image/webp"),
             "assets/index-AbCd1234.js": (b"console.log('RACCN');", "text/javascript"),
             "assets/index-AbCd1234.css": (b"body { color: white; }", "text/css"),
@@ -43,7 +41,7 @@ class FrontendRoutingTests(SimpleTestCase):
                 response = self.client.get(route)
                 self.assertEqual(response.status_code, 200)
                 self.assertContains(response, 'id="root"')
-                self.assertEqual(response["Cache-Control"], "no-cache")
+                self.assertEqual(response["Cache-Control"], "no-store" if route=="/work/renter" else "no-cache")
         self.assertEqual(self.client.get("/start?source=homepage").status_code, 200)
         self.assertEqual(self.client.get("/privacy/").status_code, 200)
 
@@ -51,7 +49,7 @@ class FrontendRoutingTests(SimpleTestCase):
         response = self.client.get("/this-page-does-not-exist")
         self.assertEqual(response.status_code, 404)
         self.assertIn(b'id="root"', response.content)
-        self.assertEqual(response["X-Robots-Tag"], "noindex")
+        self.assertIn("noindex", response["X-Robots-Tag"])
         self.assertEqual(response["Cache-Control"], "no-store")
 
     def test_public_assets_are_served_from_dist_with_correct_content_type(self):
@@ -69,7 +67,7 @@ class FrontendRoutingTests(SimpleTestCase):
                 self.assertIn("ETag", response)
 
     def test_missing_assets_never_return_the_spa_shell(self):
-        for path in ("/assets/missing.js", "/home/media/missing.webp", "/social/missing.png", "/robots-missing.txt", "/prototype/fonts/missing.woff2"):
+        for path in ("/assets/missing.js", "/home/media/missing.webp", "/social/missing.png", "/robots-missing.txt", "/fonts/missing.woff2"):
             with self.subTest(path=path):
                 response = self.client.get(path)
                 self.assertEqual(response.status_code, 404)
@@ -97,10 +95,10 @@ class FrontendRoutingTests(SimpleTestCase):
         modified = self.client.get("/assets/index-AbCd1234.js", HTTP_IF_NONE_MATCH='"old-version"')
         self.assertEqual(modified.status_code, 200)
         modified.close()
-        public = self.client.get("/robots.txt")
+        public = self.client.get("/fonts/instrument-sans-latin.woff2")
         self.assertEqual(public["Cache-Control"], "public, max-age=300")
         public.close()
-        dated = self.client.get("/robots.txt", HTTP_IF_MODIFIED_SINCE=public["Last-Modified"])
+        dated = self.client.get("/fonts/instrument-sans-latin.woff2", HTTP_IF_MODIFIED_SINCE=public["Last-Modified"])
         self.assertEqual(dated.status_code, 304)
 
     def test_head_requests_and_non_get_methods(self):
@@ -145,4 +143,4 @@ class FrontendRoutingTests(SimpleTestCase):
     def test_invalid_case_and_prototype_paths_are_real_404s(self):
         for path in ("/work/not-a-case", "/systems/not-a-tool", "/prototype/not-a-study"):
             self.assertEqual(self.client.get(path).status_code, 404)
-        self.assertEqual(self.client.get("/systems/demo")["X-Robots-Tag"], "noindex")
+        self.assertIn("noindex", self.client.get("/systems/demo")["X-Robots-Tag"])

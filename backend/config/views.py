@@ -5,7 +5,8 @@ from urllib.parse import urlencode
 
 from django.conf import settings
 from django.db import DatabaseError
-from projects.publication import published_case_exists
+from .metadata import ROUTES, case_project, canonical_origin, render_document, render_head, route_metadata
+from xml.sax.saxutils import escape as xml_escape
 from django.http import FileResponse, Http404, HttpResponse, HttpResponseNotModified, HttpResponsePermanentRedirect
 from django.utils.http import http_date, parse_etags, parse_http_date_safe
 from django.views.decorators.http import require_GET, require_safe
@@ -13,11 +14,8 @@ from django.views.decorators.http import require_GET, require_safe
 
 # Keep in sync with the public React routes. Unknown routes still receive the
 # SPA's not-found screen, but with a real HTTP 404 for clients and crawlers.
-FRONTEND_ROUTES = frozenset({
-    "/", "/work", "/work/renter", "/systems", "/systems/architecture", "/systems/decisions", "/systems/demo",
-    "/approach", "/start", "/start/define", "/privacy", "/terms",
-    "/prototype", "/prototype/braided-signal", "/prototype/control-plates", "/prototype/routing-index",
-})
+FRONTEND_ROUTES = frozenset(ROUTES)
+
 FRONTEND_REDIRECTS = {
     "/projects": "/work", "/cases/renter-architecture": "/work/renter", "/engineering": "/systems",
     "/architecture-preview": "/systems/architecture", "/admin-first": "/systems#control", "/production-ready": "/systems#production",
@@ -47,10 +45,10 @@ def _legacy_redirect(request, path):
 
 
 PUBLIC_FILES = frozenset({
-    "/robots.txt", "/sitemap.xml", "/raccn-mark.svg", "/favicon.ico",
+    "/raccn-mark.svg", "/favicon.ico",
     "/favicon.svg", "/favicon.png", "/apple-touch-icon.png",
 })
-PUBLIC_PREFIXES = ("/assets/", "/home/media/", "/prototype/media/", "/prototype/fonts/", "/social/")
+PUBLIC_PREFIXES = ("/assets/", "/home/media/", "/evidence/", "/fonts/", "/social/")
 PUBLIC_SUFFIXES = frozenset({
     ".js", ".css", ".png", ".jpg", ".jpeg", ".gif", ".webp", ".avif",
     ".svg", ".ico", ".woff", ".woff2", ".ttf", ".otf", ".txt", ".xml",
@@ -116,16 +114,48 @@ def frontend_index(request):
         raise Http404("Frontend build not found")
     normalized_path = path.rstrip("/") or "/"
     known_route = normalized_path in FRONTEND_ROUTES
-    if normalized_path == "/work/renter":
+    project = None
+    status = 200 if known_route else 404
+    if ROUTES.get(normalized_path, {}).get("caseSlug"):
         try:
-            known_route = published_case_exists("renter")
+            project = case_project(ROUTES[normalized_path]["caseSlug"])
+            status = 200 if project else 404
         except DatabaseError:
-            response = HttpResponse("Project evidence is temporarily unavailable.", status=503)
-            response["Cache-Control"] = "no-store"
-            response["X-Robots-Tag"] = "noindex"
-            return response
-    response = HttpResponse(index_path.read_text(encoding="utf-8"), status=200 if known_route else 404, content_type="text/html")
-    response["Cache-Control"] = "no-cache" if known_route else "no-store"
-    if not known_route or normalized_path.startswith("/prototype") or normalized_path == "/systems/demo":
-        response["X-Robots-Tag"] = "noindex"
+            status = 503
+    meta = route_metadata(normalized_path, project, 'error' if status == 503 else 'ready')
+    try:
+        document = render_document(index_path.read_text(encoding="utf-8"), meta)
+    except ValueError:
+        return HttpResponse('Frontend build unavailable.', status=503, headers={"X-Robots-Tag":"noindex", "Cache-Control":"no-store"})
+    response = HttpResponse(document, status=status, content_type="text/html")
+    response["Cache-Control"] = "no-cache" if status == 200 and not project else "no-store"
+    if meta.get('noindex'):
+        response["X-Robots-Tag"] = "noindex, follow"
     return response
+
+
+def not_found(request, exception=None):
+    # Missing assets/API/media endpoints never receive the SPA shell or homepage SEO.
+    meta = route_metadata('/404')
+    body = '<!doctype html><html lang="en"><head>' + render_head(meta) + '</head><body><h1>Page not found</h1></body></html>'
+    return HttpResponse(body, status=404, content_type='text/html', headers={'X-Robots-Tag':'noindex, follow','Cache-Control':'no-store'})
+
+
+@require_safe
+def robots(request):
+    body = 'User-agent: *\nAllow: /\nDisallow: /admin/\nDisallow: /api/\nSitemap: ' + canonical_origin() + '/sitemap.xml\n'
+    return HttpResponse(body, content_type='text/plain', headers={'Cache-Control':'no-cache'})
+
+
+@require_safe
+def sitemap(request):
+    paths = []
+    try:
+        for path, meta in ROUTES.items():
+            if not meta.get('noindex') and (not meta.get('caseSlug') or case_project(meta['caseSlug'])):
+                paths.append(path)
+    except DatabaseError:
+        return HttpResponse('Sitemap temporarily unavailable.', status=503, headers={'Cache-Control':'no-store','X-Robots-Tag':'noindex'})
+    urls = ''.join('<url><loc>' + xml_escape(canonical_origin() + path) + '</loc></url>' for path in paths)
+    body = '<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' + urls + '</urlset>'
+    return HttpResponse(body, content_type='application/xml', headers={'Cache-Control':'no-store'})

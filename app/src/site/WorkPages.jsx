@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { applyMetadata, getMetaForPath } from "../utils/seo.js";
 import { Link } from "react-router-dom";
 import useProjectCatalog from "../projects/useProjectCatalog.js";
 import CatalogStatus from "../projects/CatalogStatus.jsx";
@@ -38,11 +39,7 @@ export function RenterPage() {
   const project=catalog.projects.find(item=>item.slug==="renter");
   useEffect(()=>{
     if(catalog.status==="loading")return;
-    const title=project?`${project.title} — RACCN Code`:catalog.status==="error"?"Project evidence unavailable — RACCN Code":"Project not found — RACCN Code";
-    document.title=title;
-    for(const selector of ['meta[property="og:title"]','meta[name="twitter:title"]'])document.head.querySelector(selector)?.setAttribute("content",title);
-    for(const selector of ['meta[name="description"]','meta[property="og:description"]','meta[name="twitter:description"]'])document.head.querySelector(selector)?.setAttribute("content",project?.blurb||"Project evidence is not currently available.");
-    document.head.querySelector('meta[name="robots"]')?.setAttribute("content",project?"index, follow":"noindex, follow");
+    applyMetadata(getMetaForPath("/work/renter", project, catalog.status));
   },[project,catalog.status]);
   if(catalog.status==="loading"||catalog.status==="error")return <section className="site-section"><CatalogStatus catalog={catalog}/></section>;
   if(!project)return <NotFound/>;

@@ -143,3 +143,8 @@ INQUIRY_ALLOWED_ORIGINS = [value.strip() for value in os.getenv("INQUIRY_ALLOWED
 
 # Required only for an explicitly configured cross-origin frontend.
 CORS_ALLOW_HEADERS = (*default_headers, "idempotency-key")
+
+# Default retains the repository's existing host. Verify it before staging;
+# request Host/forwarded headers must never choose public canonical URLs.
+from .metadata import CONTRACT as _ROUTE_CONTRACT
+CANONICAL_ORIGIN = os.getenv("DJANGO_CANONICAL_ORIGIN", _ROUTE_CONTRACT["origin"])

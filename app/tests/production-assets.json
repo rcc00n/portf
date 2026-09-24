@@ -1,0 +1,34 @@
+{
+  "app/public/fonts/instrument-sans-latin.woff2": {
+    "sha256": "8b74e9bc6e415d564a5ffd32125c92ffd50b1635043e77543cb871e0a3cfcaf2",
+    "previous": "app/public/prototype/fonts/instrument-sans-latin.woff2"
+  },
+  "app/public/fonts/ibm-plex-mono-400-latin.woff2": {
+    "sha256": "08949f728dc52d528e69b1667d15c89a5686a4ee9a296ff90983985f99c380f7",
+    "previous": "app/public/prototype/fonts/ibm-plex-mono-400-latin.woff2"
+  },
+  "app/public/fonts/ibm-plex-mono-500-latin.woff2": {
+    "sha256": "01d285447409c8a588692162439a038b8cbd7871309ee20267b0d2d91c6e8e22",
+    "previous": "app/public/prototype/fonts/ibm-plex-mono-500-latin.woff2"
+  },
+  "app/public/fonts/IBM-Plex-OFL.txt": {
+    "sha256": "7e6b2818edbd8f6a01ae80641cc8f16a51080d08fb4e532be3a0b6f74adb07da",
+    "previous": "app/public/prototype/fonts/IBM-Plex-OFL.txt"
+  },
+  "app/public/fonts/Instrument-Sans-OFL.txt": {
+    "sha256": "9e27a72ed30eb49a08678f6a5d6ed98ec7ba5368f541637ee0683ec9134ef966",
+    "previous": "app/public/prototype/fonts/Instrument-Sans-OFL.txt"
+  },
+  "app/public/evidence/renter/customer.webp": {
+    "sha256": "de4c8b4bc55710e18563c5f38c097fb2a0111b7140e2958d25498e5ef4c04313",
+    "previous": "app/public/prototype/media/renter-market.webp"
+  },
+  "app/public/evidence/renter/operator.webp": {
+    "sha256": "05debc1d32ff0ef7c098fb81d7151031d5c5120ad5f7c6b91941c4879da7a4c7",
+    "previous": "app/public/prototype/media/renter-control.webp"
+  },
+  "app/public/social/raccn-code.png": {
+    "sha256": "e9ce93069436443e42a5f2aeb78837fb61938b8be2ac33b86dd8dc6961f9b8bb",
+    "previous": "app/public/social/raccn-code.png"
+  }
+}

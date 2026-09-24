@@ -128,11 +128,11 @@ const ProjectEvidence = ({ variant }) => (
     </div>
     <div className="tp-work__media">
       <figure className="tp-work__image tp-work__image--market">
-        <DeferredImage src="/prototype/media/renter-market.webp" alt="Renter marketplace customer interface" width="2555" height="1229" />
+        <DeferredImage src="/evidence/renter/customer.webp" alt="Renter marketplace customer interface" width="2555" height="1229" />
         <figcaption className="tp-mono">01 / Customer market</figcaption>
       </figure>
       <figure className="tp-work__image tp-work__image--control">
-        <DeferredImage src="/prototype/media/renter-control.webp" alt="Renter operator control interface" width="2566" height="1238" />
+        <DeferredImage src="/evidence/renter/operator.webp" alt="Renter operator control interface" width="2566" height="1238" />
         <figcaption className="tp-mono">02 / Operator control</figcaption>
       </figure>
     </div>

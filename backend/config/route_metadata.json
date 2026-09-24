@@ -1,0 +1,66 @@
+{
+  "origin": "https://raccncode.com",
+  "siteName": "RACCN Code",
+  "image": "/social/raccn-code.png",
+  "imageAlt": "RACCN Code — Digital systems made visible",
+  "routes": {
+    "/": {
+      "title": "RACCN Code — Digital systems made visible",
+      "description": "Digital products and the systems, controls, and operational logic behind them."
+    },
+    "/work": {
+      "title": "Selected work — RACCN Code",
+      "description": "Published product and operational interface evidence from RACCN Code."
+    },
+    "/work/renter": {
+      "caseSlug": "renter"
+    },
+    "/systems": {
+      "title": "Systems — RACCN Code",
+      "description": "Architecture, operational control, production considerations, and explicit engineering decisions."
+    },
+    "/systems/architecture": {
+      "title": "Architecture explorer — RACCN Code",
+      "description": "Explore conceptual system responsibilities by product type and operating scale."
+    },
+    "/systems/decisions": {
+      "title": "Decision records — RACCN Code",
+      "description": "Architecture decisions with their context, trade-offs, and conditions for change."
+    },
+    "/systems/demo": {
+      "title": "Operational demo — RACCN Code",
+      "description": "A clearly labelled fictional simulation of operator controls and customer views.",
+      "noindex": true
+    },
+    "/approach": {
+      "title": "Approach — RACCN Code",
+      "description": "How RACCN moves from a product problem through system decisions, implementation, and production."
+    },
+    "/start": {
+      "title": "Start a project — RACCN Code",
+      "description": "Send your name, email, and project context. RACCN replies by email to discuss the next step."
+    },
+    "/start/define": {
+      "title": "Project definition — RACCN Code",
+      "description": "An optional estimator for indicative timeline, budget, and system responsibilities."
+    },
+    "/privacy": {
+      "title": "Privacy Policy — RACCN Code",
+      "description": "How RACCN Code handles project inquiries, saved choices, and personal information."
+    },
+    "/terms": {
+      "title": "Terms of Use — RACCN Code",
+      "description": "Terms for using the RACCN Code website, project examples, and third-party content."
+    }
+  },
+  "notFound": {
+    "title": "Page not found — RACCN Code",
+    "description": "This route is not available. Explore the work or start a project.",
+    "noindex": true
+  },
+  "unavailable": {
+    "title": "Project evidence unavailable — RACCN Code",
+    "description": "Project evidence is temporarily unavailable.",
+    "noindex": true
+  }
+}
