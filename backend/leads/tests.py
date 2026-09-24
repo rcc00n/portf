@@ -1,10 +1,11 @@
 import json
+import uuid
 from unittest.mock import patch
 
 from django.test import TestCase
 from django.urls import reverse
 
-from .models import ContactRequest, TelegramRecipient
+from .models import ContactRequest
 from .views import CONTACT_LIMITS
 
 
@@ -18,12 +19,12 @@ class ContactRequestTests(TestCase):
             "source": "homepage-start",
         }
         # Every endpoint test is isolated from live external delivery.
-        self.notification = patch("leads.views._notify_telegram", return_value=(False, "Test delivery disabled"))
+        self.notification = patch("leads.notifications.send_telegram_message", side_effect=AssertionError("No Telegram calls in POST"))
         self.notify = self.notification.start()
         self.addCleanup(self.notification.stop)
 
     def post(self, payload):
-        return self.client.post(self.url, data=json.dumps(payload), content_type="application/json")
+        return self.client.post(self.url, data=json.dumps(payload), content_type="application/json", HTTP_IDEMPOTENCY_KEY=str(uuid.uuid4()))
 
     def test_requires_post(self):
         self.assertEqual(self.client.get(self.url).status_code, 405)
@@ -34,7 +35,7 @@ class ContactRequestTests(TestCase):
                 self.assertEqual(self.post(payload).status_code, 400)
         for raw in (b"{", b"\xff"):
             with self.subTest(raw=raw):
-                self.assertEqual(self.client.post(self.url, data=raw, content_type="application/json").status_code, 400)
+                self.assertEqual(self.client.post(self.url, data=raw, content_type="application/json", HTTP_IDEMPOTENCY_KEY=str(uuid.uuid4())).status_code, 400)
         self.assertEqual(ContactRequest.objects.count(), 0)
         self.notify.assert_not_called()
 
@@ -80,7 +81,8 @@ class ContactRequestTests(TestCase):
         self.assertEqual(lead.message, "A project outline.")
         self.assertEqual(lead.source, "homepage-start")
         self.assertEqual(lead.qualification, qualification)
-        self.notify.assert_called_once_with(lead)
+        self.notify.assert_not_called()
+        self.assertEqual(lead.notification.status, "pending")
 
     def test_unknown_project_intent_is_persisted_without_example_product(self):
         for value in ("unsure", "unknown", "not sure", "Not sure", "not sure yet"):
@@ -127,7 +129,7 @@ class ContactRequestTests(TestCase):
         self.assertEqual(len(ContactRequest.objects.get().message), 5000)
 
     def test_invalid_forwarded_ip_falls_back_to_remote_address(self):
-        response = self.client.post(self.url, data=json.dumps(self.payload), content_type="application/json", HTTP_X_FORWARDED_FOR="invalid, 192.0.2.1", REMOTE_ADDR="127.0.0.1")
+        response = self.client.post(self.url, data=json.dumps(self.payload), content_type="application/json", HTTP_X_FORWARDED_FOR="invalid, 192.0.2.1", REMOTE_ADDR="127.0.0.1", HTTP_IDEMPOTENCY_KEY=str(uuid.uuid4()))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(ContactRequest.objects.get().ip_address, "127.0.0.1")
 
@@ -135,29 +137,3 @@ class ContactRequestTests(TestCase):
         response = self.post({**self.payload, "qualification": {"budget": {"label": "To discuss", "rating": float("inf")}}})
         self.assertEqual(response.status_code, 200)
         self.assertIsNone(ContactRequest.objects.get().qualification["budget"]["rating"])
-
-
-class TelegramNotificationTests(TestCase):
-    def setUp(self):
-        TelegramRecipient.objects.create(chat_id="123", label="Test recipient")
-        self.payload = {"name": "Test visitor", "email": "visitor@example.com", "message": "A project outline."}
-
-    @patch.dict("os.environ", {"TELEGRAM_BOT_TOKEN": "test-only-secret-token"})
-    @patch("leads.views._send_telegram_message", side_effect=Exception("https://api.telegram.org/bottest-only-secret-token/sendMessage"))
-    def test_transport_failure_keeps_inquiry_and_does_not_store_token(self, send):
-        response = self.client.post(reverse("contact-request"), data=json.dumps(self.payload), content_type="application/json")
-        self.assertEqual(response.status_code, 200)
-        lead = ContactRequest.objects.get()
-        self.assertFalse(lead.telegram_sent)
-        self.assertIn("Telegram delivery failed", lead.telegram_error)
-        self.assertNotIn("test-only-secret-token", lead.telegram_error)
-        self.assertNotIn("https://", lead.telegram_error)
-        send.assert_called_once()
-
-    @patch.dict("os.environ", {"TELEGRAM_BOT_TOKEN": "test-only-token"})
-    @patch("leads.views._send_telegram_message", return_value=True)
-    def test_success_records_notification_result(self, send):
-        response = self.client.post(reverse("contact-request"), data=json.dumps(self.payload), content_type="application/json")
-        self.assertEqual(response.status_code, 200)
-        self.assertTrue(ContactRequest.objects.get().telegram_sent)
-        send.assert_called_once()

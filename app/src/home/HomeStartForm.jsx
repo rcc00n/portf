@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { trackCtaClick } from "../utils/analytics.js";
+import { submissionIdentity, unconfirmedInquiry } from "./inquirySubmission.js";
 import "./home-form.css";
 
 const emptyForm = { name: "", email: "", message: "" };
@@ -23,6 +24,7 @@ export default function HomeStartForm({ apiBase = "", source = "homepage-start",
   const formRef = useRef(null);
   const statusRef = useRef(null);
   const requestRef = useRef(null);
+  const submissionRef = useRef(null);
   const [form, setForm] = useState(emptyForm);
   const [errors, setErrors] = useState({});
   const [status, setStatus] = useState({ state: "idle", message: "" });
@@ -72,39 +74,43 @@ export default function HomeStartForm({ apiBase = "", source = "homepage-start",
     trackCtaClick("Start a project", "/api/contacts/", { context: source === "homepage-start" ? "homepage_start" : "site_start" });
 
     try {
+      const body = JSON.stringify({
+        name: form.name.trim(), email: form.email.trim(), company: "",
+        message: form.message.trim(), source,
+        website: formRef.current?.elements.namedItem("website")?.value || "",
+        ...(qualification ? { qualification } : {}),
+      });
+      submissionRef.current = submissionIdentity(submissionRef.current, body);
       const response = await fetch(`${apiBase}/api/contacts/`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "Idempotency-Key": submissionRef.current.key },
         signal: controller.signal,
-        body: JSON.stringify({
-          name: form.name.trim(),
-          email: form.email.trim(),
-          company: "",
-          message: form.message.trim(),
-          source,
-          ...(qualification ? { qualification } : {}),
-        }),
+        body,
       });
       const payload = await response.json().catch(() => null);
       if (requestRef.current !== controller) return;
       if (!response.ok) {
         const fieldErrors = {};
         for (const field of Object.keys(limits)) {
-          if (typeof payload?.fields?.[field] === "string") fieldErrors[field] = payload.fields[field];
+          const detail = payload?.errors?.[field] ?? payload?.fields?.[field];
+          if (typeof detail === "string") fieldErrors[field] = detail;
         }
         setErrors(fieldErrors);
         setStatus({ state: "error", message: Object.keys(fieldErrors).length
           ? "Check the highlighted fields and try again."
-          : "Your inquiry could not be sent. Your details are still here. Try again or email us below." });
+          : response.status === 429
+            ? "Please wait before sending another inquiry, or email us below. Your details are still here."
+            : unconfirmedInquiry });
         return;
       }
-      if (payload?.ok !== true) throw new Error("Unconfirmed delivery");
+      if (payload?.ok !== true || !Number.isSafeInteger(payload.id) || payload.id <= 0) throw new Error("Unconfirmed delivery");
 
+      submissionRef.current = null;
       setForm(emptyForm);
       setStatus({ state: "success", message: "Your project inquiry has been received." });
     } catch {
       if (requestRef.current !== controller) return;
-      setStatus({ state: "error", message: "We couldn’t confirm delivery. Your details are still here. You can try again or email us below." });
+      setStatus({ state: "error", message: unconfirmedInquiry });
     } finally {
       window.clearTimeout(timeout);
       if (requestRef.current === controller) requestRef.current = null;
@@ -131,6 +137,9 @@ export default function HomeStartForm({ apiBase = "", source = "homepage-start",
         </div>
       ) : (
         <>
+          <div hidden aria-hidden="true">
+            <label>Leave this field empty<input name="website" type="text" tabIndex={-1} autoComplete="off" /></label>
+          </div>
           <p className="hp-start-form__intro">Send the project context. We’ll reply by email to discuss the next step. <span>All three fields are required.</span></p>
           <label className="hp-form-field" data-field="01" data-state={fieldState("name")} htmlFor="start-name">
             <span className="hp-form-field__label"><b aria-hidden="true">01</b><span id="start-name-label">Name</span><i aria-hidden="true" /></span>

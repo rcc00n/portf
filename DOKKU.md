@@ -131,3 +131,61 @@ After owner review, a staging operator still needs to verify:
 
 No production push, migration, storage change or record edit is authorized by this
 document. Stop for the phase review before staging or production actions.
+
+## Inquiry notification worker (contact reliability phase)
+
+The root `Procfile` is copied to the final Docker image's `/srv/app/Procfile`.
+It defines `web` (the existing Gunicorn server) and `worker`
+(`python manage.py process_inquiry_notifications`). Procfile commands take
+precedence over Docker CMD when supported by the installed Dokku builder.
+Process scale/restart is managed separately. See
+[Dokku process management](https://dokku.com/docs/processes/process-management/).
+
+No worker has been started on staging or production by this change. After explicit
+release review, the operator should apply the migration **before** new web/worker
+code runs, confirm the image's Procfile is recognized, and configure **one** worker.
+Example commands for that later approved operation, not commands run in this phase:
+
+```sh
+dokku run portf python manage.py migrate --noinput
+dokku ps:scale portf web=1 worker=1
+dokku ps:restart portf worker
+```
+
+Keep the app's existing web scale if it differs from the example. Verify the installed
+Dokku restart policy and that worker processes recover after host/container restart.
+The worker exits on a database error so its supervisor can restart it; it handles
+SIGTERM/SIGINT, stops taking new jobs, and finishes the current bounded delivery round.
+A killed process leaves a 60-second recoverable lease. Give shutdown enough grace
+for the actual configured recipient count (10-second transport timeout per recipient).
+No release hook, automatic deployment, or automatic worker scaling was added.
+
+Web and worker need the **same database**, a stable `DJANGO_SECRET_KEY`, and matching
+Django settings. Only worker needs `TELEGRAM_BOT_TOKEN`; keep it outside Git and logs.
+Add reviewed active `TelegramRecipient` records through authenticated Django admin.
+The worker polls every 2 seconds, cleans expired throttle buckets, and processes one
+job at a time. `--once` drains currently due jobs and exits; it does not wait for future
+backoff times. Do not run this command against real data during automated tests.
+
+`INQUIRY_RATE_LIMIT` defaults to 60 new valid submissions per socket peer per UTC hour.
+**All visitors may share the nginx peer address.** Forwarded IP headers are ignored.
+Verify the actual REMOTE_ADDR distribution before staging; size this shared budget
+for expected traffic. Apply per-client nginx limits only at a proxy that sanitizes
+client identity. Do not “fix” this by trusting arbitrary X-Forwarded-For.
+`INQUIRY_ALLOWED_ORIGINS` optionally contains comma-separated exact verified browser
+origins. Missing Origin is allowed; origin checks and CORS are not authentication.
+Prefer same-origin requests; configured CORS permits `Idempotency-Key` for a reviewed
+separate frontend. Add a contact-location proxy request body cap (at least 32 KiB),
+header limits and timeouts without reducing the separate admin media upload allowance.
+The application enforces its own 32 KiB JSON body cap.
+
+In admin, inspect Contact requests → Notification, or Inquiry notifications filtered
+by pending/processing/failed. Final delivery failures emit a safe job/lead ID log
+message; tokens and raw Telegram errors are not logged. Staff can select failed jobs
+and use **Retry failed notifications** after fixing configuration. Already delivered
+recipients are preserved. Do not delete/recreate a lead to retry delivery.
+Monitor old pending jobs as well as failures: an absent worker creates no attempt/error
+until it runs. `/health/` remains independent of Telegram and does not prove queue health.
+Queue age alerts, log routing, database backups and restore rehearsals remain operator
+checks. Backups must include inquiries, notification state, and idempotency keys.
+See [the complete acceptance/retry contract](CONTACT_RELIABILITY.md).
