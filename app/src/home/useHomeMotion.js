@@ -11,8 +11,8 @@ export default function useHomeMotion(rootRef) {
     const hero = root.querySelector(".hp-hero");
     const stage = root.querySelector(".hp-hero-plane");
     const acts = [...root.querySelectorAll("[data-home-act]")];
-    const evidence = [...root.querySelectorAll("[data-home-evidence]")];
-    const layers = [...root.querySelectorAll(".hp-flagship__architecture span")];
+    let evidence = [...root.querySelectorAll("[data-home-evidence]")];
+    let layers = [...root.querySelectorAll(".hp-flagship__architecture span")];
     const decisions = [...root.querySelectorAll("[data-decision-step]")];
     const decisionList = root.querySelector(".hp-approach-list");
     const heroAction = hero?.querySelector(".hp-hero-enter");
@@ -163,6 +163,16 @@ export default function useHomeMotion(rootRef) {
     };
     [...acts, ...evidence].forEach((element) => visibilityObserver.observe(element));
     acts.forEach((element) => resizeObserver.observe(element));
+    // CMS evidence arrives asynchronously; retain the authored Work choreography.
+    const workChanges = new MutationObserver(() => {
+      evidence.forEach(element => visibilityObserver.unobserve(element));
+      evidence = [...root.querySelectorAll("[data-home-evidence]")];
+      layers = [...root.querySelectorAll(".hp-flagship__architecture span")];
+      evidence.forEach(element => visibilityObserver.observe(element));
+      scheduleScroll();
+    });
+    const work = root.querySelector("#work");
+    if (work) workChanges.observe(work, {childList:true, subtree:true});
     window.addEventListener("scroll", scheduleScroll, { passive: true });
     window.addEventListener("resize", scheduleScroll, { passive: true });
     document.addEventListener("visibilitychange", onVisibilityChange);
@@ -175,6 +185,7 @@ export default function useHomeMotion(rootRef) {
       window.cancelAnimationFrame(scrollFrame);
       visibilityObserver.disconnect();
       resizeObserver.disconnect();
+      workChanges.disconnect();
       window.removeEventListener("scroll", scheduleScroll);
       window.removeEventListener("resize", scheduleScroll);
       document.removeEventListener("visibilitychange", onVisibilityChange);

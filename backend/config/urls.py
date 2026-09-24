@@ -1,11 +1,10 @@
-from django.conf import settings
-from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path, re_path
 
 from config.views import frontend_index, healthcheck
 from leads.views import contact_request
 from projects.views import pricing_list, project_list
+from projects.media import project_media
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -15,8 +14,7 @@ urlpatterns = [
     path("health/", healthcheck, name="healthcheck"),
 ]
 
-if settings.SERVE_MEDIA:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+urlpatterns += [path("media/<path:path>", project_media, name="project-media")]
 
 urlpatterns += [
     re_path(r"^(?!api/|admin/|media/|static/).*$", frontend_index, name="frontend"),

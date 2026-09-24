@@ -52,7 +52,7 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = "config.urls"
 
-FRONTEND_DIST_DIR = BASE_DIR / "frontend_dist"
+FRONTEND_DIST_DIR = Path(os.getenv("DJANGO_FRONTEND_DIST_DIR", BASE_DIR / "frontend_dist"))
 
 TEMPLATES = [
     {
@@ -118,7 +118,7 @@ STORAGES = {
 }
 
 MEDIA_URL = os.getenv("DJANGO_MEDIA_URL", "/media/")
-MEDIA_ROOT = BASE_DIR / "media"
+MEDIA_ROOT = Path(os.getenv("DJANGO_MEDIA_ROOT", BASE_DIR / "media"))
 SERVE_MEDIA = env_bool("DJANGO_SERVE_MEDIA", DEBUG)
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"

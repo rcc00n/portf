@@ -1,4 +1,5 @@
-const curatedProjects = [
+// Historical reference only. Never used as a publication fallback.
+export const legacyCuratedProjects = [
   {
     key: "bad-guy-motors",
     match: ["bad guy motors", "motorcycle"],
@@ -21,42 +22,7 @@ const curatedProjects = [
   },
 ];
 
-const normalizedTitle = (value = "") => value.trim().toLowerCase();
-
-const firstValidLink = (project = {}) => {
-  const links = Array.isArray(project.links) ? project.links.map((item) => item?.href) : [];
-  return [...links, project.url].find((href) => {
-    try {
-      const url = new URL(href);
-      return ["https:", "http:"].includes(url.protocol) && !["example.com", "yourdomain.com"].includes(url.hostname.replace(/^www\./, ""));
-    } catch { return false; }
-  }) || "";
-};
-
-export const selectHomepageProjects = (projects = []) => curatedProjects.map((curated) => {
-  const match = projects.find((project) => {
-    const title = normalizedTitle(project?.title);
-    return curated.match.some((term) => title.includes(term));
-  });
-
-  if (!match) return curated;
-  return {
-    ...curated,
-    title: match.title || curated.title,
-    type: match.impact || curated.type,
-    blurb: match.blurb || curated.blurb,
-    href: firstValidLink(match) || curated.href,
-    tags: Array.isArray(match.tags) ? match.tags.slice(0, 3) : [],
-  };
-});
-
-export const loadHomepageProjects = async ({ apiBase = "", signal } = {}) => {
-  const response = await fetch(`${apiBase}/api/projects/`, { signal });
-  if (!response.ok) throw new Error("Projects request failed");
-  const data = await response.json();
-  const projects = Array.isArray(data) ? data : data?.projects;
-  return Array.isArray(projects) ? projects : [];
-};
+export { loadHomepageProjects, selectHomepageProjects } from "../projects/catalog.js";
 
 export const systemModes = [
   { id: "architecture", index: "01", label: "Architecture", route: "/systems/architecture" },

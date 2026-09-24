@@ -2,7 +2,7 @@ const image = "/social/raccn-code.png";
 const withSite = title => `${title} — RACCN Code`;
 export const ROUTE_META = {
   "/": {title:"RACCN Code — Digital systems made visible",description:"Digital products and the systems, controls, and operational logic behind them."},
-  "/work": {title:withSite("Selected work"),description:"Product and operational interface evidence from Renter, Bad Guy Motors, and WorldDoc."},
+  "/work": {title:withSite("Selected work"),description:"Published product and operational interface evidence from RACCN Code."},
   "/work/renter": {title:withSite("Renter"),description:"A rental marketplace through its customer, provider, and operational control surfaces."},
   "/systems": {title:withSite("Systems"),description:"Architecture, operational control, production considerations, and explicit engineering decisions."},
   "/systems/architecture": {title:withSite("Architecture explorer"),description:"Explore conceptual system responsibilities by product type and operating scale."},

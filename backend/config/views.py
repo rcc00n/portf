@@ -4,6 +4,8 @@ from pathlib import Path
 from urllib.parse import urlencode
 
 from django.conf import settings
+from django.db import DatabaseError
+from projects.publication import published_case_exists
 from django.http import FileResponse, Http404, HttpResponse, HttpResponseNotModified, HttpResponsePermanentRedirect
 from django.utils.http import http_date, parse_etags, parse_http_date_safe
 from django.views.decorators.http import require_GET, require_safe
@@ -114,6 +116,14 @@ def frontend_index(request):
         raise Http404("Frontend build not found")
     normalized_path = path.rstrip("/") or "/"
     known_route = normalized_path in FRONTEND_ROUTES
+    if normalized_path == "/work/renter":
+        try:
+            known_route = published_case_exists("renter")
+        except DatabaseError:
+            response = HttpResponse("Project evidence is temporarily unavailable.", status=503)
+            response["Cache-Control"] = "no-store"
+            response["X-Robots-Tag"] = "noindex"
+            return response
     response = HttpResponse(index_path.read_text(encoding="utf-8"), status=200 if known_route else 404, content_type="text/html")
     response["Cache-Control"] = "no-cache" if known_route else "no-store"
     if not known_route or normalized_path.startswith("/prototype") or normalized_path == "/systems/demo":

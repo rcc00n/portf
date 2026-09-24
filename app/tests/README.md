@@ -55,7 +55,9 @@ licences. Audit/review recordings, local databases and environment files were no
 staged. A selected-file secret-pattern scan found no matches; this is not a
 full security certification.
 
-Other release-hardening work remains open: CMS authority, production media,
+CMS authority and production media were addressed in the next focused phase; see
+[CMS_MEDIA_HARDENING.md](../../CMS_MEDIA_HARDENING.md) for that contract and remaining
+infrastructure checks. Other release-hardening work remains open:
 contact abuse control/durable notifications, prototype asset migration, raw route
 metadata, dependency triage, operations, broader accessibility and legacy cleanup.
 No production or staging deployment was performed. Owner/legal/infrastructure

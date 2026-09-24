@@ -1,4 +1,5 @@
 import tempfile
+from unittest.mock import patch
 from pathlib import Path
 from urllib.parse import parse_qs, urlsplit
 
@@ -9,6 +10,9 @@ from .views import FRONTEND_ROUTES, FRONTEND_REDIRECTS
 
 class FrontendRoutingTests(SimpleTestCase):
     def setUp(self):
+        case = patch("config.views.published_case_exists", return_value=True)
+        case.start()
+        self.addCleanup(case.stop)
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name) / "frontend_dist"
