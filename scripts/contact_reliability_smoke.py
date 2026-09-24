@@ -35,7 +35,7 @@ def run(root):
         port = listener.getsockname()[1]
     base = f"http://127.0.0.1:{port}"
     os.environ.update({
-        "DJANGO_SETTINGS_MODULE": "config.settings", "DJANGO_DEBUG": "false", "DJANGO_DB_SSL": "false",
+        "DJANGO_ENV": "test", "DJANGO_SETTINGS_MODULE": "config.settings", "DJANGO_DEBUG": "false", "DJANGO_DB_SSL": "false",
         "DJANGO_SECURE_SSL_REDIRECT": "false", "DJANGO_ALLOWED_HOSTS": "127.0.0.1,localhost,testserver",
         "DJANGO_FRONTEND_DIST_DIR": str(REPO / "app/dist"), "DJANGO_MEDIA_ROOT": str(root / "media"),
         "DATABASE_URL": f'sqlite:///{root / "db.sqlite3"}', "TELEGRAM_BOT_TOKEN": "",
@@ -51,7 +51,7 @@ def run(root):
     logs = open(root / "gunicorn.log", "w")
 
     def start():
-        process = subprocess.Popen([sys.executable, "-m", "gunicorn", "config.wsgi:application", "--chdir", str(REPO / "backend"),
+        process = subprocess.Popen([sys.executable, "-m", "gunicorn", "--config", str(REPO / "backend/gunicorn.conf.py"), "config.wsgi:application", "--chdir", str(REPO / "backend"),
                                     "--bind", f"127.0.0.1:{port}", "--workers", "2"], stdout=logs, stderr=logs)
         for _ in range(100):
             try:

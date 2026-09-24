@@ -1,4 +1,4 @@
-FROM node:20-slim AS frontend
+FROM node:22-slim AS frontend
 WORKDIR /app
 COPY app/package*.json ./
 RUN npm ci
@@ -34,7 +34,7 @@ COPY --from=frontend /app/dist /srv/app/frontend_dist
 ENV DJANGO_SETTINGS_MODULE=config.settings
 ENV PORT=8000
 
-RUN python manage.py collectstatic --noinput
+RUN DJANGO_ENV=build python manage.py collectstatic --noinput
 
 EXPOSE 8000
-CMD ["sh", "-c", "gunicorn config.wsgi:application --bind 0.0.0.0:${PORT}"]
+CMD ["sh", "-c", "exec gunicorn --config gunicorn.conf.py config.wsgi:application --bind 0.0.0.0:${PORT}"]
