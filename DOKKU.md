@@ -189,3 +189,44 @@ until it runs. `/health/` remains independent of Telegram and does not prove que
 Queue age alerts, log routing, database backups and restore rehearsals remain operator
 checks. Backups must include inquiries, notification state, and idempotency keys.
 See [the complete acceptance/retry contract](CONTACT_RELIABILITY.md).
+
+## Canonical metadata, crawlers and bundled assets
+
+The release image must pair this backend with the matching Vite build. The frontend
+build reads `backend/config/route_metadata.json`; the Dockerfile copies that same
+source into the Node build stage, and the Python image already includes it. Vite
+writes a marked head region. Django replaces only that region on document requests;
+page rendering remains React. An old/incompatible build returns 503/noindex rather
+than publishing incorrect homepage metadata on every route.
+
+`DJANGO_CANONICAL_ORIGIN` controls absolute canonical, OpenGraph/Twitter and sitemap
+URLs at runtime. Its default retains the existing `https://raccncode.com` contract;
+this is not a claim that DNS/domain ownership has been verified. Set only the reviewed
+origin (scheme + host, optional port; no path/query/fragment/credentials). Incoming
+Host/X-Forwarded-Host never determines canonical URLs. The rendered head passes the
+same origin to React. Staging needs separate indexing/access policy approved by the
+operator; do not assume public-site robots rules protect a staging deployment.
+
+Django owns `/robots.txt` and `/sitemap.xml`. The old static copies were removed to
+prevent proxy/static hosting from serving a stale host or unpublished case entry.
+Verify nginx/CDN forwards both to Django and does not cache the publication-sensitive
+sitemap or Renter HTML. Indexable routes are declared in the shared contract; Renter
+is included only while its approved slug is published. Demo is 200 with raw/client
+`noindex, follow` and an X-Robots-Tag, excluded from the sitemap. Robots allows demo
+crawling so crawlers can read noindex. Robots is not access control.
+
+Bundled fonts/licences now live at `/fonts/`; bundled Renter source evidence at
+`/evidence/renter/customer.webp` and `/evidence/renter/operator.webp`. These are static
+release assets, served by the frontend asset handler with five-minute revalidation
+caching, separate from protected CMS uploads under `/media/projects/`. Font/image
+bytes are unchanged. Projects continue to render CMS ImageField URLs, without an
+editorial fallback overriding publication. `/prototype` and all old prototype page
+and asset URLs return 404/noindex; study source remains in Git but is not routed or
+included as a prototype JavaScript chunk. Do not add a proxy alias that republishes
+an old prototype directory from a previous release.
+
+Before staging, verify target-image construction, proxy/CDN route precedence and
+cache invalidation, reviewed canonical origin, externally reachable social preview
+and font MIME types, actual published CMS metadata, and staged access/indexing rules.
+No production search engine recrawl, social-provider refresh or infrastructure
+configuration was verified locally. See [migration and metadata handoff](ASSETS_METADATA_HARDENING.md).

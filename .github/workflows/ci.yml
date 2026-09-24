@@ -48,6 +48,7 @@ jobs:
           python -m pip install -r backend/requirements.txt
           python scripts/cms_media_smoke.py
           python scripts/contact_reliability_smoke.py
+          python scripts/site_metadata_smoke.py
 
   backend:
     runs-on: ubuntu-latest

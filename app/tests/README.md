@@ -78,3 +78,20 @@ workers against a temporary SQLite database, deliberately loses the response aft
 persistence, restarts the server, retries, and exercises a duplicate HTTP race.
 It never starts a notification worker and removes synthetic records with its temp DB.
 All worker/Telegram tests use mocked transport in `backend/leads/test_reliability.py`.
+
+Asset/route metadata regression:
+
+```sh
+python3 scripts/site_metadata_smoke.py
+RACCN_MEASURE_LABEL=review python3 scripts/cms_media_smoke.py
+```
+
+The first command compares raw Django heads with hydrated React heads for all 12
+canonical routes, exercises client navigation, checks configured-origin parity,
+CMS publication changes, sitemap, robots, 404/noindex and migrated static assets.
+It verifies that production bundles and browser requests contain no prototype URLs.
+The optional measurement run uses isolated published fixtures and writes desktop/
+mobile screenshots and cold-context resource/font/LCP samples to `/tmp`, not Git.
+`metadata.test.js` checks contract semantics and SHA-256 byte preservation for fonts,
+licences, evidence and the 1200×630 social image. Backend `config/test_metadata.py`
+checks raw responses including CMS escaping and crawler policy with DEBUG=false.

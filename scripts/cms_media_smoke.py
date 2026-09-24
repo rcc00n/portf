@@ -54,8 +54,8 @@ def run(root):
     renter=Project.objects.create(slug='renter', title='Renter', headline='One market.\nTwo control\nsurfaces.', impact='Rental marketplace', blurb='Local verification fixture using the approved evidence media.', status='Local verification only', is_published=True, featured_placement='lead')
     def attach(project, path, alt, order=0):
         return ProjectImage.objects.create(project=project, image=ContentFile((REPO / path).read_bytes(), name=Path(path).name), alt=alt, order=order)
-    market=attach(renter, 'app/public/prototype/media/renter-market.webp', 'CMS customer evidence')
-    control=attach(renter, 'app/public/prototype/media/renter-control.webp', 'CMS operator evidence', 1)
+    market=attach(renter, 'app/public/evidence/renter/customer.webp', 'CMS customer evidence')
+    control=attach(renter, 'app/public/evidence/renter/operator.webp', 'CMS operator evidence', 1)
     first=Project.objects.create(slug='cms-first', title='CMS first', impact='Verified fixture type', blurb='First fixture description', is_published=True, featured_placement='supporting', featured_order=1, order=1)
     second=Project.objects.create(slug='cms-second', title='CMS second', is_published=True, featured_placement='supporting', featured_order=2, order=2)
     other=Project.objects.create(slug='cms-archive', title='Renter WorldDoc motorcycle doctor finder', is_published=True, order=3)
@@ -75,6 +75,9 @@ def run(root):
         else: raise RuntimeError('Gunicorn readiness timeout')
         with sync_playwright() as p:
             browser=p.chromium.launch(headless=True)
+            if os.getenv('RACCN_MEASURE_LABEL'):
+                from measure_site_resources import measure
+                measure(browser,base,os.environ['RACCN_MEASURE_LABEL'])
             page=browser.new_page(viewport={'width':1440,'height':1000}, reduced_motion='reduce')
             errors=[]
             page.on('pageerror',lambda error:errors.append(str(error)))
@@ -111,7 +114,7 @@ def run(root):
             expect(page.get_by_role('link',name='CMS link')).to_have_attribute('href','https://example.org/cms')
             assert page.locator('[data-project-slug="cms-first"] img').get_attribute('src').endswith(pic.image.url)
             second.featured_order=0;second.order=0;db(second.save)
-            replacement=db(lambda:attach(first,'app/public/prototype/media/renter-control.webp','Changed CMS image',0))
+            replacement=db(lambda:attach(first,'app/public/evidence/renter/operator.webp','Changed CMS image',0))
             pic.order=10;db(pic.save)
             page.reload()
             expect(page.locator('[data-project-slug]')).to_have_count(4)

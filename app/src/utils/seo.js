@@ -1,17 +1,57 @@
-const image = "/social/raccn-code.png";
-const withSite = title => `${title} — RACCN Code`;
-export const ROUTE_META = {
-  "/": {title:"RACCN Code — Digital systems made visible",description:"Digital products and the systems, controls, and operational logic behind them."},
-  "/work": {title:withSite("Selected work"),description:"Published product and operational interface evidence from RACCN Code."},
-  "/work/renter": {title:withSite("Renter"),description:"A rental marketplace through its customer, provider, and operational control surfaces."},
-  "/systems": {title:withSite("Systems"),description:"Architecture, operational control, production considerations, and explicit engineering decisions."},
-  "/systems/architecture": {title:withSite("Architecture explorer"),description:"Explore conceptual system responsibilities by product type and operating scale."},
-  "/systems/decisions": {title:withSite("Decision records"),description:"Architecture decisions with their context, trade-offs, and conditions for change."},
-  "/systems/demo": {title:withSite("Operational demo"),description:"A clearly labelled fictional simulation of operator controls and customer views.",noindex:true},
-  "/approach": {title:withSite("Approach"),description:"How RACCN moves from a product problem through system decisions, implementation, and production."},
-  "/start": {title:withSite("Start a project"),description:"Send your name, email, and project context. RACCN replies by email to discuss the next step."},
-  "/start/define": {title:withSite("Project definition"),description:"An optional estimator for indicative timeline, budget, and system responsibilities."},
-  "/privacy": {title:withSite("Privacy Policy"),description:"How RACCN Code handles project inquiries, saved choices, and personal information."},
-  "/terms": {title:withSite("Terms of Use"),description:"Terms for using the RACCN Code website, project examples, and third-party content."},
-};
-export const getMetaForPath = pathname => ({image,...(ROUTE_META[pathname] || {title:withSite("Page not found"),description:"This route is not available. Explore the work or start a project.",noindex:true})});
+import contract from '../../../backend/config/route_metadata.json' with { type: 'json' };
+export { contract };
+export const ROUTE_META = contract.routes;
+export const normalizePath = pathname => pathname.split(/[?#]/)[0].replace(/\/+$/, '') || '/';
+export function getMetaForPath(pathname, project = null, status = 'ready') {
+  const path = normalizePath(pathname);
+  let meta = contract.routes[path];
+  if (meta?.caseSlug) {
+    meta = status === 'error' ? contract.unavailable
+      : project?.slug === meta.caseSlug && project.is_published === true
+        ? { title: `${project.title} — ${contract.siteName}`, description: project.blurb || '' }
+        : contract.notFound;
+  }
+  const found = meta && meta !== contract.notFound && meta !== contract.unavailable;
+  return { image: contract.image, ...meta || contract.notFound, path, canonical: found ? path : null };
+}
+export const fontPaths = path => [
+  '/fonts/instrument-sans-latin.woff2', '/fonts/ibm-plex-mono-400-latin.woff2',
+  ...(['/', '/start', '/start/define'].includes(path) ? ['/fonts/ibm-plex-mono-500-latin.woff2'] : []),
+];
+export function metaTags(meta, origin) {
+  return {
+    description: meta.description, robots: meta.noindex ? 'noindex, follow' : 'index, follow',
+    'raccn:canonical-origin': origin, 'raccn:route': meta.path,
+    'og:type': 'website', 'og:site_name': contract.siteName,
+    'og:title': meta.title, 'og:description': meta.description,
+    'og:url': meta.canonical ? origin + meta.canonical : null,
+    'og:image': origin + meta.image, 'og:image:width': '1200', 'og:image:height': '630',
+    'og:image:alt': contract.imageAlt,
+    'twitter:card': 'summary_large_image', 'twitter:title': meta.title,
+    'twitter:description': meta.description, 'twitter:image': origin + meta.image,
+    'twitter:image:alt': contract.imageAlt,
+  };
+}
+export function applyMetadata(meta) {
+  const origin = document.querySelector('meta[name="raccn:canonical-origin"]')?.content || contract.origin;
+  document.title = meta.title;
+  for (const [name, value] of Object.entries(metaTags(meta, origin))) {
+    const attribute = name.startsWith('og:') ? 'property' : 'name';
+    let element = document.head.querySelector(`meta[${attribute}="${name}"]`);
+    if (value === null) { element?.remove(); continue; }
+    if (!element) { element = document.createElement('meta'); element.setAttribute(attribute, name); document.head.appendChild(element); }
+    element.content = value;
+  }
+  let canonical = document.head.querySelector('link[rel="canonical"]');
+  if (!meta.canonical) { canonical?.remove(); return; }
+  if (!canonical) { canonical = document.createElement('link'); canonical.rel = 'canonical'; document.head.appendChild(canonical); }
+  canonical.href = origin + meta.canonical;
+}
+export function renderMetadataHead(meta, origin = contract.origin) {
+  const escape = value => String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#x27;'}[c]));
+  return [`<title>${escape(meta.title)}</title>`,
+    ...Object.entries(metaTags(meta, origin)).filter(([,value])=>value!==null).map(([name,value])=>`<meta ${name.startsWith('og:')?'property':'name'}="${name}" content="${escape(value)}" />`),
+    ...(meta.canonical ? [`<link rel="canonical" href="${escape(origin + meta.canonical)}" />`] : []),
+    ...fontPaths(meta.path).map(path=>`<link rel="preload" href="${path}" as="font" type="font/woff2" crossorigin />`),
+  ].join('\n');
+}

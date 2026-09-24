@@ -20,14 +20,12 @@ const DefinePage=lazy(()=>import("./site/StartPages.jsx").then(m=>({default:m.De
 const PrivacyPage=lazy(()=>import("./pages/legal/LegalPages.jsx").then(m=>({default:m.PrivacyPage})));
 const TermsPage=lazy(()=>import("./pages/legal/LegalPages.jsx").then(m=>({default:m.TermsPage})));
 const NotFound=lazy(()=>import("./site/SiteShell.jsx").then(m=>({default:m.NotFound})));
-const TracePrototype=lazy(()=>import("./prototype/TracePrototype.jsx"));
 const loader=<div style={{minHeight:"100svh",background:"#0d0e0c"}}/>;
 const page=element=><Suspense fallback={loader}>{element}</Suspense>;
 
 ReactDOM.createRoot(document.getElementById("root")).render(<React.StrictMode><BrowserRouter><RouteMetadata/><Routes>
   <Route path="/" element={page(<HomePage/>)}/>
   {Object.keys(redirects).map(path=><Route key={path} path={path} element={<LegacyRedirect/>}/>)}
-  <Route path="/prototype/*" element={page(<TracePrototype/>)}/>
   <Route element={page(<SiteShell/>)}>
     <Route path="/work" element={page(<WorkPage/>)}/><Route path="/work/renter" element={page(<RenterPage/>)}/>
     <Route path="/systems" element={page(<SystemsPage/>)}/><Route path="/systems/architecture" element={page(<ArchitecturePage/>)}/><Route path="/systems/decisions" element={page(<DecisionsPage/>)}/><Route path="/systems/demo" element={page(<DemoPage/>)}/>
