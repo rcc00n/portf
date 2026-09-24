@@ -1,3 +1,4 @@
+import process from 'node:process'
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
@@ -5,4 +6,6 @@ import react from '@vitejs/plugin-react'
 export default defineConfig(() => ({
   base: process.env.VITE_BASE || '/',
   plugins: [react()],
+  server: { proxy: { '/api': 'http://127.0.0.1:8001', '/media': 'http://127.0.0.1:8001' } },
+  preview: { proxy: { '/api': 'http://127.0.0.1:8001', '/media': 'http://127.0.0.1:8001' } },
 }))

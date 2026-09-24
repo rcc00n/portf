@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useId, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import {
@@ -19,11 +19,10 @@ import {
   Menu,
   X,
 } from "lucide-react";
-import raccoonLogo from "./assets/raccoon-logo.png";
+const raccoonLogo = "/raccn-mark.svg";
 import ToggleGroup from "./components/ToggleGroup";
 import DataCard from "./components/DataCard";
 import { trackCtaClick, trackPageView } from "./utils/analytics";
-import { getMetaForPath } from "./utils/seo";
 import {
   buildEstimate,
   PRODUCT_OPTIONS as ESTIMATE_PRODUCT_OPTIONS,
@@ -49,7 +48,7 @@ const nav = [
   { id: "stack", label: "Tech", href: "/tech", icon: Braces, desc: "Stack and tooling" },
   { id: "engineering", label: "Engineering", href: "/engineering", icon: Braces, desc: "Advanced modules" },
   { id: "about", label: "About", href: "/about", icon: Sparkles, desc: "Studio story" },
-  { id: "contact", label: "Contact", href: "/start", icon: Mail, desc: "Get estimate in 24h" },
+  { id: "contact", label: "Contact", href: "/start", icon: Mail, desc: "Start a project" },
 ];
 
 const CONTACT = {
@@ -57,7 +56,7 @@ const CONTACT = {
   phone: "+15873227188",
 };
 
-const SALES_PROMISE = "Reply in 24h with scope, timeline, and budget.";
+const SALES_PROMISE = "Share your project. We’ll reply by email to discuss the next step.";
 
 const services = [
   { icon: Braces, title: "Software Development", desc: "Back-/front-end, mobile apps, integrations, microservices, DevOps.", tags: ["Django", "Node", "React", "Postgres", "Docker", "K8s"] },
@@ -222,10 +221,10 @@ const projectSeed = [
   {
     title: "Mobile Arcade (Android/iOS)",
     impact: "Unity · Mobile",
-    blurb: "Lightweight arcade game for phones. Store links/APK can be attached later.",
+    blurb: "An arcade game project for phones, shown through interface screenshots.",
     outcome: "Cross-platform build pipeline for iOS and Android releases.",
-    links: [{ label: "APK / TestFlight", href: "#" }],
-    url: "https://example.com",
+    links: [],
+    url: "",
     tags: ["Mobile", "Game"],
     images: [
       "assets/projects/arcade/1.png",
@@ -241,7 +240,7 @@ const projectSeed = [
       { label: "Live", href: "https://rcc00n.github.io/portf/" },
       { label: "Repo", href: "https://github.com/rcc00n/portf" },
     ],
-    url: "https://yourdomain.com",
+    url: "https://raccncode.com/",
     tags: ["Portfolio", "React", "Tailwind", "Framer Motion"],
     images: [
       "assets/projects/portfolio/1.png",
@@ -723,9 +722,16 @@ const collapsedOverlayMask = {
   maskImage: "linear-gradient(to top, rgba(255,255,255,1) 0%, rgba(255,255,255,1) 55%, rgba(255,255,255,0) 100%)",
 };
 const isExternalUrl = (url) => /^https?:\/\//i.test(url || "");
+const validProjectUrl = (value) => {
+  if (!value || value === "#") return false;
+  try {
+    const parsed = new URL(value, window.location.origin);
+    return ["https:", "http:"].includes(parsed.protocol) && !["example.com", "yourdomain.com"].includes(parsed.hostname.replace(/^www\./, ""));
+  } catch { return false; }
+};
 const getProjectMeta = (project) => {
-  const rawLinks = Array.isArray(project?.links) ? project.links.filter((l) => l?.href) : [];
-  const primaryUrl = project?.url || project?.website || project?.link || rawLinks[0]?.href;
+  const rawLinks = Array.isArray(project?.links) ? project.links.filter((l) => validProjectUrl(l?.href)) : [];
+  const primaryUrl = [project?.url, project?.website, project?.link, rawLinks[0]?.href].find(validProjectUrl);
   const hasPrimaryLink = primaryUrl && rawLinks.some((l) => l.href === primaryUrl);
   const actionLinks = primaryUrl && !hasPrimaryLink
     ? [{ label: "Visit site", href: primaryUrl }, ...rawLinks]
@@ -810,12 +816,12 @@ const Logo = ({ size = "h-12 w-12 sm:h-14 sm:w-14" }) => (
     <img
       src={raccoonLogo}
       alt="raccoon logo"
-      className={`${size} -ml-1 select-none drop-shadow-[0_0_24px_rgba(56,189,248,.45)]`}
+      className={`${size} select-none`}
       decoding="async"
       loading="eager"
       draggable={false}
     />
-    <span className="text-lg sm:text-xl font-semibold tracking-wide">studio</span>
+    <span className="text-lg sm:text-xl font-semibold tracking-wide">RACCN CODE</span>
   </div>
 );
 
@@ -859,11 +865,14 @@ const TierCardClean = ({ children, featured = false }) => (
   </div>
 );
 
-const StatPill = ({ icon: Icon, children }) => (
+const StatPill = ({ icon, children }) => {
+  const Icon = icon;
+  return (
   <li className="flex items-center gap-2 rounded-xl bg-white/6 p-3 text-sm text-zinc-200">
     <Icon className="h-4 w-4 opacity-90" /> {children}
   </li>
-);
+  );
+};
 
 const PageHero = ({ kicker, title, subtitle, primary, secondary, stats = [] }) => (
   <header className="relative overflow-hidden">
@@ -919,6 +928,7 @@ const emptyContactForm = {
 };
 
 const ContactForm = ({ apiBase = "", source = "" }) => {
+  const fieldPrefix = useId();
   const [form, setForm] = useState(emptyContactForm);
   const [status, setStatus] = useState({ state: "idle", message: "" });
   const [fieldErrors, setFieldErrors] = useState({});
@@ -1006,7 +1016,7 @@ const ContactForm = ({ apiBase = "", source = "" }) => {
         return;
       }
 
-      setStatus({ state: "success", message: "Thanks! We will reply within 24 hours." });
+      setStatus({ state: "success", message: "Thanks! We’ll reply by email to discuss your project." });
       setForm(emptyContactForm);
       setSubmitted(false);
       navigate(buildPreCallUrl(routing), { replace: true });
@@ -1024,8 +1034,12 @@ const ContactForm = ({ apiBase = "", source = "" }) => {
   return (
     <form className="grid grid-cols-1 gap-4 md:grid-cols-2" onSubmit={handleSubmit} noValidate>
       <div className="flex flex-col gap-1">
+        <label htmlFor={`${fieldPrefix}-name`} className="text-sm text-zinc-300">Name (required)</label>
         <input
           type="text"
+          id={`${fieldPrefix}-name`}
+          maxLength={120}
+          required
           name="name"
           value={form.name}
           onChange={handleChange}
@@ -1037,8 +1051,12 @@ const ContactForm = ({ apiBase = "", source = "" }) => {
         {showError("name") ? <span className="text-xs text-rose-300">{fieldErrors.name}</span> : null}
       </div>
       <div className="flex flex-col gap-1">
+        <label htmlFor={`${fieldPrefix}-email`} className="text-sm text-zinc-300">Email (required)</label>
         <input
           type="email"
+          id={`${fieldPrefix}-email`}
+          maxLength={254}
+          required
           name="email"
           value={form.email}
           onChange={handleChange}
@@ -1050,8 +1068,11 @@ const ContactForm = ({ apiBase = "", source = "" }) => {
         {showError("email") ? <span className="text-xs text-rose-300">{fieldErrors.email}</span> : null}
       </div>
       <div className="flex flex-col gap-1 md:col-span-2">
+        <label htmlFor={`${fieldPrefix}-company`} className="text-sm text-zinc-300">Company / website (optional)</label>
         <input
           type="text"
+          id={`${fieldPrefix}-company`}
+          maxLength={200}
           name="company"
           value={form.company}
           onChange={handleChange}
@@ -1061,7 +1082,11 @@ const ContactForm = ({ apiBase = "", source = "" }) => {
         />
       </div>
       <div className="flex flex-col gap-1 md:col-span-2">
+        <label htmlFor={`${fieldPrefix}-message`} className="text-sm text-zinc-300">Project outline (required)</label>
         <textarea
+          id={`${fieldPrefix}-message`}
+          maxLength={5000}
+          required
           name="message"
           value={form.message}
           onChange={handleChange}
@@ -1081,6 +1106,9 @@ const ContactForm = ({ apiBase = "", source = "" }) => {
           {status.message}
         </div>
       ) : null}
+      <p className="md:col-span-2 text-sm leading-relaxed text-zinc-300">
+        Your contact details and project outline are collected to reply and discuss your project. Saved qualification choices and estimate routing are included if you used those tools. Please don’t include sensitive information. <Link to="/privacy" className="underline underline-offset-4">Privacy Policy</Link>. Submitting does not subscribe you to marketing.
+      </p>
       <div className="flex flex-wrap items-center gap-4 md:col-span-2">
         <ContactInline />
         <Btn
@@ -1089,7 +1117,7 @@ const ContactForm = ({ apiBase = "", source = "" }) => {
           disabled={isSubmitting}
           className={`ml-auto bg-white text-black hover:bg-zinc-200 ${isSubmitting ? "cursor-not-allowed opacity-70" : ""}`}
         >
-          {isSubmitting ? "Sending..." : "Get estimate in 24h"}
+          {isSubmitting ? "Sending..." : "Start a project"}
         </Btn>
       </div>
       <div className="md:col-span-2 flex flex-wrap gap-3 text-xs text-zinc-500">
@@ -1101,7 +1129,7 @@ const ContactForm = ({ apiBase = "", source = "" }) => {
   );
 };
 
-const CTABox = ({ title, subtitle, primaryLabel = "Get estimate in 24h", primaryTo = "/start", secondaryLabel = "See pricing", secondaryTo = "/pricing" }) => (
+const CTABox = ({ title, subtitle, primaryLabel = "Start a project", primaryTo = "/start", secondaryLabel = "See pricing", secondaryTo = "/pricing" }) => (
   <Section className="pt-8">
     <div className="relative">
       <div className="absolute inset-0 -z-10 rounded-3xl bg-[radial-gradient(80%_120%_at_50%_-20%,rgba(99,102,241,0.35),transparent)]" />
@@ -1126,40 +1154,14 @@ const CTABox = ({ title, subtitle, primaryLabel = "Get estimate in 24h", primary
 
 /* ===== Favicon fallback preview ===== */
 const FaviconPreview = ({ url, className = "", heightClass = "h-44", iconClassName = "h-12 w-12" }) => {
-  const host = new URL(url).host;
-  const chain = [
-    `https://www.google.com/s2/favicons?domain=${host}&sz=128`,
-    `https://icons.duckduckgo.com/ip3/${host}.ico`,
-    url.replace(/\/$/, "") + "/favicon.ico",
-  ];
-
-  const onErr = (e) => {
-    const i = +(e.currentTarget.dataset.i || 0);
-    if (i < chain.length - 1) {
-      e.currentTarget.dataset.i = String(i + 1);
-      e.currentTarget.src = chain[i + 1];
-    } else {
-      e.currentTarget.style.display = "none";
-      const placeholder = e.currentTarget.nextSibling;
-      if (placeholder && placeholder.style) placeholder.style.display = "flex";
-    }
-  };
+  let host = "Project";
+  try { host = new URL(url).host; } catch { /* Missing or invalid CMS link. */ }
 
   const initials = host.replace(/^www\./, "").split(".")[0].slice(0, 2).toUpperCase();
 
   return (
     <div className={`mb-4 w-full rounded-xl border border-white/10 bg-zinc-950/60 flex flex-col items-center justify-center text-zinc-400 ${heightClass} ${className}`}>
-      <img
-        src={chain[0]}
-        data-i="0"
-        onError={onErr}
-        alt=""
-        loading="lazy"
-        decoding="async"
-        fetchPriority="low"
-        className={`${iconClassName} rounded`}
-      />
-      <div style={{ display: "none" }} className={`${iconClassName} items-center justify-center rounded bg-white/5 text-sm`}>
+      <div className={`${iconClassName} flex items-center justify-center rounded bg-white/5 text-sm`}>
         {initials}
       </div>
       <div className="mt-2 text-xs opacity-70">{host}</div>
@@ -1238,6 +1240,7 @@ const ScrollToTop = () => {
 
 const MobileNav = ({ open, onClose }) => {
   const location = useLocation();
+  const previousPath = useRef(location.pathname);
 
   useEffect(() => {
     if (!open) return undefined;
@@ -1249,8 +1252,11 @@ const MobileNav = ({ open, onClose }) => {
   }, [open]);
 
   useEffect(() => {
-    if (open) onClose();
-  }, [location.pathname]);
+    if (previousPath.current !== location.pathname) {
+      previousPath.current = location.pathname;
+      if (open) onClose();
+    }
+  }, [location.pathname, open, onClose]);
 
   if (!open) return null;
 
@@ -1310,7 +1316,7 @@ const MobileNav = ({ open, onClose }) => {
         <div className="mt-3 text-xl font-semibold text-white">Next slot in 2-3 weeks</div>
         <p className="mt-2 text-sm text-zinc-300">Limited slots per quarter. Reserve yours now.</p>
         <div className="mt-4">
-          <BtnLink to="/start" analyticsLabel="Get estimate in 24h" analyticsMeta={{ context: "mobile_nav" }} className="w-full bg-white text-black hover:bg-zinc-200">Get estimate in 24h</BtnLink>
+          <BtnLink to="/start" analyticsLabel="Start a project" analyticsMeta={{ context: "mobile_nav" }} className="w-full bg-white text-black hover:bg-zinc-200">Start a project</BtnLink>
         </div>
         <div className="mt-4 text-xs text-zinc-400">{SALES_PROMISE}</div>
       </div>
@@ -1361,13 +1367,13 @@ const FloatingContactButton = () => (
   <div className="fixed bottom-6 left-6 z-40 sm:bottom-8 sm:left-8">
     <BtnLink
       to="/start"
-      analyticsLabel="Get estimate in 24h"
+      analyticsLabel="Start a project"
       analyticsMeta={{ context: "floating_cta" }}
       className="gap-2 bg-white px-4 py-3 text-sm text-black shadow-lg shadow-black/40 ring-1 ring-white/10 hover:bg-zinc-200"
-      aria-label="Get estimate in 24h"
+      aria-label="Start a project"
     >
       <Mail className="h-4 w-4" />
-      Get estimate in 24h
+      Start a project
     </BtnLink>
   </div>
 );
@@ -1406,7 +1412,7 @@ const SiteNav = () => {
             </nav>
             <div className="flex items-center gap-3">
               <div className="hidden md:block">
-                <BtnLink to="/start" analyticsLabel="Get estimate in 24h" analyticsMeta={{ context: "nav" }} className="bg-white text-black hover:bg-zinc-200 px-4 py-2 text-sm">Get estimate in 24h</BtnLink>
+                <BtnLink to="/start" analyticsLabel="Start a project" analyticsMeta={{ context: "nav" }} className="bg-white text-black hover:bg-zinc-200 px-4 py-2 text-sm">Start a project</BtnLink>
               </div>
               <button
                 type="button"
@@ -1428,46 +1434,16 @@ const SiteNav = () => {
 const SiteFooter = () => (
   <footer className="border-t border-white/10 py-10">
     <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-6 sm:flex-row">
-      <div className="text-sm text-zinc-400">© {new Date().getFullYear()} studio — CRM, Software, SMM, Marketing</div>
+      <div className="text-sm text-zinc-400">© {new Date().getFullYear()} RACCN Code</div>
       <ContactInline linkClassName="text-zinc-400 hover:text-white" />
       <div className="flex items-center gap-3 text-xs text-zinc-500">
-        <a href="#" className="hover:text-zinc-300">Privacy Policy</a>
+        <Link to="/privacy" className="inline-flex min-h-11 items-center text-zinc-300 hover:text-white">Privacy Policy</Link>
         <span className="opacity-50">•</span>
-        <a href="#" className="hover:text-zinc-300">Terms</a>
+        <Link to="/terms" className="inline-flex min-h-11 items-center text-zinc-300 hover:text-white">Terms</Link>
       </div>
     </div>
   </footer>
 );
-
-const setMetaTag = (attribute, key, content) => {
-  if (typeof document === "undefined") return;
-  const selector = `meta[${attribute}="${key}"]`;
-  let tag = document.head.querySelector(selector);
-  if (!tag) {
-    tag = document.createElement("meta");
-    tag.setAttribute(attribute, key);
-    document.head.appendChild(tag);
-  }
-  tag.setAttribute("content", content);
-};
-
-const applyMeta = (meta) => {
-  if (typeof document === "undefined") return;
-  document.title = meta.title;
-  const origin = window.location.origin;
-  const imageUrl = meta.image.startsWith("http") ? meta.image : `${origin}${meta.image}`;
-
-  setMetaTag("name", "description", meta.description);
-  setMetaTag("property", "og:title", meta.title);
-  setMetaTag("property", "og:description", meta.description);
-  setMetaTag("property", "og:type", "website");
-  setMetaTag("property", "og:url", window.location.href);
-  setMetaTag("property", "og:image", imageUrl);
-  setMetaTag("name", "twitter:card", "summary_large_image");
-  setMetaTag("name", "twitter:title", meta.title);
-  setMetaTag("name", "twitter:description", meta.description);
-  setMetaTag("name", "twitter:image", imageUrl);
-};
 
 const RouteFallback = () => (
   <div className="mx-auto flex min-h-[40vh] max-w-6xl items-center justify-center px-6 py-16 text-sm text-zinc-400">
@@ -1656,7 +1632,7 @@ const HomePage = ({ projectsData, pricingData, apiBase }) => {
           <motion.h1 {...fade} className="bg-gradient-to-b from-white to-zinc-400 bg-clip-text text-4xl font-semibold leading-tight text-transparent sm:text-6xl">We build custom software & CRMs that replace manual work and scale revenue</motion.h1>
           <motion.p {...fade} className="max-w-2xl text-lg text-zinc-300">From internal CRMs to marketplaces and automation — built end-to-end with analytics and full admin control.</motion.p>
           <motion.div {...fade} className="flex flex-wrap items-center justify-center gap-3">
-            <Btn href="#contact" className="bg-white text-black hover:bg-zinc-200">Get estimate in 24h</Btn>
+            <Btn href="#contact" className="bg-white text-black hover:bg-zinc-200">Start a project</Btn>
             <Btn href="#projects" className="border border-white/15 text-white hover:bg-white/5">See our work</Btn>
             <Btn href="#pricing" className="border border-white/15 text-white hover:bg-white/5">Pricing</Btn>
           </motion.div>
@@ -1883,7 +1859,7 @@ const HomePage = ({ projectsData, pricingData, apiBase }) => {
                       </ul>
                     </div>
                     <div className="mt-auto pt-6">
-                      <Btn href="#contact" className="w-full bg-white text-black hover:bg-zinc-200">Get estimate in 24h</Btn>
+                      <Btn href="#contact" className="w-full bg-white text-black hover:bg-zinc-200">Start a project</Btn>
                     </div>
                   </div>
                 </TierCardClean>
@@ -1940,8 +1916,8 @@ const HomePage = ({ projectsData, pricingData, apiBase }) => {
 
       {/* Contact */}
       <Section id="contact">
-        <H2>Free estimate & architecture outline in 24 hours — no commitment.</H2>
-        <motion.p {...fade} className="mb-4 max-w-2xl text-zinc-300">Share your goals and we will return with a free estimate, architecture outline, and timeline within 24 hours.</motion.p>
+        <H2>Start with a project outline.</H2>
+        <motion.p {...fade} className="mb-4 max-w-2xl text-zinc-300">Share your goals so we can discuss scope, architecture, and timing.</motion.p>
         <Card>
           <ContactForm apiBase={apiBase} source="home-contact" />
         </Card>
@@ -1956,7 +1932,7 @@ const ServicesPage = () => (
       kicker="Services"
       title="Senior teams that ship product, not slides"
       subtitle="We lead end-to-end delivery from discovery to growth. Expect sharp decisions, modern craft, and measurable outcomes."
-      primary={{ label: "Get estimate in 24h", to: "/start" }}
+      primary={{ label: "Start a project", to: "/start" }}
       secondary={{ label: "See projects", to: "/projects" }}
       stats={[
         { label: "Avg. delivery", value: "10-14 w" },
@@ -2070,7 +2046,7 @@ const ProjectsPage = ({ projectsData }) => {
       kicker="Projects"
       title="Case studies with measurable impact"
       subtitle="We design, build, and grow digital products that move real metrics. Here is a selection of recent work."
-      primary={{ label: "Get estimate in 24h", to: "/start" }}
+      primary={{ label: "Start a project", to: "/start" }}
       secondary={{ label: "See services", to: "/services" }}
       stats={[
         { label: "Launches", value: "120+" },
@@ -2178,7 +2154,7 @@ const ProcessPage = () => (
       kicker="Process"
       title="A delivery engine built for clarity"
       subtitle="Our process keeps stakeholders aligned, risks visible, and releases predictable. It is calm, transparent, and senior-led."
-      primary={{ label: "Get estimate in 24h", to: "/start" }}
+      primary={{ label: "Start a project", to: "/start" }}
       secondary={{ label: "See pricing", to: "/pricing" }}
       stats={[
         { label: "Cadence", value: "2-week" },
@@ -2228,10 +2204,10 @@ const PricingPage = ({ pricingData }) => (
       kicker="Pricing"
       title="Transparent tiers with senior delivery"
       subtitle="Choose a fixed scope or a dedicated squad. Every tier comes with senior-only execution and clear reporting."
-      primary={{ label: "Get estimate in 24h", to: "/start" }}
+      primary={{ label: "Start a project", to: "/start" }}
       secondary={{ label: "See process", to: "/process" }}
       stats={[
-        { label: "Quote time", value: "24h" },
+        { label: "Next step", value: "Scope" },
         { label: "Scoping", value: "Fixed" },
         { label: "Support", value: "Included" },
       ]}
@@ -2272,7 +2248,7 @@ const PricingPage = ({ pricingData }) => (
                     </ul>
                   </div>
                   <div className="mt-auto pt-6">
-                    <BtnLink to="/start" analyticsLabel="Get estimate in 24h" analyticsMeta={{ context: "pricing_tier" }} className="w-full bg-white text-black hover:bg-zinc-200">Get estimate in 24h</BtnLink>
+                    <BtnLink to="/start" analyticsLabel="Start a project" analyticsMeta={{ context: "pricing_tier" }} className="w-full bg-white text-black hover:bg-zinc-200">Start a project</BtnLink>
                   </div>
                 </div>
               </TierCardClean>
@@ -2314,7 +2290,7 @@ const TechPage = () => (
       kicker="Tech"
       title="Modern stack, engineered for reliability"
       subtitle="We pick proven tools that ship fast and scale without drama. Every layer is optimized for performance and observability."
-      primary={{ label: "Get estimate in 24h", to: "/start" }}
+      primary={{ label: "Start a project", to: "/start" }}
       secondary={{ label: "See projects", to: "/projects" }}
       stats={[
         { label: "Stack maturity", value: "Battle-tested" },
@@ -2367,7 +2343,7 @@ const AboutPage = () => (
       kicker="About"
       title="Senior-only studio with a product mindset"
       subtitle="We are a compact team of senior operators. We move fast, stay calm, and own outcomes with you."
-      primary={{ label: "Get estimate in 24h", to: "/start" }}
+      primary={{ label: "Start a project", to: "/start" }}
       secondary={{ label: "See projects", to: "/projects" }}
       stats={[
         { label: "Years in product", value: "14+" },
@@ -2475,7 +2451,7 @@ const StartPage = () => {
   useEffect(() => {
     if (typeof window === "undefined") return;
     const payload = { ...answers, updatedAt: new Date().toISOString() };
-    window.localStorage.setItem(QUALIFICATION_STORAGE_KEY, JSON.stringify(payload));
+    try { window.localStorage.setItem(QUALIFICATION_STORAGE_KEY, JSON.stringify(payload)); } catch { /* Selections still work without browser storage. */ }
   }, [answers]);
 
   const projectOption = QUAL_PROJECT_OPTIONS.find((option) => option.value === answers.projectType);
@@ -2514,11 +2490,12 @@ const StartPage = () => {
         stats={[
           { label: "Steps", value: "4" },
           { label: "Time", value: "1 min" },
-          { label: "Response", value: "24h" },
+          { label: "Reply", value: "Email" },
         ]}
       />
       <Section>
         <H2>Qualification gate</H2>
+        <p className="mb-6 text-sm leading-relaxed text-zinc-300">These choices are saved in this browser and included if you later submit the detailed contact form. <Link to="/privacy#browser-storage" className="underline underline-offset-4">Privacy and saved choices</Link>.</p>
         <div className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr]">
           <div className="space-y-6">
             <Card className="space-y-4">
@@ -2587,7 +2564,7 @@ const StartPage = () => {
                 <>
                   <div className="text-lg font-semibold text-emerald-300">Looks aligned.</div>
                   <p className="text-sm text-zinc-300">
-                    If you want an estimate, continue to the request form and we will reply within 24 hours.
+                    To discuss an estimate, continue to the request form. We’ll reply by email.
                   </p>
                   <div className="flex flex-wrap gap-3">
                     <BtnLink to="/contact" analyticsLabel="Continue to estimate request" analyticsMeta={{ context: "qualification_gate" }} className="bg-white text-black hover:bg-zinc-200">
@@ -2924,11 +2901,11 @@ const ContactPage = ({ apiBase }) => (
     <PageHero
       kicker="Contact"
       title="Tell us what you want to build"
-      subtitle="Share your goals and we will return with architecture, timeline, and budget within 24 hours."
+      subtitle="Share your goals and we’ll reply by email to discuss architecture, timing, and budget."
       primary={{ label: "See process", to: "/process" }}
       secondary={{ label: "See pricing", to: "/pricing" }}
       stats={[
-        { label: "Response time", value: "24h" },
+        { label: "Reply", value: "Email" },
         { label: "Discovery", value: "1 week" },
         { label: "Launch", value: "2-7 weeks" },
       ]}
@@ -2962,7 +2939,7 @@ const NotFoundPage = () => (
       title="This page does not exist"
       subtitle="The page you are looking for moved or was never published."
       primary={{ label: "Back home", to: "/" }}
-      secondary={{ label: "Get estimate in 24h", to: "/start" }}
+      secondary={{ label: "Start a project", to: "/start" }}
       stats={[]}
     />
   </>
@@ -2982,10 +2959,6 @@ export default function PortfolioSite() {
     trackPageView(location.pathname);
   }, [location.pathname]);
 
-  useEffect(() => {
-    const meta = getMetaForPath(location.pathname);
-    applyMeta(meta);
-  }, [location.pathname]);
 
   useEffect(() => {
     const controller = new AbortController();

@@ -1,4 +1,5 @@
 export const PRODUCT_OPTIONS = [
+  { value: "SaaS", label: "SaaS", description: "Accounts, workflows, subscriptions" },
   { value: "CRM", label: "CRM", description: "Pipelines, ops, and auditability" },
   { value: "Marketplace", label: "Marketplace", description: "Matching, trust, payouts" },
   { value: "E-commerce", label: "E-commerce", description: "Catalog, checkout, fulfillment" },
@@ -23,6 +24,7 @@ export const INTEGRATION_OPTIONS = [
 ];
 
 const PRODUCT_WEIGHTS = {
+  SaaS: 2,
   CRM: 2,
   Marketplace: 3,
   "E-commerce": 3,
@@ -108,6 +110,7 @@ const BASE_BLOCKS = [
 ];
 
 const PRODUCT_BLOCK_TAGS = {
+  SaaS: { frontend: ["Account workspace"], backend: ["Tenant boundaries", "Subscriptions"], database: ["Account ownership"], integrations: ["Billing"], admin: ["Access controls"], analytics: ["Product usage"] },
   CRM: {
     frontend: ["Pipeline UI", "Bulk actions"],
     backend: ["Workflow engine", "SLA timers"],

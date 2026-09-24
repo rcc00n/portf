@@ -1,115 +1,17 @@
-import ogImage from "../assets/raccoon-logo.png";
-
-const SITE_TITLE = "Custom software & CRM delivery";
-const withSite = () => SITE_TITLE;
-
-const DEFAULT_META = {
-  title: SITE_TITLE,
-  description: "Senior-only product studio building CRMs, marketplaces, and internal platforms with production-grade engineering.",
-  image: ogImage,
+const image = "/social/raccn-code.png";
+const withSite = title => `${title} — RACCN Code`;
+export const ROUTE_META = {
+  "/": {title:"RACCN Code — Digital systems made visible",description:"Digital products and the systems, controls, and operational logic behind them."},
+  "/work": {title:withSite("Selected work"),description:"Product and operational interface evidence from Renter, Bad Guy Motors, and WorldDoc."},
+  "/work/renter": {title:withSite("Renter"),description:"A rental marketplace through its customer, provider, and operational control surfaces."},
+  "/systems": {title:withSite("Systems"),description:"Architecture, operational control, production considerations, and explicit engineering decisions."},
+  "/systems/architecture": {title:withSite("Architecture explorer"),description:"Explore conceptual system responsibilities by product type and operating scale."},
+  "/systems/decisions": {title:withSite("Decision records"),description:"Architecture decisions with their context, trade-offs, and conditions for change."},
+  "/systems/demo": {title:withSite("Operational demo"),description:"A clearly labelled fictional simulation of operator controls and customer views.",noindex:true},
+  "/approach": {title:withSite("Approach"),description:"How RACCN moves from a product problem through system decisions, implementation, and production."},
+  "/start": {title:withSite("Start a project"),description:"Send your name, email, and project context. RACCN replies by email to discuss the next step."},
+  "/start/define": {title:withSite("Project definition"),description:"An optional estimator for indicative timeline, budget, and system responsibilities."},
+  "/privacy": {title:withSite("Privacy Policy"),description:"How RACCN Code handles project inquiries, saved choices, and personal information."},
+  "/terms": {title:withSite("Terms of Use"),description:"Terms for using the RACCN Code website, project examples, and third-party content."},
 };
-
-const ROUTE_META = {
-  "/": {
-    title: SITE_TITLE,
-    description: "Senior-only teams building CRMs, marketplaces, and internal tools with reliable delivery and clear outcomes.",
-  },
-  "/services": {
-    title: withSite("Services"),
-    description: "Senior delivery for software development, CRM transformation, analytics, and growth systems.",
-  },
-  "/projects": {
-    title: withSite("Projects"),
-    description: "Case studies with measurable outcomes across CRM, marketplaces, and automation platforms.",
-  },
-  "/process": {
-    title: withSite("Process"),
-    description: "Delivery rituals, risk tracking, and weekly demos that keep launches predictable.",
-  },
-  "/pricing": {
-    title: withSite("Pricing"),
-    description: "Transparent tiers with senior-only delivery and scoped outcomes.",
-  },
-  "/tech": {
-    title: withSite("Tech"),
-    description: "Modern, reliable stack choices across frontend, backend, data, and DevOps.",
-  },
-  "/journal": {
-    title: withSite("Engineering Journal"),
-    description: "Short, opinionated notes on admin-first systems, scaling failure modes, and auditability.",
-  },
-  "/decisions": {
-    title: withSite("Decisions"),
-    description: "Public decision records covering architecture defaults, trade-offs, and when we change course.",
-  },
-  "/about": {
-    title: withSite("About"),
-    description: "A senior-only team founded by engineers and focused on delivery quality.",
-  },
-  "/not-for-everyone": {
-    title: withSite("Not for everyone"),
-    description: "A calm fit check to help teams self-select before starting.",
-  },
-  "/start": {
-    title: withSite("Start"),
-    description: "Qualification gate to align project type, complexity, budget, and timeline.",
-  },
-  "/contact": {
-    title: withSite("Contact"),
-    description: "Request a technical estimate with clear scope, timeline, and budget.",
-  },
-  "/pre-call": {
-    title: withSite("Pre-call package"),
-    description: "Prep package covering workflow, resources, and what to bring to the call.",
-  },
-  "/summary": {
-    title: withSite("Project summary"),
-    description: "Single-screen project one-pager with scope signals and next steps.",
-  },
-  "/engineering": {
-    title: withSite("Engineering Lab"),
-    description: "Advanced modules that surface architecture depth and delivery standards.",
-  },
-  "/architecture-preview": {
-    title: withSite("Architecture Preview"),
-    description: "Interactive system map showing frontend, backend, data, and integrations.",
-  },
-  "/admin-first": {
-    title: withSite("Admin-First Toggle"),
-    description: "Switch between customer and admin views to reveal control layers.",
-  },
-  "/production-ready": {
-    title: withSite("Production Readiness"),
-    description: "Checklist of auth, monitoring, backups, and security defaults.",
-  },
-  "/estimate": {
-    title: withSite("Estimator"),
-    description: "Range-based estimator for timelines, budgets, and architecture scope.",
-  },
-  "/admin-demo": {
-    title: withSite("Admin Demo"),
-    description: "Interactive admin control demo showing roles, ops, disputes, and financial transparency.",
-  },
-  "/demo/admin": {
-    title: withSite("Admin Demo"),
-    description: "Interactive admin control demo showing roles, ops, disputes, and financial transparency.",
-  },
-  "/cases/renter-architecture": {
-    title: withSite("Renter Architecture"),
-    description: "Public breakdown of a rental marketplace architecture and decisions.",
-  },
-};
-
-export const getMetaForPath = (pathname) => {
-  if (ROUTE_META[pathname]) {
-    return { ...DEFAULT_META, ...ROUTE_META[pathname] };
-  }
-  if (pathname.startsWith("/cases/")) {
-    return {
-      ...DEFAULT_META,
-      title: withSite("Case Study"),
-      description: "Public architecture case studies with engineering constraints and decisions.",
-    };
-  }
-  return DEFAULT_META;
-};
+export const getMetaForPath = pathname => ({image,...(ROUTE_META[pathname] || {title:withSite("Page not found"),description:"This route is not available. Explore the work or start a project.",noindex:true})});
