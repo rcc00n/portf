@@ -34,8 +34,10 @@ Set secret values outside Git and Docker build arguments. Review actual values i
 Dokku without printing them into audit logs.
 
 ```text
-DJANGO_SECRET_KEY=<secret>
+DJANGO_ENV=production
+DJANGO_SECRET_KEY=<private stable random value, at least 50 characters>
 DJANGO_ALLOWED_HOSTS=<verified domains>
+DJANGO_CANONICAL_ORIGIN=https://<verified canonical host>
 DJANGO_DEBUG=false
 DJANGO_SERVE_MEDIA=true
 DJANGO_MEDIA_ROOT=/srv/app/media
@@ -168,7 +170,7 @@ job at a time. `--once` drains currently due jobs and exits; it does not wait fo
 backoff times. Do not run this command against real data during automated tests.
 
 `INQUIRY_RATE_LIMIT` defaults to 60 new valid submissions per socket peer per UTC hour.
-**All visitors may share the nginx peer address.** Forwarded IP headers are ignored.
+**All visitors share the nginx peer address unless the verified proxy mode below is enabled.** By default forwarded client IP headers are ignored.
 Verify the actual REMOTE_ADDR distribution before staging; size this shared budget
 for expected traffic. Apply per-client nginx limits only at a proxy that sanitizes
 client identity. Do not “fix” this by trusting arbitrary X-Forwarded-For.
@@ -200,8 +202,7 @@ page rendering remains React. An old/incompatible build returns 503/noindex rath
 than publishing incorrect homepage metadata on every route.
 
 `DJANGO_CANONICAL_ORIGIN` controls absolute canonical, OpenGraph/Twitter and sitemap
-URLs at runtime. Its default retains the existing `https://raccncode.com` contract;
-this is not a claim that DNS/domain ownership has been verified. Set only the reviewed
+URLs at runtime. Production requires an explicit value; development/test builds retain the existing `https://raccncode.com` contract. Domain ownership has not been verified. Set only the reviewed
 origin (scheme + host, optional port; no path/query/fragment/credentials). Incoming
 Host/X-Forwarded-Host never determines canonical URLs. The rendered head passes the
 same origin to React. Staging needs separate indexing/access policy approved by the
@@ -230,3 +231,36 @@ cache invalidation, reviewed canonical origin, externally reachable social previ
 and font MIME types, actual published CMS metadata, and staged access/indexing rules.
 No production search engine recrawl, social-provider refresh or infrastructure
 configuration was verified locally. See [migration and metadata handoff](docs/hardening/ASSETS_METADATA_HARDENING.md).
+
+## Release-hardening runtime requirements
+
+`DJANGO_ENV` defaults to `production`. Startup fails for missing/short secret, missing PostgreSQL URL, missing/wildcard allowed hosts, missing HTTPS canonical origin, DEBUG, disabled secure cookies/redirects, absent absolute media root configuration, or an incompatible media/static URL contract. SQLite and random development keys are allowed only with explicit `development`, `test` or `build`. Never set those modes on a release runtime. Django does not load dotenv automatically. The image uses `DJANGO_ENV=build` only for collectstatic, not as a runtime ENV.
+
+The lockfile pins all Python runtime packages, including transitive dependencies. Docker uses Node 22 and Python 3.12 slim lines; these base tags and Debian repositories still float. A local Python 3.12 image was built and tested, but no registry release image was published or attested. Freeze and verify the final release image digest in a separately approved staging pipeline. Root CI has no deployment jobs; obsolete nested Pages workflows are absent.
+
+### Proxy trust and client address
+
+Default: trust no proxy networks. Do not set `0.0.0.0/0` or `::/0` (startup rejects them). Gunicorn's independent forwarding/scheme-header interpretation is disabled in `backend/gunicorn.conf.py`, explicitly loaded by Procfile/Docker CMD and all smoke servers; Django validates the actual socket peer. Relying only on --chdir does not reliably load that config.
+
+After verifying the actual network path, set `DJANGO_TRUSTED_PROXY_CIDRS` to only the nginx-to-container peer address(es)/small subnet. nginx must overwrite `X-Forwarded-Proto` from its verified transport, preserve Host, and prevent direct external access to Gunicorn. The application accepts only a single `http`/`https` value from a trusted peer. Other values are stripped. Incorrect trust configuration causes an HTTPS redirect loop; verify before admitting traffic.
+
+For contact rate limiting, optional `DJANGO_TRUST_PROXY_CLIENT_IP=true` accepts a **single** IP in X-Forwarded-For from that trusted peer. nginx must **overwrite**, not append or relay, the incoming header. For a directly internet-facing Dokku nginx, the documented configuration uses `dokku nginx:set <app> x-forwarded-for-value '$remote_addr'`. This command was not run. Inspect generated nginx config and the installed Dokku version first. See [Dokku header configuration](https://dokku.com/docs/networking/proxies/nginx/). A CDN/load-balancer topology needs its own reviewed trusted real-IP boundary; do not copy this setting blindly behind another proxy. Lists/malformed values fall back to the socket peer. `X-Real-IP` and Forwarded are not read.
+
+Staging must demonstrate: spoofed incoming XFF/protocol headers cannot choose the app identity; two real clients receive distinct buckets; direct Gunicorn access is blocked; socket-peer CIDRs remain stable across restarts. Until then the conservative shared-peer 60/hour limit remains and may undercount real client capacity. No production proxy was inspected.
+
+### Health, readiness and monitoring
+
+- `/health/`: process liveness only, no DB or Telegram dependency.
+- `/ready/`: migrated database, readable/writable media directory and built index present; 200 `{ "ok": true }` or generic 503 `{ "ok": false }`, no-store/noindex. No secrets or provider details. Both endpoints are exempt from application HTTPS redirect for private health probes; Host validation still applies.
+- Readiness does **not** prove that a directory is a persistent mount, storage has free capacity, backups work, PostgreSQL is replicated, or a worker is running. Operator monitoring must verify these separately. Avoid high-frequency readiness polling; the check consults the migration table.
+- Watch pending/processing queue age, exhausted jobs and fixed-category application logs. Telegram availability never marks the web process unhealthy. No monitoring provider was installed.
+
+### Browser security headers
+
+Public CSP permits same-origin scripts/API/fonts; HTTPS CMS images and data/blob image layers; inline styles required by React/SVG motion. It forbids script eval/inline scripts, objects and framing. Optional `DJANGO_CSP_CONNECT_ORIGINS` accepts explicit HTTP(S) origins for a separately hosted API; prefer same-origin. This cannot substitute for API CORS/CSRF settings. Authenticated Django admin is excluded from the SPA CSP and retains Django CSRF/auth and frame protection; do not impose the SPA policy on admin at the proxy without separate testing.
+
+All responses receive Permissions-Policy disabling camera/microphone/geolocation/payment. Django provides nosniff, DENY framing and strict-origin-when-cross-origin referrer policy. HSTS remains explicitly operator-controlled (`DJANGO_SECURE_HSTS_SECONDS`, default 0) until HTTPS/subdomains are verified. Do not enable includeSubDomains/preload without reviewing every affected host. The proxy/CDN must not duplicate/conflict with these headers. Review [Django deployment checks](https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/) against the actual runtime.
+
+### Backup and recovery rehearsal (not executed)
+
+Take coordinated PostgreSQL and persistent-media backups outside the container. Include leads, idempotency and outbox delivery state; encrypt and restrict access to backups. Restore to an isolated private environment with notifications disabled before starting any worker. Verify counts, ordered project image references, publish/unpublish behavior, historical inquiries, migrations and media MIME/cache behavior. Restoring an old outbox snapshot may redeliver already-sent notifications: review delivery state before enabling the worker. Document backup retention, restore duration, acceptable data loss and an accountable operator; no values are assumed here.

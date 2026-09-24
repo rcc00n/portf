@@ -35,7 +35,7 @@ def run(root):
         port = listener.getsockname()[1]
     base = f'http://127.0.0.1:{port}'
     os.environ.update({
-        'DJANGO_SETTINGS_MODULE':'config.settings', 'DJANGO_DEBUG':'false',
+        'DJANGO_ENV':'test', 'DJANGO_SETTINGS_MODULE':'config.settings', 'DJANGO_DEBUG':'false',
         'DJANGO_SERVE_MEDIA':'true', 'DJANGO_DB_SSL':'false',
         'DJANGO_SECURE_SSL_REDIRECT':'false', 'DJANGO_ALLOWED_HOSTS':'127.0.0.1,localhost,testserver',
         'DJANGO_SESSION_COOKIE_SECURE':'false', 'DJANGO_CSRF_COOKIE_SECURE':'false',
@@ -63,7 +63,7 @@ def run(root):
     attach(second, 'app/public/home/media/bad-guy-motors.webp', 'Second fixture evidence')
     ProjectLink.objects.create(project=first, label='CMS link', href='https://example.org/cms', order=1)
     logs=(root/'gunicorn.log').open('w+')
-    process=subprocess.Popen([sys.executable,'-m','gunicorn','config.wsgi:application','--chdir',str(REPO/'backend'),'--bind',f'127.0.0.1:{port}','--workers','1'], env=os.environ.copy(), stdout=logs, stderr=logs)
+    process=subprocess.Popen([sys.executable,'-m','gunicorn','--config',str(REPO/'backend/gunicorn.conf.py'),'config.wsgi:application','--chdir',str(REPO/'backend'),'--bind',f'127.0.0.1:{port}','--workers','1'], env=os.environ.copy(), stdout=logs, stderr=logs)
     try:
         for _ in range(100):
             try:
@@ -80,9 +80,14 @@ def run(root):
                 measure(browser,base,os.environ['RACCN_MEASURE_LABEL'])
             page=browser.new_page(viewport={'width':1440,'height':1000}, reduced_motion='reduce')
             errors=[]
+            policy_errors=[]
+            page.on('console', lambda message: policy_errors.append(message.text) if 'Content Security Policy' in message.text or 'violates the following' in message.text else None)
             page.on('pageerror',lambda error:errors.append(str(error)))
             api=page.request.get(base+'/api/projects/').json()
             assert [item['slug'] for item in api]==['renter','cms-first','cms-second','cms-archive']
+            # Gunicorn must not independently turn an untrusted protocol header into HTTPS.
+            spoofed=page.request.get(base+'/api/projects/',headers={'X-Forwarded-Proto':'https','X-Forwarded-For':'203.0.113.250'}).json()
+            assert spoofed[0]['media'][0]['url'].startswith(base+'/media/')
             url=api[0]['media'][0]['url']
             media=page.request.get(url)
             assert media.status==200 and media.headers['content-type']=='image/webp'
@@ -94,7 +99,11 @@ def run(root):
             for route in routes:
                 response=page.goto(base+route)
                 assert response.status==200,(route,response.status)
-                page.locator('h1').wait_for(state='attached')
+                try:
+                    page.locator('h1').wait_for(state='attached')
+                except Exception as exc:
+                    raise AssertionError({'route':route, 'page_errors':errors, 'csp_errors':policy_errors, 'title':page.title()}) from exc
+            assert page.request.get(base+'/ready/').json()=={'ok':True}
             page.goto(base+'/')
             expect(page.locator('.hp-wordmark')).to_be_visible()
             core=page.locator('.hp-control-plane [role="button"]')
@@ -102,6 +111,13 @@ def run(root):
             expect(page.locator('.hp-control-plane')).to_have_attribute('data-control','active')
             core.press('Space')
             expect(page.locator('.hp-control-plane')).to_have_attribute('data-control','ready')
+            page.emulate_media(reduced_motion='no-preference')
+            core.press('Enter')
+            expect(page.locator('.hp-topology-sheet').first).to_be_visible()
+            assert page.locator('.hp-topology-sheet').first.evaluate('(img)=>img.complete && img.naturalWidth>0')
+            page.wait_for_timeout(1600)
+            expect(page.locator('.hp-topology-sheet')).to_have_count(0)
+            page.emulate_media(reduced_motion='reduce')
             expect(page.locator('[data-project-slug="renter"]')).to_have_count(1)
             page.locator('#work').scroll_into_view_if_needed()
             expect(page.locator('.hp-secondary-work img').first).to_have_attribute('alt','Owner-provided catalog alt')
@@ -163,6 +179,7 @@ def run(root):
             page.get_by_role('button',name='Try again').click()
             expect(page.locator('[data-catalog-state="empty"]')).to_be_visible()
             assert not errors,errors
+            assert not policy_errors,policy_errors
             browser.close()
             print(json.dumps({'result':'PASS','server':'Gunicorn','DEBUG':False,'SERVE_MEDIA':True,'canonical_routes':len(routes),'media_mime':media.headers['content-type'],'media_cache':media.headers['cache-control'],'checks':['publish','API metadata','desktop/mobile rendering','ordering update','media update','unpublish','case 404','missing media 404','empty vs failure','retry','Control Plane keyboard/reduced motion'],'database':'isolated temporary SQLite','production_records_modified':False},indent=2))
     finally:

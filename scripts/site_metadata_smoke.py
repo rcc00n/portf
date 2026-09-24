@@ -31,7 +31,7 @@ def run(root):
     base=f'http://127.0.0.1:{port}'
     origin='https://canonical.example'
     os.environ.update({
-        'DJANGO_SETTINGS_MODULE':'config.settings','DJANGO_DEBUG':'false','DJANGO_DB_SSL':'false',
+        'DJANGO_ENV':'test', 'DJANGO_SETTINGS_MODULE':'config.settings','DJANGO_DEBUG':'false','DJANGO_DB_SSL':'false',
         'DJANGO_SECURE_SSL_REDIRECT':'false','DJANGO_ALLOWED_HOSTS':'127.0.0.1,localhost,testserver',
         'DJANGO_FRONTEND_DIST_DIR':str(REPO/'app/dist'),'DJANGO_MEDIA_ROOT':str(root/'media'),
         'DJANGO_SERVE_MEDIA':'true','DJANGO_CANONICAL_ORIGIN':origin,
@@ -61,7 +61,7 @@ def run(root):
         if asset.is_file() and asset.suffix in ('.html','.js','.css','.json','.xml','.txt'):
             assert '/prototype/' not in asset.read_text(), asset
     logs=open(root/'server.log','w')
-    process=subprocess.Popen([sys.executable,'-m','gunicorn','config.wsgi:application','--chdir',str(REPO/'backend'),'--bind',f'127.0.0.1:{port}'],stdout=logs,stderr=logs)
+    process=subprocess.Popen([sys.executable,'-m','gunicorn','--config',str(REPO/'backend/gunicorn.conf.py'),'config.wsgi:application','--chdir',str(REPO/'backend'),'--bind',f'127.0.0.1:{port}'],stdout=logs,stderr=logs)
     try:
         for _ in range(100):
             try:

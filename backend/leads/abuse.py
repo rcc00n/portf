@@ -1,4 +1,4 @@
-"""Request limits use the socket peer, never untrusted forwarded headers."""
+"""Request limits use a verified proxy identity or the conservative socket peer."""
 import ipaddress
 from datetime import timedelta
 
@@ -12,7 +12,7 @@ from .models import InquiryRateBucket
 
 def client_ip(request):
     try:
-        return str(ipaddress.ip_address(request.META.get("REMOTE_ADDR", "")))
+        return str(ipaddress.ip_address(getattr(request, "trusted_client_ip", None) or request.META.get("REMOTE_ADDR", "")))
     except ValueError:
         return None
 
