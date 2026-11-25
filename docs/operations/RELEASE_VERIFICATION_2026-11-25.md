@@ -1,7 +1,7 @@
 # RACCN Code release verification — 2026-11-25
 
 This record covers the initial portfolio launch and the subsequent architecture
-interaction release described at the end of this document.
+and navigation releases described at the end of this document.
 
 ## Scope and source
 
@@ -217,3 +217,38 @@ image archive, database/media/config snapshots and compatibility-asset provenanc
 Earlier backups remain retained. These are private operational artifacts, not Git
 source. The earlier documented provider/Safari/backup-retention limitations still
 apply; no new external delivery guarantee is implied by the release.
+
+## Page navigation positioning
+
+Source revision `7a9ddd464cd419c921cc29d5cdf38256c4890e00`, branch
+`fix/page-navigation-scroll`, fixes a reproduced navigation defect: selecting the
+header brand from `/systems/architecture` at `scrollY=1100` left the homepage at
+the same scroll position. The reset previously lived only in the secondary shell.
+
+A shared positioning wrapper now runs when each destination's lazy page has
+actually committed, including the homepage. Non-anchor navigation starts at zero,
+including Back/Forward. Existing section/hash navigation remains unchanged. One
+next-frame correction handles outgoing cleanup and is cancelled if another
+navigation starts. There are no continuous scroll handlers or local UI-state resets.
+
+Six maintained browser regressions cover the original failure, desktop/mobile
+cross-page links, cached history, genuinely delayed lazy loading, delayed CMS
+anchors, homepage section history and navigation while a gallery is open. All pass
+in the complete release suite alongside 33 total browser tests, 38 frontend unit
+tests, 106 Django tests (one PostgreSQL-only skip), 11 compatibility tests, lint,
+build, migration drift and CMS/media/contact/metadata smoke checks.
+
+The readiness-gated production release succeeded with entry
+`/assets/index-CnViFC4U.js`. All six navigation regressions passed against the live
+site, as did the twelve-route/twenty-redirect/eleven-image public smoke. A tab held
+open across deployment retained working navigation; after refresh its mid-page
+Systems-to-home transition ended at exactly `scrollY=0`, with no script errors or
+failed assets. Existing tabs need one refresh to receive the new navigation code.
+
+Web and worker run `7a9ddd4` with zero restarts. Original CMS and inquiry content
+fingerprints are unchanged; the outbox is empty. Configuration is identical except
+expected Dokku revision metadata, with the catalog-import flag still absent. All
+twenty prior reachable code chunks pass public MIME/hash checks, and the twelve
+unrelated containers are unchanged. Private rollback checksums were verified under
+`/var/backups/raccn/20261125-scroll-navigation`. No test inquiry or provider message
+was sent; the established verification limits above still apply.
