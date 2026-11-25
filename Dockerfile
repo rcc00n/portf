@@ -38,4 +38,4 @@ ENV PORT=8000
 RUN DJANGO_ENV=build python manage.py collectstatic --noinput
 
 EXPOSE 8000
-CMD ["sh", "-c", "exec gunicorn --config gunicorn.conf.py config.wsgi:application --bind 0.0.0.0:${PORT}"]
+CMD ["gunicorn", "--config", "gunicorn.conf.py", "config.wsgi:application"]

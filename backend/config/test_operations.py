@@ -2,6 +2,7 @@
 import ipaddress
 import json
 import os
+import runpy
 from pathlib import Path
 import subprocess
 import sys
@@ -18,6 +19,12 @@ from deployment_ready import NoRedirect, check_readiness
 
 
 class DeploymentProbeTests(SimpleTestCase):
+    def test_gunicorn_binds_runtime_port_without_shell_expansion(self):
+        configuration = Path(__file__).resolve().parents[1] / 'gunicorn.conf.py'
+        for environment, expected in [({}, '0.0.0.0:8000'), ({'PORT': '8321'}, '0.0.0.0:8321'), ({'PORT': ''}, '0.0.0.0:8000')]:
+            with self.subTest(environment=environment), patch.dict(os.environ, environment, clear=True):
+                self.assertEqual(runpy.run_path(str(configuration))['bind'], expected)
+
     def test_dokku_startup_command_uses_supported_argv_array(self):
         # Dokku 0.34.7 decodes Healthcheck.Command into []string. A shell string
         # can pass application tests yet prevent the actual release from booting.

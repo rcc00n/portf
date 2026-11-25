@@ -13,7 +13,7 @@ class NoRedirect(HTTPRedirectHandler):
 
 def check_readiness():
     try:
-        port = int(os.environ.get("PORT", "8000"))
+        port = int(os.environ.get("PORT") or "8000")
         if not 1 <= port <= 65535:
             return False
         host = urlsplit(os.environ.get("DJANGO_CANONICAL_ORIGIN", "http://localhost")).netloc
