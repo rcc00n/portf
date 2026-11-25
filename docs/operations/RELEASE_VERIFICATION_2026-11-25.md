@@ -352,3 +352,66 @@ Private rollback snapshots/checksums are verified at
 review artifact, not application source: it includes private-repository inventory
 and sensitive finding locations without secret values. No other repository,
 profile pin, visibility setting or main branch was changed by this release.
+
+
+## Employer evidence and confirmed privacy handling
+
+Application revision `a424cb4b7adc7634db0b88410d438108beba613b` is deployed to
+`https://raccncode.com/`, with entry `/assets/index-F0n6KJJu.js`.
+[PR #2](https://github.com/rcc00n/portf/pull/2) reconciles the approved release
+history and the public default branch without rewriting existing commits.
+
+The owner requested another reduction: the five indicative bands are now
+`$8k–$13k`, `$13k–$23k`, `$23k–$33k`, `$33k–$49k`, `$49k–$78k`. The frozen
+81-case baseline remains unchanged; only the explicit budget mapping differs.
+Scores, thresholds, timelines, SaaS and unknown intent are preserved.
+
+The demonstrated demo-dialog background scroll defect is fixed using the existing
+gallery's shared scroll lock/restore behavior. Source-only Work links identify
+their actual destination. Approach introduces the engineer with GitHub/PDF links;
+Start includes an engineering-role email path. Decisions links a real BGM
+implementation/test case instead of repeating a generic principle. Approved
+homepage geometry, typography, motion and CMS content are unchanged.
+
+The owner confirmed personal operation by Vadim Rudenko and manual removal of
+closed inquiries 12 months after their last communication. Public legal copy now
+reflects this and the verified data path/logging configuration. The operational
+[retention procedure](PRIVACY_HANDLING.md) covers database, notifications, email,
+backups and restoration. No automatic purge, historical inquiry deletion, provider
+location guarantee, client-rights certification or legal-compliance claim is made.
+
+### Verification
+
+- Complete isolated local suite: 40 frontend tests, 37 browser regressions,
+  106 Django tests (one PostgreSQL-only test skipped under SQLite), 11 compatibility
+  tests, lint/build, migration drift and CMS/media/contact/metadata smoke checks.
+- All four hosted jobs passed at source revision `81bfee0` in
+  [run 45694016132](https://github.com/rcc00n/portf/actions/runs/45694016132), including
+  real PostgreSQL migration and Docker image checks. The merge revision has the
+  same Git tree. Independent source review and desktop/mobile visual checks passed.
+- Production-mode rehearsal restored isolated PostgreSQL/media with external
+  networking disabled. Running release twice preserved original records. The
+  default command on a non-default port passed readiness and real HTTP/media tests.
+- Live smoke: twelve canonical pages, twenty legacy redirects, eleven images,
+  six projects, genuine 404s and health/readiness passed. Live SaaS, unknown and
+  restored estimates show the new bands; summary/reload/selected identity remain
+  correct. Three employer browser regressions passed against the live site.
+- A tab held open across deployment retained navigation and loaded the new entry
+  after refresh; cross-page scroll ended at zero. All twenty preceding reachable
+  JS/CSS chunks passed MIME/hash checks: twelve copied files (417,152 bytes), eight
+  identical files reused. No preceding HTML/media/prototype page was republished.
+- Original content fingerprints remain equal for ten projects, twenty-three
+  images, five links and thirteen inquiries. Six projects are public; outbox empty.
+  No test inquiry or real provider notification was sent.
+- Web and worker share revision `a424cb4`, zero restarts during inspection. Settings
+  differ only by expected Git revision; the one-shot catalog flag remains absent.
+  All twelve unrelated containers retain IDs/start times/restart counts. BGM
+  homepage/store/services return 200. www preserves path/query through its 308;
+  retired design host returns 410 and old GitHub Pages returns 404.
+
+Fresh restricted rollback material and checksums are verified under
+`/var/backups/raccn/20261125-employer-readiness`. Temporary restored data, rehearsal
+containers and secret files were removed. Provider delivery, Safari/VoiceOver,
+provider-region/backup-expiry facts and final rights/legal review remain outside
+this verification. Detailed cross-repository audit artifacts remain private and
+are not copied into application source.
