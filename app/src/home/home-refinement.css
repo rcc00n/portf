@@ -146,7 +146,7 @@
 }
 .hp-control-label-compact { display: none; }
 .hp-act-head { position: relative; }
-.hp-act-head .hp-act-route { top: -8.5rem; left: calc(68vw - clamp(1.5rem,6vw,7rem)); height: calc(100% + 8.5rem); pointer-events: none; }
+.hp-act-head .hp-act-route { top: -6.5rem; left: calc(68vw - clamp(1.5rem,6vw,7rem)); height: calc(100% + 6.5rem); pointer-events: none; }
 .hp-act-head .hp-act-route::after { content: none; }
 .hp-act-head .hp-act-route span { top: auto; bottom: -4px; }
 .hp-systems-instrument .hp-systems-modes button span,

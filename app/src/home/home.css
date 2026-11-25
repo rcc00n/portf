@@ -630,7 +630,7 @@
 .hp-work {
   position: relative;
   z-index: 5;
-  padding: 8.5rem clamp(1.5rem, 6vw, 7rem) 5.5rem;
+  padding: 6.5rem clamp(1.5rem, 6vw, 7rem) 4rem;
   background: var(--hp-bone-deep);
   color: var(--hp-ink);
 }
@@ -845,7 +845,7 @@
 .hp-systems {
   position: relative;
   z-index: 6;
-  padding: 8rem clamp(1.5rem, 5vw, 6rem) 5rem;
+  padding: 4.5rem clamp(1.5rem, 5vw, 6rem) 3rem;
   background: var(--hp-carbon);
   color: var(--hp-bone);
 }
@@ -1070,7 +1070,7 @@
   position: relative;
   z-index: 7;
   min-height: 90svh;
-  padding: 8rem clamp(1.5rem, 6vw, 7rem) 5.5rem;
+  padding: 6rem clamp(1.5rem, 6vw, 7rem) 4rem;
   overflow: hidden;
   background: var(--hp-bone);
   color: var(--hp-ink);

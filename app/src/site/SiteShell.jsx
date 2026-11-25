@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 import { RaccnGlyph } from "../home/ControlPlane.jsx";
 import { trackPageView } from "../utils/analytics.js";
+import ProjectAction from "./ProjectAction.jsx";
 import "./site.css";
 
 const sections = [["/work","Work"],["/systems","Systems"],["/approach","Approach"],["/start","Start"]];
@@ -60,6 +61,7 @@ export default function SiteShell() {
     </header>
     <main id="site-content" ref={main} tabIndex={-1}><Outlet /></main>
     <SiteFooter />
+    <ProjectAction key={pathname} />
   </div>;
 }
 export function PageLead({ index, title, intro, children, className="" }) {

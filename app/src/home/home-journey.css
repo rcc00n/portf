@@ -58,9 +58,9 @@
 .raccn-home .hp-systems-head > p { max-width: 20rem; color: #b3b0a7; }
 
 /* Approach: the headline owns the left field; decisions share one measured route. */
-.raccn-home .hp-approach { padding-top: 6rem; }
+.raccn-home .hp-approach { padding-top: 4rem; }
 .raccn-home .hp-approach-head { display: block; padding-bottom: 3.5rem; }
-.raccn-home .hp-approach-head .hp-system-label { display: block; margin-bottom: 2.5rem; }
+.raccn-home .hp-approach-head .hp-system-label { display: block; margin-bottom: 2rem; }
 .raccn-home .hp-approach-head h2 { font-size: clamp(4.5rem,8.8vw,9.7rem); max-width: 70rem; }
 .raccn-home .hp-approach-list { margin-left: 8%; border-top: 1px solid #73746b; --decision-progress: 0; }
 .raccn-home .hp-approach-list::before,
@@ -72,7 +72,7 @@
 .raccn-home .hp-approach-list::after {
   width: 2px; background: var(--hp-signal-ink); transform: scaleY(var(--decision-progress)); transform-origin: top;
 }
-.raccn-home .hp-approach-list article { position: relative; grid-template-columns: 3rem minmax(15rem,.9fr) 1fr; gap: 2.25rem; padding: 1.75rem 0; min-height: 7.5rem; }
+.raccn-home .hp-approach-list article { position: relative; grid-template-columns: 3rem minmax(15rem,.9fr) 1fr; gap: 2.25rem; padding: 1.4rem 0; min-height: 6rem; }
 .raccn-home .hp-approach-list article::after {
   content: ""; position: absolute; left: 1.1rem; top: 50%; width: 2.7rem; height: 1px;
   background: var(--hp-signal-ink); transform-origin: left; transform: scaleX(var(--decision-state,0));
@@ -87,7 +87,7 @@
 .raccn-home .hp-approach-link { margin-top: 2rem; }
 
 /* Start: a single semantic link is the complete architectural composition. */
-.raccn-home .hp-start { padding-top: 5rem; }
+.raccn-home .hp-start { padding-top: 4rem; }
 .raccn-home .hp-start-card {
   padding: 2.5rem 0 3.5rem;
   border-top: 1px solid #74746e;

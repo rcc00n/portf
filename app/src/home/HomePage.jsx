@@ -8,10 +8,12 @@ import { approachSteps, selectHomepageProjects, systemModes } from "./homeData.j
 import { trackCtaClick, trackPageView } from "../utils/analytics.js";
 import useProjectCatalog from "../projects/useProjectCatalog.js";
 import CatalogStatus from "../projects/CatalogStatus.jsx";
+import ProjectAction from "../site/ProjectAction.jsx";
 import { casePath, imageAlt, presentProject, selectProjectEvidence } from "../projects/catalog.js";
 import "./home.css";
 import "./home-refinement.css";
 import "./home-journey.css";
+import "./project-showcase.css";
 
 const DeferredImage = ({ src, alt, width, height }) => {
   const ref = useRef(null);
@@ -58,11 +60,20 @@ const HomeHeader = () => (
 );
 
 const SecondaryProject = ({ project, index }) => {
+  const internal = casePath(project);
+  const domain = internal ? `${project.title} / Case study` : project.href ? new URL(project.href, window.location.origin).hostname.replace(/^www\./, "") : "Project preview";
   const content = (
     <>
       {project.image && <figure data-home-evidence>
-        <DeferredImage src={project.image} alt={project.imageAlt} width="1800" height={project.key === "worlddoc" ? "858" : "810"} />
-        <figcaption><span>0{index + 2}</span><span>Interface evidence</span></figcaption>
+        <div className="hp-project-stage">
+          <div className="hp-project-stage__label"><span>{domain}</span><span aria-hidden="true">↗</span></div>
+          <div className="hp-project-screen">
+            <div className="hp-project-screen__bar" aria-hidden="true"><i /><i /><i /><span>{domain}</span></div>
+            <DeferredImage src={project.image} alt={project.imageAlt} width="1440" height="1000" />
+          </div>
+          <span className="hp-project-stage__visit" aria-hidden="true">{internal ? "Explore case" : "Visit project"} ↗</span>
+        </div>
+        <figcaption><span>{String(index + 1).padStart(2, "0")} / Selected work</span><span>{project.status || "Interface evidence"}</span></figcaption>
       </figure>}
       <div className="hp-secondary-project__copy">
         <span className="hp-system-label">{project.type}</span>
@@ -73,7 +84,7 @@ const SecondaryProject = ({ project, index }) => {
     </>
   );
 
-  return project.href ? (
+  return internal ? <Link data-project-slug={project.slug} className="hp-secondary-project" to={internal}>{content}</Link> : project.href ? (
     <a data-project-slug={project.slug} className="hp-secondary-project" href={project.href} target="_blank" rel="noreferrer" aria-label={`${project.title} — open project in a new tab`}>{content}</a>
   ) : (
     <article data-project-slug={project.slug} className="hp-secondary-project">{content}</article>
@@ -167,8 +178,9 @@ export default function HomePage() {
         </article>}
 
         <div className="hp-secondary-work">
-          {secondaryProjects.map((project, index) => <SecondaryProject key={project.key} project={project} index={index} />)}
+          {secondaryProjects.slice(0,2).map((project, index) => <SecondaryProject key={project.key} project={project} index={index + (lead ? 1 : 0)} />)}
         </div>
+        {secondaryProjects.length > 2 && <nav className="hp-more-work" aria-label="More selected projects">{secondaryProjects.slice(2).map(project => <Link key={project.key} to={`/work#project-${project.slug}`} data-project-slug={project.slug}><span>{project.type}</span><strong>{project.title}</strong><b aria-hidden="true">↗</b></Link>)}</nav>}
         <div className="hp-decision-links"><Link className="hp-work-index-link" to="/work">Project index <span aria-hidden="true">↗</span></Link><a className="hp-project-cta" href="#start">Start a project <span aria-hidden="true">↗</span></a></div>
       </section>
 
@@ -230,6 +242,7 @@ export default function HomePage() {
           <a href="mailto:vadrud2016@gmail.com">vadrud2016@gmail.com</a>
         </footer>
       </section>
+      <ProjectAction />
     </main>
   );
 }
