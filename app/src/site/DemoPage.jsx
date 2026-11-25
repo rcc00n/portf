@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { ChoiceGroup, SignalLink } from "./SiteShell.jsx";
+import { lockDocumentScroll } from "./lockDocumentScroll.js";
 import { VIEW_OPTIONS, ADMIN_NAV, KPI_DATA, USERS_SEED, PERMISSION_OPTIONS, PIPELINE_COLUMNS, PIPELINE_SEED, TRANSACTIONS_SEED, DISPUTES_SEED, SETTINGS_SEED, AUDIT_LOG, CUSTOMER_ORDERS, CUSTOMER_NOTIFICATIONS } from "./demoData.js";
 const money = value => Number(String(value).replace(/[$,]/g,""));
 const format = value => new Intl.NumberFormat("en-US",{style:"currency",currency:"USD"}).format(value);
@@ -9,7 +10,18 @@ export default function DemoPage() {
   const [pipeline,setPipeline]=useState(PIPELINE_SEED);const [transaction,setTransaction]=useState(null);
   const [disputeId,setDisputeId]=useState(DISPUTES_SEED[0].id);const [announcement,setAnnouncement]=useState("");
   const dialog=useRef(null);const user=users.find(x=>x.id===userId);const dispute=DISPUTES_SEED.find(x=>x.id===disputeId);
-  useEffect(()=>{if(transaction){dialog.current?.showModal();}else{dialog.current?.close();}},[transaction]);
+  useEffect(()=>{
+    const modal=dialog.current;
+    if(!transaction || !modal)return;
+    const opener=document.activeElement;
+    const restore=lockDocumentScroll();
+    modal.showModal();
+    return ()=>{
+      modal.close();
+      restore();
+      if(opener?.isConnected)opener.focus({preventScroll:true});
+    };
+  },[transaction]);
   const move=(id,status)=>{if(!PIPELINE_COLUMNS.some(x=>x.id===status))return;setPipeline(cards=>cards.map(card=>card.id===id?{...card,status}:card));setAnnouncement(`Item moved to ${PIPELINE_COLUMNS.find(x=>x.id===status).label}.`);};
   const toggle=(permission)=>setUsers(current=>current.map(x=>x.id!==userId?x:{...x,permissions:x.permissions.includes(permission)?x.permissions.filter(p=>p!==permission):[...x.permissions,permission]}));
   return <section className="site-demo">

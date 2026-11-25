@@ -45,8 +45,9 @@ combinations from Git revision `ded2944`, before this fix. Tests compare ranges,
 notes, blocks and tags. Do not regenerate it from the modified implementation.
 The corrected SaaS behavior is checked separately across its 27 combinations.
 The unknown-intent fix did not change estimator arithmetic. The owner-requested
-2026-11-25 pricing refinements reduce only the five budget ranges, each pass by
-approximately 10% rounded to whole thousands. Tests explicitly map current ranges onto
+2026-11-25 pricing refinements reduce only the five budget ranges. The first two
+passes were approximately 10%; the employer-readiness pass is approximately 20%,
+rounded to whole thousands. Tests explicitly map current ranges onto
 the unchanged fixture and still compare every other result, including scoring,
 timelines, notes and tags. Browser coverage checks current prices after restoring
 saved choices and keeps unknown-product estimates labelled as illustrative.

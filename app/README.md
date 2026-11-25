@@ -23,7 +23,7 @@ from the repository root after installing its Python/browser dependencies.
 ## Source map and boundaries
 
 - `src/main.jsx`: explicit routes, lazy pages and destination scroll positioning.
-- `src/pages/Home/`: approved homepage and Control Plane.
+- `src/home/`: approved homepage, Control Plane and idempotent inquiry submission.
 - `src/site/`: evidence, architecture, demo, Start and optional definition.
 - `src/projects/`: CMS publication, ordering, identity, media and degraded states.
 - `src/site/definition.js`: selected intent versus illustrative assumptions.

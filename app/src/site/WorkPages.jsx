@@ -3,16 +3,17 @@ import { applyMetadata, getMetaForPath } from "../utils/seo.js";
 import { Link } from "react-router-dom";
 import useProjectCatalog from "../projects/useProjectCatalog.js";
 import CatalogStatus from "../projects/CatalogStatus.jsx";
-import { casePath, imageAlt, presentProject, projectLinks, selectProjectEvidence } from "../projects/catalog.js";
+import { casePath, imageAlt, presentProject, projectActionLabel, projectLinks, selectProjectEvidence } from "../projects/catalog.js";
 import { ClosingAction, Evidence, NotFound, PageLead, SignalLink } from "./SiteShell.jsx";
 import ProjectGallery from "./ProjectGallery.jsx";
 
 function ProjectEvidence({project, index, eager=false, className=""}) {
   const image=project.media[0];
   if (!image) return null;
-  const evidence=<Evidence eager={eager} height={project.slug==="worlddoc"?858:810} src={image.url} alt={imageAlt(project,image)} label={`${String(index).padStart(2,"0")} / ${project.title}`} note={casePath(project)?"Explore the case ↗":projectLinks(project).length?"Visit project ↗":"Project evidence"}/>;
+  const action=projectActionLabel(project);
+  const evidence=<Evidence eager={eager} height={project.slug==="worlddoc"?858:810} src={image.url} alt={imageAlt(project,image)} label={`${String(index).padStart(2,"0")} / ${project.title}`} note={`${action}${projectLinks(project).length||casePath(project)?" ↗":""}`}/>;
   const href=presentProject(project).href;
-  const linkedEvidence=casePath(project)?<Link className={className} to={casePath(project)} aria-label={`Explore ${project.title}`}>{evidence}</Link>:href?<a className={className} href={href} target="_blank" rel="noreferrer" aria-label={`${project.title} — opens in a new tab`}>{evidence}</a>:evidence;
+  const linkedEvidence=casePath(project)?<Link className={className} to={casePath(project)} aria-label={`Explore ${project.title}`}>{evidence}</Link>:href?<a className={className} href={href} target="_blank" rel="noreferrer" aria-label={`${action}: ${project.title} — opens in a new tab`}>{evidence}</a>:evidence;
   return <>{linkedEvidence}<ProjectGallery project={project}/></>;
 }
 function ProjectLinks({project}) {

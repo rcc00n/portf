@@ -18,7 +18,7 @@ function StartEditor({search}){
       <div className="raccn-home site-inquiry"><HomeStartForm apiBase={(import.meta.env.VITE_API_BASE||"").replace(/\/$/,"")} source={source} qualification={context?inquiryQualification(definition.selected,definition.qualification):null}/></div>
       <EstimatorLink />
     </section>
-    <section className="site-editorial site-section site-next-step" id="next-step"><span className="site-label">After you send / The next step</span><h2>A conversation.<br />Then a clear next step.</h2><div><p>RACCN reviews your project context and replies by email. We can clarify the constraints, discuss fit, and decide what would be useful next.</p><p>If you already have a workflow, reference, or existing product, it can help the conversation. No polished brief or booked call is required.</p><a className="site-text-link" href="mailto:vadrud2016@gmail.com">Prefer email? Write directly ↗</a></div></section>
+    <section className="site-editorial site-section site-next-step" id="next-step"><span className="site-label">After you send / The next step</span><h2>A conversation.<br />Then a clear next step.</h2><div><p>RACCN reviews your project context and replies by email. We can clarify the constraints, discuss fit, and decide what would be useful next.</p><p>If you already have a workflow, reference, or existing product, it can help the conversation. No polished brief or booked call is required.</p><p>For an engineering role or collaboration, you can also contact Vadim directly.</p><a className="site-text-link" href="mailto:vadrud2016@gmail.com">Prefer email? Write directly ↗</a></div></section>
   </>;
 }
 export function DefinePage(){const {search}=useLocation();return <DefinitionEditor key={search} search={search}/>;}

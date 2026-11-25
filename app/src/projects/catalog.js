@@ -7,6 +7,13 @@ const byFeatured = (a, b) => a.featured_order - b.featured_order || byOrder(a, b
 export const publishedProjects = projects => projects.filter(project => project.is_published === true).sort(byOrder);
 export const casePath = project => Object.hasOwn(approvedCases, project.slug) ? approvedCases[project.slug] : null;
 export const projectLinks = project => [...(project.links || []), ...(project.url ? [{label:"Visit project", href:project.url}] : [])].filter(link => safeLink(link.href));
+export function projectActionLabel(project) {
+  if (casePath(project)) return "Explore the case";
+  const href = projectLinks(project)[0]?.href;
+  if (!href) return "Project evidence";
+  return ["github.com", "gitlab.com", "bitbucket.org"].includes(new URL(href).hostname.toLowerCase())
+    ? "View source" : "Visit website";
+}
 export const imageAlt = (project, image, index = 0) => image?.alt?.trim() || `${project.title} — project image ${index + 1}`;
 export function presentProject(project) {
   const image = project.media?.[0];

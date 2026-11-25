@@ -13,7 +13,7 @@ export function SiteFooter() {
     <nav aria-label="Footer">{sections.map(([to,label])=><Link key={to} to={to}>{label}</Link>)}</nav>
     <a className="site-footer-email" href="mailto:vadrud2016@gmail.com">vadrud2016@gmail.com ↗</a>
     <small>© {new Date().getFullYear()} RACCN Code</small>
-    <div className="site-footer-legal"><Link to="/privacy">Privacy</Link><Link to="/terms">Terms</Link></div>
+    <div className="site-footer-legal"><a href="https://github.com/rcc00n" target="_blank" rel="noreferrer">GitHub ↗</a><Link to="/privacy">Privacy</Link><Link to="/terms">Terms</Link></div>
   </footer>;
 }
 export default function SiteShell() {

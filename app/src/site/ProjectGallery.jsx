@@ -1,35 +1,7 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { imageAlt } from "../projects/catalog.js";
+import { lockDocumentScroll } from "./lockDocumentScroll.js";
 import "./project-gallery.css";
-
-function lockDocumentScroll() {
-  const root = document.documentElement;
-  const body = document.body;
-  const { scrollX, scrollY } = window;
-  const scrollbar = Math.max(0, window.innerWidth - root.clientWidth);
-  const saved = [];
-  const set = (element, property, value) => {
-    saved.push([element, property, element.style.getPropertyValue(property), element.style.getPropertyPriority(property)]);
-    element.style.setProperty(property, value);
-  };
-  // Fixed body also prevents background touch scrolling on iOS. Preserve its
-  // available width when the desktop scrollbar disappears, avoiding a shift.
-  set(root, "overflow", "hidden");
-  set(body, "position", "fixed");
-  set(body, "top", `${-scrollY}px`);
-  set(body, "left", `${-scrollX}px`);
-  set(body, "width", `calc(100vw - ${scrollbar}px)`);
-  let restored = false;
-  return () => {
-    if (restored) return;
-    restored = true;
-    for (const [element, property, value, priority] of saved) {
-      if (value) element.style.setProperty(property, value, priority);
-      else element.style.removeProperty(property);
-    }
-    window.scrollTo({ left: scrollX, top: scrollY, behavior: "instant" });
-  };
-}
 
 export default function ProjectGallery({ project }) {
   const dialog = useRef(null);

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { casePath, imageAlt, loadHomepageProjects, presentProject, publishedProjects, selectHomepageProjects, selectProjectEvidence } from '../src/projects/catalog.js';
+import { casePath, imageAlt, loadHomepageProjects, presentProject, projectActionLabel, publishedProjects, selectHomepageProjects, selectProjectEvidence } from '../src/projects/catalog.js';
 
 const project = (slug, overrides={}) => ({id:1,slug,title:slug,is_published:true,order:0,featured_order:0,featured_placement:'',impact:'CMS type',blurb:'CMS copy',url:'',links:[],media:[],...overrides});
 
@@ -36,6 +36,14 @@ test('CMS media, alt, title, copy and links flow into featured evidence without 
 test('only approved case identity receives a public case route', () => {
   assert.equal(casePath(project('renter',{title:'New public name'})),'/work/renter');
   for(const slug of ['renter-copy','constructor','not-a-real-case'])assert.equal(casePath(project(slug,{title:'Renter'})),null);
+});
+
+test('evidence actions describe the actual first valid destination', () => {
+  assert.equal(projectActionLabel(project('renter')), 'Explore the case');
+  assert.equal(projectActionLabel(project('code', {links:[{label:'Project', href:'https://github.com/rcc00n/QUANTIX'}]})), 'View source');
+  assert.equal(projectActionLabel(project('live', {url:'https://example.org'})), 'Visit website');
+  assert.equal(projectActionLabel(project('lookalike', {url:'https://github.com.example.org/repo'})), 'Visit website');
+  assert.equal(projectActionLabel(project('unlinked', {url:'javascript:alert(1)'})), 'Project evidence');
 });
 
 test('empty API is success; failure and malformed response throw instead of restoring seeds', async () => {
