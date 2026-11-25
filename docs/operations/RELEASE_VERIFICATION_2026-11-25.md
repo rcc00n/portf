@@ -1,7 +1,7 @@
 # RACCN Code release verification — 2026-11-25
 
-This record covers the initial portfolio launch and the subsequent architecture
-and navigation releases described at the end of this document.
+This record covers the initial portfolio launch and the subsequent architecture,
+navigation and pricing releases described at the end of this document.
 
 ## Scope and source
 
@@ -252,3 +252,67 @@ twenty prior reachable code chunks pass public MIME/hash checks, and the twelve
 unrelated containers are unchanged. Private rollback checksums were verified under
 `/var/backups/raccn/20261125-scroll-navigation`. No test inquiry or provider message
 was sent; the established verification limits above still apply.
+
+## Canonical domain and estimator pricing refinement
+
+The owner confirmed `https://raccncode.com/` as production and requested slightly
+lower configurator prices. Application revision
+`a3894a0e58c6376f54df1f0533266f066a72e30b`, branch `refinement/estimate-pricing`,
+changes only the five indicative budget bands, approximately 10% lower with
+whole-thousand rounding:
+
+| Previous | Current |
+| --- | --- |
+| $12k–$20k | $11k–$18k |
+| $20k–$35k | $18k–$32k |
+| $35k–$50k | $32k–$45k |
+| $50k–$75k | $45k–$68k |
+| $75k–$120k | $68k–$108k |
+
+Scoring, bucket thresholds, timelines, scope, notes, SaaS and unknown-project
+semantics are unchanged. The frozen 81-case fixture is retained; regression tests
+explicitly apply the new price mapping and compare all other output unchanged.
+Saved definitions recalculate against the current bands. An illustrative estimate
+still does not become the visitor's selected product or optional inquiry metadata.
+
+The exact apex already served the approved redesign. Its www alias now returns
+308 directly to the HTTPS apex, preserving path, query and method through the
+reviewed persistent nginx include. Both domain certificates remain in use. The
+old GitHub Pages address returns 404, the retired design subdomain returns 410,
+and prototype page URLs return 404. No application, database or historical source
+was deleted to change public routing.
+
+The full release suite passed: frontend lint/unit/build, 106 Django tests (one
+PostgreSQL-only skip), migration drift, 34 browser regressions, 11 compatibility
+packaging tests, and CMS/media/contact/metadata smokes. No real inquiry or external
+provider notification was sent by these checks.
+
+The readiness-gated release now serves `/assets/index-Cu1AKQAi.js` at the exact
+public apex. All twelve canonical pages, twenty legacy redirects, eleven published
+images and six CMS projects passed the public smoke, including desktop/mobile
+gallery and Start navigation. A tab kept open on the preceding `CnViFC4U` entry
+navigated successfully across the switch and received the new entry after refresh;
+its cross-page scroll reset remained zero, with no script errors or failed assets.
+Only the immediately preceding reachable JS/CSS graph is retained for existing
+tabs: thirteen copied files (422,706 bytes), seven reused byte-identical files,
+all twenty verified over HTTP with correct MIME types and SHA256 hashes. This does
+not expose the old website's HTML, media or prototype presentation.
+
+Independent production browser verification confirmed the revised SaaS Lean,
+unknown Balanced and restored advanced Marketplace prices, unchanged timelines,
+summary/share behavior and optional inquiry identity. Desktop and 390px mobile
+reduced-motion views passed without JavaScript errors or submissions.
+
+Web and worker run `a3894a0` with zero restarts. Original CMS/media/link/inquiry
+fingerprints are unchanged: ten projects, twenty-three images, five links and
+thirteen inquiries; six projects are published and the outbox is empty. Runtime
+settings are unchanged except the expected Git revision, and the one-shot catalog
+flag remains absent. All twelve unrelated containers are unchanged; protected BGM
+homepage/store/services return 200. nginx validation passed, and the canonical
+redirect remains active after the Dokku release.
+
+Restricted rollback material is verified under
+`/var/backups/raccn/20261125-estimate-pricing`: the preceding running `7a9ddd4`
+image archive, database/media/configuration and pre-redirect nginx snapshots.
+Temporary rehearsal containers were removed. The earlier documented provider,
+Safari, external-cache and backup-retention limitations remain unchanged.
