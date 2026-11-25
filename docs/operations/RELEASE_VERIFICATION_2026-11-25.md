@@ -316,3 +316,39 @@ Restricted rollback material is verified under
 image archive, database/media/configuration and pre-redirect nginx snapshots.
 Temporary rehearsal containers were removed. The earlier documented provider,
 Safari, external-cache and backup-retention limitations remain unchanged.
+
+## Employer-audit follow-up: pricing and CI runner
+
+The owner requested a further modest configurator reduction during an employer-facing
+GitHub/site audit. Revision `39f477b0d40d725f2769e25da6ba17366ca53732`, branch
+`refinement/employer-audit`, changes only the five public budget bands to
+`$10k-$16k`, `$16k-$29k`, `$29k-$41k`, `$41k-$61k`, `$61k-$97k`. The original
+81-case fixture remains intact; scoring, timelines, notes, scope, SaaS and unknown
+intent are unchanged and regression protected.
+
+The audit also identified why recent hosted frontend CI jobs failed before browser
+tests could start: `ubuntu-latest` resolved to Ubuntu 26.04, unsupported by the
+pinned Playwright 1.55. Frontend CI now explicitly uses Ubuntu 24.04. The exact
+candidate passed all four jobs in [GitHub run 45682972736](https://github.com/rcc00n/portf/actions/runs/45682972736),
+including browser/smoke checks, backend, PostgreSQL migration and Docker image.
+The full isolated local release suite also passed. No test was disabled to obtain
+this result, and the production runtime/dependency configuration was unchanged.
+
+The readiness-gated release serves `/assets/index-CKa3oAPA.js`. Public checks pass
+for twelve canonical routes, twenty legacy redirects, eleven images, six CMS
+projects and desktop/mobile gallery/Start flows. Live SaaS, unknown and restored
+Marketplace estimates show the new bands; reload/share/optional inquiry identity
+remain correct, with no writes or JavaScript errors.
+
+Web and worker run `39f477b` with zero restarts. Original CMS and inquiry fingerprints
+are unchanged, six projects remain public, and the outbox is empty. Runtime settings
+differ only by expected revision metadata; the import flag remains absent. The www
+308, nginx validation, all twenty prior reachable code chunks, twelve protected
+containers and BGM homepage/store/services checks pass. Only twelve missing prior
+JS/CSS files (417,153 bytes) were copied, with eight identical files reused.
+
+Private rollback snapshots/checksums are verified at
+`/var/backups/raccn/20261125-employer-pricing`. The employer audit itself is a private
+review artifact, not application source: it includes private-repository inventory
+and sensitive finding locations without secret values. No other repository,
+profile pin, visibility setting or main branch was changed by this release.
