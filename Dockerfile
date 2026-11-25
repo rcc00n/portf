@@ -29,6 +29,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY backend/ /srv/app/
 COPY Procfile /srv/app/Procfile
+COPY app.json /srv/app/app.json
 COPY --from=frontend /app/dist /srv/app/frontend_dist
 
 ENV DJANGO_SETTINGS_MODULE=config.settings

@@ -9,6 +9,12 @@ permissions still require operator verification.
 The Dockerfile builds Vite into `/srv/app/frontend_dist` and runs Django through
 Gunicorn on `PORT` (default 8000). Dokku's nginx proxies requests to Gunicorn.
 
+The release now includes a Procfile migration phase and an `app.json` startup check.
+Read the [release/rollback runbook](docs/operations/RELEASE_RUNBOOK.md) before pushing:
+a deployment can apply database migrations before changing traffic. Back up and
+rehearse against an isolated database first. This document does not claim a release
+or backup has already been performed.
+
 - `/assets/`, shipped fonts/images and the HTML shell come from the frontend build.
 - `/static/` is collected Django/admin static content, served by WhiteNoise.
 - `/media/projects/...` is uploaded ProjectImage content on the persistent mount.
@@ -137,19 +143,18 @@ document. Stop for the phase review before staging or production actions.
 ## Inquiry notification worker (contact reliability phase)
 
 The root `Procfile` is copied to the final Docker image's `/srv/app/Procfile`.
-It defines `web` (the existing Gunicorn server) and `worker`
+It defines `release` (`python release.py`), `web` (Gunicorn) and `worker`
 (`python manage.py process_inquiry_notifications`). Procfile commands take
 precedence over Docker CMD when supported by the installed Dokku builder.
 Process scale/restart is managed separately. See
 [Dokku process management](https://dokku.com/docs/processes/process-management/).
 
-No worker has been started on staging or production by this change. After explicit
-release review, the operator should apply the migration **before** new web/worker
-code runs, confirm the image's Procfile is recognized, and configure **one** worker.
+No worker is started by a source change alone. After release review, the operator
+must verify the migration phase runs from the **new image before** new web/worker
+code starts, confirm the image's Procfile is recognized, and configure **one** worker.
 Example commands for that later approved operation, not commands run in this phase:
 
 ```sh
-dokku run portf python manage.py migrate --noinput
 dokku ps:scale portf web=1 worker=1
 dokku ps:restart portf worker
 ```
@@ -160,7 +165,21 @@ The worker exits on a database error so its supervisor can restart it; it handle
 SIGTERM/SIGINT, stops taking new jobs, and finishes the current bounded delivery round.
 A killed process leaves a 60-second recoverable lease. Give shutdown enough grace
 for the actual configured recipient count (10-second transport timeout per recipient).
-No release hook, automatic deployment, or automatic worker scaling was added.
+The release hook defaults to migrations only. The explicitly reviewed one-time
+`RACCN_RELEASE_PORTFOLIO=2026-11-25` flag additionally imports the approved catalog
+using verified record mappings before traffic changes. Unset this flag immediately
+after that release; normal subsequent releases must preserve owner CMS edits.
+The hook never sends notifications, deploys from CI, or changes worker scale.
+Running `dokku run ... migrate`
+before deploying only runs the currently deployed image and cannot apply migrations
+that exist exclusively in the new release.
+
+`app.json` runs `python deployment_ready.py` in the new web container before traffic
+switches. The probe calls only loopback `/ready/`, uses the configured canonical Host,
+ignores ambient HTTP proxies, refuses redirects, and requires HTTP 200 with `ok: true`.
+Thus an HTTP redirect to the old public site cannot accidentally satisfy readiness.
+The probe has a four-second request timeout; Dokku retries six times. This does not
+replace external HTTPS, upload, inquiry and worker checks after release.
 
 Web and worker need the **same database**, a stable `DJANGO_SECRET_KEY`, and matching
 Django settings. Only worker needs `TELEGRAM_BOT_TOKEN`; keep it outside Git and logs.

@@ -5,7 +5,7 @@ from pathlib import Path
 import subprocess
 import sys
 import tempfile
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from django.db import OperationalError
 from django.http import HttpResponse
@@ -13,6 +13,46 @@ from django.test import RequestFactory, SimpleTestCase, TestCase, override_setti
 
 from config.middleware import TrustedProxyMiddleware
 from leads.abuse import client_ip
+from deployment_ready import NoRedirect, check_readiness
+
+
+class DeploymentProbeTests(SimpleTestCase):
+    def probe(self, status=200, body=b'{"ok": true}'):
+        response = Mock(status=status)
+        response.read.return_value = body
+        context = Mock()
+        context.__enter__ = Mock(return_value=response)
+        context.__exit__ = Mock(return_value=False)
+        opener = Mock()
+        opener.open.return_value = context
+        return opener
+
+    @patch.dict(os.environ, {'PORT': '8123', 'DJANGO_CANONICAL_ORIGIN': 'https://site.example'})
+    def test_checks_local_container_with_valid_host_and_bounded_timeout(self):
+        opener = self.probe()
+        with patch('deployment_ready.build_opener', return_value=opener) as build:
+            self.assertTrue(check_readiness())
+        request = opener.open.call_args.args[0]
+        self.assertEqual(request.full_url, 'http://127.0.0.1:8123/ready/')
+        self.assertEqual(request.get_header('Host'), 'site.example')
+        self.assertEqual(opener.open.call_args.kwargs['timeout'], 4)
+        self.assertEqual(build.call_args.args[0].proxies, {})
+
+    def test_rejects_bad_readiness_and_network_failure(self):
+        for status, body in [(503, b'{"ok": false}'), (200, b'not-json'), (200, b'{"ok": false}'), (200, b'{}')]:
+            with self.subTest(status=status, body=body), patch('deployment_ready.build_opener', return_value=self.probe(status, body)):
+                self.assertFalse(check_readiness())
+        with patch('deployment_ready.build_opener', side_effect=OSError('private detail')):
+            self.assertFalse(check_readiness())
+
+    def test_never_follows_external_redirects(self):
+        self.assertIsNone(NoRedirect().redirect_request(None, None, 302, '', {}, 'https://site.example/ready/'))
+
+    def test_invalid_local_port_fails_without_request(self):
+        for port in ['bad', '0', '65536']:
+            with patch.dict(os.environ, {'PORT': port}), patch('deployment_ready.build_opener') as build:
+                self.assertFalse(check_readiness())
+                build.assert_not_called()
 
 
 class ProductionSettingsTests(SimpleTestCase):

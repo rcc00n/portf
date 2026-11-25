@@ -1,0 +1,16 @@
+{
+  "healthchecks": {
+    "web": [
+      {
+        "type": "startup",
+        "name": "Django internal readiness",
+        "description": "Require migrated database, persistent media and frontend build before traffic switches.",
+        "command": "python deployment_ready.py",
+        "initialDelay": 2,
+        "attempts": 6,
+        "wait": 5,
+        "timeout": 6
+      }
+    ]
+  }
+}
