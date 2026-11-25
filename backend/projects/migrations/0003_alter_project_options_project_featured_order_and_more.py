@@ -58,7 +58,10 @@ class Migration(migrations.Migration):
         ),
         migrations.AddField(
             model_name="project", name="slug",
-            field=models.SlugField(max_length=120, null=True),
+            # SlugField indexes by default. Defer indexing until the final unique
+            # field below: PostgreSQL would otherwise create the same LIKE index
+            # twice in this schema editor, even though SQLite accepts it.
+            field=models.SlugField(max_length=120, null=True, db_index=False),
         ),
         migrations.RunPython(assign_neutral_slugs, migrations.RunPython.noop),
         migrations.AlterField(

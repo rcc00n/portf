@@ -128,6 +128,16 @@ snapshot. Never silently discard those records. Rehearse `postgres:import` into 
 isolated restore service before replacing live data; restore media consistently.
 Keep the worker stopped until schema, idempotency and notification state agree.
 
+## PostgreSQL migration regression
+
+The isolated PostgreSQL 17.5 restore rehearsal caught a real failure missed by
+SQLite: migration `projects.0003` attempted to create the same slug LIKE index
+twice. Its temporary nullable SlugField now uses `db_index=False`; the final unique
+slug definition is unchanged. The maintained PostgreSQL CI service applies the
+migrations to a populated legacy catalog and verifies neutral identities, image/alt
+and link preservation, ordering, and final uniqueness. Do not replace this check
+with SQLite-only migration validation.
+
 ## Versioned references
 
 - [Dokku 0.34.7 release phase](https://github.com/dokku/dokku/blob/v0.34.7/docs/advanced-usage/deployment-tasks.md)
