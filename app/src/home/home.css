@@ -188,15 +188,15 @@
 .hp-nav a:hover,
 .hp-nav a:focus-visible { color: var(--hp-bone); }
 
-.raccn-home[data-current-act="work"] .hp-nav a[href="#work"],
-.raccn-home[data-current-act="systems"] .hp-nav a[href="#systems"],
-.raccn-home[data-current-act="approach"] .hp-nav a[href="#approach"],
-.raccn-home[data-current-act="start"] .hp-nav a[href="#start"] { color: var(--hp-bone); }
+.raccn-home[data-current-act="work"] .hp-nav a[href="/work"],
+.raccn-home[data-current-act="systems"] .hp-nav a[href="/systems"],
+.raccn-home[data-current-act="approach"] .hp-nav a[href="/approach"],
+.raccn-home[data-current-act="start"] .hp-nav a[href="/start"] { color: var(--hp-bone); }
 
-.raccn-home[data-current-act="work"] .hp-nav a[href="#work"]::after,
-.raccn-home[data-current-act="systems"] .hp-nav a[href="#systems"]::after,
-.raccn-home[data-current-act="approach"] .hp-nav a[href="#approach"]::after,
-.raccn-home[data-current-act="start"] .hp-nav a[href="#start"]::after { transform: scaleX(1); }
+.raccn-home[data-current-act="work"] .hp-nav a[href="/work"]::after,
+.raccn-home[data-current-act="systems"] .hp-nav a[href="/systems"]::after,
+.raccn-home[data-current-act="approach"] .hp-nav a[href="/approach"]::after,
+.raccn-home[data-current-act="start"] .hp-nav a[href="/start"]::after { transform: scaleX(1); }
 
 .hp-header-state {
   display: grid;
