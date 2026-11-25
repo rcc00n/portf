@@ -109,6 +109,26 @@ as a hidden health check. Verify web/worker share the same DB and media persists
 across the controlled container replacement. Check BGM and other protected public
 paths remain healthy without changing their process/configuration.
 
+## Canonical public host
+
+The public origin is `https://raccncode.com`. Dokku `portf` owns that apex host and
+`www.raccncode.com`; the www CNAME points to the apex. Keep both domains and their
+TLS coverage so existing www links continue to work.
+
+Install the reviewed [canonical-host include](../../deploy/nginx-canonical.conf)
+as `/home/dokku/portf/nginx.conf.d/canonical-host.conf`. Dokku includes this
+directory in both HTTP and HTTPS server blocks and preserves it across releases.
+Back up the existing nginx configuration first, run `nginx -t`, and only then
+gracefully reload nginx. Restore the previous include if validation fails.
+
+The exact www host returns 308 to the HTTPS apex, retaining the request path and
+query string; 308 also preserves the method/body when clients follow it. Other
+applications and hostnames are outside this rule. Verify HTTP and HTTPS www
+requests, a deep path/query, the apex, and protected applications after reload.
+Do not remove domains, certificates, images or historical source to achieve this
+redirect. Prototype pages are already retired, the design subdomain returns 410,
+and the old project GitHub Pages URL returns 404 (verified 2026-11-25).
+
 ## Preserve navigation in already-open tabs
 
 Vite route chunks are loaded on demand. Replacing the image while a tab still
