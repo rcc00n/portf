@@ -117,7 +117,12 @@ source revision separately and use the normal source deployment for later releas
 Do not assume a source reset alone restores database or config state.
 
 Prefer an image-only rollback when the migrated schema remains compatible, retaining
-new inquiries. If database restoration is necessary, stop writes and preserve a
+new inquiries. Also verify runtime compatibility: the observed legacy image depended
+on DEBUG for uploaded-media serving. Running that old image under the hardened
+DEBUG=false configuration does not restore its old media behavior. A rollback needs
+an explicit reviewed configuration restoration from the private snapshot; never
+turn DEBUG on for the hardened release to work around a problem.
+If database restoration is necessary, stop writes and preserve a
 post-failure backup first; reconcile any inquiries accepted since the original
 snapshot. Never silently discard those records. Rehearse `postgres:import` into an
 isolated restore service before replacing live data; restore media consistently.
