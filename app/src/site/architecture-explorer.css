@@ -1,0 +1,184 @@
+.architecture-explorer {
+  --arch-signal: #8190ff;
+}
+.architecture-explorer .site-choices input:checked+span {
+  background: color-mix(in srgb, var(--arch-signal) 19%, #10120f);
+  border-bottom-color: var(--arch-signal);
+  transition: background-color 240ms, border-color 240ms;
+}
+.architecture-explorer .site-architecture-controls {
+  padding-top: 2.5rem;
+}
+.arch-workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1.95fr) minmax(260px, 1fr);
+  gap: clamp(1.5rem, 3.3vw, 4rem);
+  padding-top: 3rem;
+  align-items: start;
+  scroll-margin-top: 95px;
+}
+.arch-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 1.25rem;
+}
+.arch-heading h2 {
+  font-size: clamp(1.6rem, 2.4vw, 2.4rem);
+  letter-spacing: -.045em;
+  margin: .65rem 0 0;
+}
+.arch-key, .arch-canvas-caption, .arch-run, .arch-node-index, .arch-node small,
+.arch-step, .arch-tradeoff, .arch-inspector-role, .arch-inspector dt, .arch-inspector h3 {
+  font-family: "IBM Plex Mono", monospace;
+  font-weight: 400;
+}
+.arch-key {
+  display: flex;
+  align-items: center;
+  gap: .65rem;
+  font-size: .65rem;
+  color: #a6a99b;
+  white-space: nowrap;
+}
+.arch-key i { width: 5px; height: 5px; background: var(--arch-signal); }
+.arch-canvas {
+  position: relative;
+  isolation: isolate;
+  height: clamp(410px, 34vw, 530px);
+  border-block: 1px solid var(--site-rule);
+  background: #10130f;
+  overflow: hidden;
+}
+.arch-grid {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: linear-gradient(#d8debc08 1px, transparent 1px), linear-gradient(90deg, #d8debc08 1px, transparent 1px);
+  background-size: 12.5% 16.6667%;
+}
+.arch-routes { position: absolute; inset: 0; width: 100%; height: 100%; fill: none; pointer-events: none; }
+.arch-routes--mobile { display: none; }
+.arch-route {
+  stroke: #42493c;
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+  transition: d 420ms cubic-bezier(.2,.7,.2,1), stroke 220ms;
+}
+.arch-route.is-async { stroke-dasharray: 4 4; }
+.arch-routes .is-related .arch-route { stroke: color-mix(in srgb, var(--arch-signal) 70%, #42493c); stroke-width: 1.5; }
+.arch-routes .is-traversed .arch-route { stroke: var(--arch-signal); stroke-width: 2; }
+.arch-signal {
+  stroke: #e6eee2;
+  stroke-width: 2.5;
+  vector-effect: non-scaling-stroke;
+  stroke-dasharray: .16 .84;
+  animation: arch-signal-travel 720ms cubic-bezier(.2,.6,.4,1) both;
+}
+.arch-node {
+  position: absolute;
+  left: var(--node-x);
+  top: var(--node-y);
+  transform: translate(-50%, -50%);
+  width: 19%;
+  min-height: 86px;
+  padding: .75rem .8rem;
+  text-align: left;
+  color: #e4e4d6;
+  background: #171c14;
+  border: 1px solid #515949;
+  cursor: pointer;
+  transition: left 420ms cubic-bezier(.2,.7,.2,1), top 420ms cubic-bezier(.2,.7,.2,1), background-color 220ms, border-color 220ms;
+  animation: arch-node-assemble 300ms both;
+  scroll-margin-block: 125px 25px;
+}
+.arch-node-index { display: flex; justify-content: space-between; font-size: .57rem; color: #9caa8e; margin-bottom: .45rem; }
+.arch-node-index i { width: 4px; height: 4px; background: currentColor; }
+.arch-node strong { display: block; font-size: clamp(.73rem, 1vw, .94rem); font-weight: 500; line-height: 1.25; }
+.arch-node small { display: block; font-size: .55rem; color: #a3ac99; margin-top: .4rem; line-height: 1.4; }
+.arch-node.is-related { border-color: color-mix(in srgb, var(--arch-signal) 60%, #515949); }
+.arch-node.is-visited { background: color-mix(in srgb, var(--arch-signal) 14%, #171c14); }
+.arch-node[aria-pressed=true] { background: color-mix(in srgb, var(--arch-signal) 40%, #11192a); border-color: var(--arch-signal); }
+.arch-node[aria-pressed=true] small, .arch-node[aria-pressed=true] .arch-node-index { color: #e0e3f5; }
+.arch-node:hover { border-color: #e0e3f5; background: color-mix(in srgb, var(--arch-signal) 22%, #171c14); }
+.arch-node:focus-visible { outline: 2px solid #eeeede; outline-offset: 4px; z-index: 2; }
+.arch-node-response { position: absolute; inset: -1px; border: 1px solid var(--arch-signal); pointer-events: none; animation: arch-node-response 650ms ease-out both; }
+.arch-canvas-caption { position: absolute; bottom: 13px; left: 17px; font-size: .55rem; text-transform: uppercase; letter-spacing: .06em; color: #818b78; pointer-events: none; }
+.arch-flow-controls { display: flex; justify-content: space-between; align-items: center; gap: 1rem; border-bottom: 1px solid var(--site-rule); }
+.arch-flow-controls>.site-label { font-size: .59rem; color: #a1a993; }
+.architecture-explorer .arch-run { display: flex; align-items: center; justify-content: space-between; gap: 1.25rem; min-height: 61px; min-width: 205px; padding: .65rem 0 .65rem 1rem; color: #e3e7dc; border: 0; border-left: 1px solid var(--site-rule); background: color-mix(in srgb, var(--arch-signal) 7%, #10130f); font: .8rem "IBM Plex Mono", monospace; cursor: pointer; transition: background-color 180ms; }
+.arch-run b { display: grid; place-items: center; width: 35px; height: 35px; color: var(--arch-signal); font-size: 1.2rem; font-weight: 400; transition: transform 180ms; }
+.architecture-explorer .arch-run:hover, .architecture-explorer .arch-run:focus-visible { color: var(--arch-signal); background: color-mix(in srgb, var(--arch-signal) 16%, #10130f); }
+.arch-run:hover b { transform: translate(2px, -2px); }
+.arch-run:focus-visible, .arch-step:focus-visible, .arch-connections button:focus-visible { outline: 2px solid var(--arch-signal); outline-offset: -2px; }
+.arch-sequence { list-style: none; display: grid; grid-template-columns: repeat(auto-fit,minmax(72px,1fr)); padding: 0; margin: 1.2rem 0 0; }
+.arch-sequence li { min-width: 0; border-top: 1px solid #454b3d; transition: border-color 180ms; }
+.arch-sequence li.is-reached { border-color: var(--arch-signal); }
+.architecture-explorer .arch-step { display: block; width: 100%; min-height: 66px; padding: .65rem .5rem .55rem 0; border: 0; text-align: left; background: transparent; color: #a6aa9d; font: .64rem/1.6 "IBM Plex Mono", monospace; cursor: pointer; }
+.arch-step span { display: block; color: #89927d; font-size: .55rem; margin-bottom: .3rem; }
+.arch-step:hover, .arch-step[aria-current=step] { color: #edeee2; }
+.arch-step[aria-current=step] span { color: var(--arch-signal); }
+.arch-status { margin: .75rem 0 0!important; min-height: 3.8em; max-width: 66ch; font-size: .84rem; color: #b7bbab; }
+.arch-decision { margin-top: 1.4rem; padding-top: 1.25rem; border-top: 1px solid var(--site-rule); animation: arch-detail-resolve 260ms ease-out both; }
+.arch-decision p { margin: .7rem 0 .9rem; font-size: .95rem; }
+.arch-tradeoff { display: block; font-size: .61rem; color: var(--arch-signal); line-height: 1.7; }
+.arch-tradeoff>span { margin-left: .8rem; color: #a1a795; }
+.arch-inspector { border-left: 1px solid var(--site-rule); padding-left: clamp(1.3rem, 2.2vw, 2.5rem); padding-top: .1rem; scroll-margin-top: 110px; }
+.arch-inspector-content { animation: arch-detail-resolve 260ms ease-out both; }
+.arch-inspector h2 { margin: 1.3rem 0 .6rem; font-size: clamp(2.2rem, 3.2vw, 3.6rem); letter-spacing: -.055em; line-height: 1.03; }
+.arch-inspector-role { color: var(--arch-signal)!important; font-size: .64rem!important; margin-bottom: 1.45rem!important; }
+.arch-inspector p { font-size: .95rem; }
+.arch-inspector dl { margin: 1.8rem 0; }
+.arch-inspector dl>div+div { margin-top: 1.4rem; }
+.arch-inspector dt, .arch-inspector h3 { font-size: .61rem; color: var(--arch-signal); text-transform: uppercase; letter-spacing: .05em; margin: 0 0 .65rem; }
+.arch-inspector dd { margin: 0; color: #b9bcae; font-size: .85rem; line-height: 1.65; }
+.arch-connections { margin: 1.8rem 0; }
+.architecture-explorer .arch-connections button { display: flex; justify-content: space-between; gap: .5rem; width: 100%; min-height: 44px; padding: .55rem 0; border: 0; border-bottom: 1px solid #2d3329; text-align: left; background: transparent; color: #b9bcae; font-size: .81rem; cursor: pointer; }
+.arch-connections button:hover { color: var(--arch-signal); }
+.arch-connections button>span:last-child { color: var(--arch-signal); }
+.arch-inspector .site-disclosure summary { font-size: .8rem; gap: .8rem; }
+.arch-inspector ul { color: #b9bcae; font-size: .83rem; line-height: 1.7; padding-left: 1rem; }
+.arch-inspector .site-disclosure h3 { margin-top: 1.5rem; }
+.arch-inspector .site-disclosure p { font-size: .8rem; }
+@keyframes arch-signal-travel { 0% { stroke-dashoffset: 1; opacity: 0; } 12% { opacity: 1; } 88% { opacity: 1; } 100% { stroke-dashoffset: -1; opacity: 0; } }
+@keyframes arch-node-response { from { opacity: .9; } to { opacity: 0; inset: -10px; } }
+@keyframes arch-node-assemble { from { opacity: .35; clip-path: inset(0 100% 0 0); } to { opacity: 1; clip-path: inset(0); } }
+@keyframes arch-detail-resolve { from { clip-path: inset(0 0 9% 0); opacity: .55; } to { clip-path: inset(0); opacity: 1; } }
+@media(max-width:1050px) {
+  .arch-workspace { grid-template-columns: minmax(0,1fr); }
+  .arch-canvas { height: 490px; }
+  .arch-inspector { border-left: 0; border-top: 1px solid var(--site-rule); padding: 1.5rem 0 0; }
+  .arch-inspector-content { display: grid; grid-template-columns: 1fr 1fr; column-gap: 2rem; }
+  .arch-inspector h2, .arch-inspector-role, .arch-inspector-content>p { grid-column: 1; }
+  .arch-inspector dl { grid-column: 2; grid-row: 1/4; margin-top: 1.4rem; }
+  .arch-inspector .site-disclosure { grid-column: 2; }
+  .arch-node strong { font-size: .9rem; }
+}
+@media(max-width:600px) {
+  .architecture-explorer .site-architecture-controls { padding-top: 1.5rem; }
+  .arch-workspace { padding-top: 2rem; gap: 2rem; scroll-margin-top: 115px; }
+  .arch-heading { align-items: center; }
+  .arch-heading h2 { font-size: 1.6rem; }
+  .arch-key { font-size: .55rem; gap: .4rem; }
+  .arch-canvas { height: 580px; }
+  .arch-routes--desktop { display: none; }
+  .arch-routes--mobile { display: block; }
+  .arch-node { left: var(--mobile-x); top: var(--mobile-y); width: 40%; min-height: 77px; padding: .65rem .65rem; }
+  .arch-node strong { font-size: .8rem; }
+  .arch-node small { font-size: .53rem; }
+  .arch-canvas-caption { display: none; }
+  .arch-flow-controls { gap: .5rem; }
+  .arch-flow-controls>.site-label { font-size: .49rem; max-width: 12ch; line-height: 1.65; }
+  .architecture-explorer .arch-run { min-width: 185px; font-size: .72rem; padding-left: .7rem; }
+  .arch-sequence { grid-template-columns: repeat(3,minmax(0,1fr)); row-gap: .7rem; }
+  .architecture-explorer .arch-step { min-height: 60px; font-size: .62rem; }
+  .arch-status { min-height: 5em; font-size: .81rem; }
+  .arch-tradeoff>span { display: block; margin: .35rem 0 0; }
+  .arch-inspector-content { display: block; }
+  .arch-inspector h2 { font-size: 2.7rem; }
+}
+@media(prefers-reduced-motion:reduce) {
+  .architecture-explorer *, .architecture-explorer *::before, .architecture-explorer *::after { animation: none!important; transition: none!important; }
+  .arch-signal, .arch-node-response { display: none; }
+}

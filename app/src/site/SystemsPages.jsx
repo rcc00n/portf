@@ -4,7 +4,8 @@ import useProjectCatalog from "../projects/useProjectCatalog.js";
 import CatalogStatus from "../projects/CatalogStatus.jsx";
 import { imageAlt } from "../projects/catalog.js";
 import SystemGraph from "./SystemGraph.jsx";
-import { PRODUCT_OPTIONS, SCALE_OPTIONS, buildPreset } from "../pages/engineering/architectureData.js";
+import ArchitectureExplorer from "./ArchitectureExplorer.jsx";
+import { buildPreset } from "../pages/engineering/architectureData.js";
 import { CHECKLIST_ITEMS } from "../pages/engineering/productionReadyData.js";
 
 export function SystemsPage() {
@@ -26,12 +27,9 @@ export function SystemsPage() {
   </>;
 }
 export function ArchitecturePage() {
-  const [product,setProduct]=useState("CRM");const [scale,setScale]=useState("MVP");const [active,setActive]=useState("backend");
-  const preset=useMemo(()=>buildPreset(product,scale),[product,scale]);const block=preset.blocks[active];
   return <>
-    <PageLead className="site-tool-lead" index="Systems / Architecture explorer" title={<>Choose the shape.<br /><em>See the trade-offs.</em></>} intro="Explore a conceptual system by product type and operating scale. Select a layer to inspect its responsibilities and interfaces." />
-    <section className="site-section site-architecture-controls"><ChoiceGroup legend="01 / Product" name="architecture-product" options={PRODUCT_OPTIONS} value={product} onChange={setProduct}/><ChoiceGroup legend="02 / Operating scale" name="architecture-scale" options={SCALE_OPTIONS} value={scale} onChange={setScale}/></section>
-    <section className="site-architecture-workspace site-section"><div><div className="site-graph-heading"><span className="site-label">{product} / {scale}</span><span className="site-caption">Select a system layer</span></div><SystemGraph active={active} onSelect={setActive} scale={scale} product={product}/><div className="site-architecture-context" aria-live="polite"><p>{preset.productProfile?.summary}</p><p>{preset.scaleProfile?.summary}</p></div></div><aside className="site-block-detail" aria-live="polite"><span className="site-label">Layer / {active}</span><h2>{block.title}</h2><p>{block.summary}</p><h3>Responsibilities</h3><ul>{block.responsibilities.map(x=><li key={x}>{x}</li>)}</ul><h3>Interfaces</h3><ul>{block.interfaces.map(x=><li key={x}>{x}</li>)}</ul><details className="site-disclosure"><summary>Technical options <span aria-hidden="true">+</span></summary><div><ul>{block.stack.map(x=><li key={x}>{x}</li>)}</ul><p className="site-caption">Options to evaluate against the real constraints, rather than a prescribed stack.</p></div></details></aside></section>
+    <PageLead className="site-tool-lead" index="Systems / Architecture explorer" title={<>Choose the shape.<br /><em>See the trade-offs.</em></>} intro="Change the product and scale to reconfigure the system. Run a workflow to follow the handoffs, or select any layer to explore its decisions." />
+    <ArchitectureExplorer />
     <p className="site-architecture-note">This explorer illustrates design options. It does not describe a deployed system or guarantee performance. Final architecture and operational targets are established from the project context.</p>
     <ClosingAction title={<>Which constraints<br />shape your product?</>} />
   </>;
