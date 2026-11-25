@@ -283,3 +283,10 @@ All responses receive Permissions-Policy disabling camera/microphone/geolocation
 ### Backup and recovery rehearsal (not executed)
 
 Take coordinated PostgreSQL and persistent-media backups outside the container. Include leads, idempotency and outbox delivery state; encrypt and restrict access to backups. Restore to an isolated private environment with notifications disabled before starting any worker. Verify counts, ordered project image references, publish/unpublish behavior, historical inquiries, migrations and media MIME/cache behavior. Restoring an old outbox snapshot may redeliver already-sent notifications: review delivery state before enabling the worker. Document backup retention, restore duration, acceptable data loss and an accountable operator; no values are assumed here.
+
+## Inquiry retention
+
+The owner-approved manual retention policy and cross-system deletion/restore
+procedure are in [Privacy handling](docs/operations/PRIVACY_HANDLING.md). Closed
+inquiries are reviewed for removal 12 months after the last communication.
+Do not substitute creation time or a blind database purge for that review.
