@@ -44,7 +44,7 @@ def main():
                         time.sleep(.1)
                 else:
                     raise RuntimeError('Preview did not become ready.')
-                for script in ['definition_browser.py', 'contact_browser.py', 'project_gallery_browser.py', 'project_action_browser.py']:
+                for script in ['definition_browser.py', 'contact_browser.py', 'project_gallery_browser.py', 'project_action_browser.py', 'architecture_browser.py']:
                     run([sys.executable, f'app/tests/{script}'])
             finally:
                 server.terminate()
