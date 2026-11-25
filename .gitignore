@@ -22,3 +22,7 @@ app/dist/
 .DS_Store
 .idea/
 .vscode/
+
+# Nested repository recovery copies are private, not application source.
+.git.bak/
+!.env.example
