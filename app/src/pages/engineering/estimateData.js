@@ -1,4 +1,5 @@
 export const PRODUCT_OPTIONS = [
+  { value: "SaaS", label: "SaaS", description: "Accounts, workflows, subscriptions" },
   { value: "CRM", label: "CRM", description: "Pipelines, ops, and auditability" },
   { value: "Marketplace", label: "Marketplace", description: "Matching, trust, payouts" },
   { value: "E-commerce", label: "E-commerce", description: "Catalog, checkout, fulfillment" },
@@ -23,6 +24,7 @@ export const INTEGRATION_OPTIONS = [
 ];
 
 const PRODUCT_WEIGHTS = {
+  SaaS: 2,
   CRM: 2,
   Marketplace: 3,
   "E-commerce": 3,
@@ -61,11 +63,11 @@ const TIMELINE_BUCKETS = [
 ];
 
 const BUDGET_BUCKETS = [
-  { max: 3, range: "$12k-$20k", note: "Lean build with core ops" },
-  { max: 5, range: "$20k-$35k", note: "Balanced scope and delivery" },
-  { max: 7, range: "$35k-$50k", note: "Complex workflows and integrations" },
-  { max: 9, range: "$50k-$75k", note: "Advanced reliability and scale" },
-  { max: 99, range: "$75k-$120k", note: "Enterprise scope and long-run support" },
+  { max: 3, range: "$8k-$13k", note: "Lean build with core ops" },
+  { max: 5, range: "$13k-$23k", note: "Balanced scope and delivery" },
+  { max: 7, range: "$23k-$33k", note: "Complex workflows and integrations" },
+  { max: 9, range: "$33k-$49k", note: "Advanced reliability and scale" },
+  { max: 99, range: "$49k-$78k", note: "Enterprise scope and long-run support" },
 ];
 
 const BASE_BLOCKS = [
@@ -108,6 +110,7 @@ const BASE_BLOCKS = [
 ];
 
 const PRODUCT_BLOCK_TAGS = {
+  SaaS: { frontend: ["Account workspace"], backend: ["Tenant boundaries", "Subscriptions"], database: ["Account ownership"], integrations: ["Billing"], admin: ["Access controls"], analytics: ["Product usage"] },
   CRM: {
     frontend: ["Pipeline UI", "Bulk actions"],
     backend: ["Workflow engine", "SLA timers"],

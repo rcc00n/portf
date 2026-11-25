@@ -1,19 +1,10 @@
-# Focused CI checks
+# Regression checks
 
-`ci/checks.py` loads application models and existing code under an explicit synthetic
-settings module. It forces an in-memory SQLite database, local file storage, memory
-queues/caches and an in-memory email backend. It clears external-provider credentials
-and blocks socket connections before Django initializes. No payment, email, bot,
-OCR-model download, live database or deployment operation is performed.
+The former syntax-only checks are superseded by the root
+[regression workflow](../.github/workflows/ci.yml) and
+[`scripts/check_release.py`](../scripts/check_release.py).
 
-The existing tests selected here are:
-
-- None: this repository has no backend regression tests yet; the job runs Django system checks.
-
-These are focused source checks, not full PostgreSQL, external-provider, OCR-model,
-browser or production acceptance. PostgreSQL-specific constraints and concurrency
-need their own isolated integration environment. Existing test assertions are not
-modified or skipped by this setup.
-
-The GitHub workflow also checks Python syntax and runs the interface build. It does not deploy or use repository secrets. A failing check remains a failing
-job; no passing badge or coverage percentage is asserted by this document.
+`python ci/checks.py` remains a compatibility entry point to the complete runner.
+Install the dependencies/browser from the [root instructions](../README.md) first.
+Checks use isolated databases/media and mocked or disabled providers. They do not
+deploy or send real inquiries. GitHub also runs PostgreSQL migration and image checks.

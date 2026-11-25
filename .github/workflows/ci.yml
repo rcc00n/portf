@@ -1,0 +1,147 @@
+name: Regression checks
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  frontend:
+    # Playwright 1.55 supports 24.04; ubuntu-latest now resolves to 26.04.
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+      - run: npm ci
+        working-directory: app
+      - run: npm run lint
+        working-directory: app
+      - run: npm test
+        working-directory: app
+      - run: npm run build
+        working-directory: app
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r app/tests/requirements.txt
+      - run: python -m playwright install --with-deps chromium
+      - name: Definition and inquiry browser regression
+        env:
+          RACCN_TEST_URL: http://127.0.0.1:4173
+        run: |
+          npm --prefix app run preview -- --host 127.0.0.1 --port 4173 > /tmp/raccn-preview.log 2>&1 &
+          preview_pid=$!
+          trap 'kill "$preview_pid"' EXIT
+          for attempt in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:4173/start/define > /dev/null; then break; fi
+            sleep 1
+          done
+          python app/tests/definition_browser.py
+          python app/tests/contact_browser.py
+          python app/tests/project_gallery_browser.py
+          python app/tests/project_action_browser.py
+          python app/tests/architecture_browser.py
+          python app/tests/navigation_scroll_browser.py
+          python app/tests/employer_browser.py
+      - name: Production-like CMS, media and inquiry regression
+        run: |
+          python -m pip install -r backend/requirements.txt
+          python scripts/cms_media_smoke.py
+          python scripts/contact_reliability_smoke.py
+          python scripts/site_metadata_smoke.py
+
+  backend:
+    runs-on: ubuntu-latest
+    env:
+      DJANGO_ENV: test
+      DJANGO_DEBUG: 'false'
+      DJANGO_DB_SSL: 'false'
+      DJANGO_SERVE_MEDIA: 'true'
+      DJANGO_SECURE_SSL_REDIRECT: 'false'
+      DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1,testserver
+      DATABASE_URL: sqlite:////tmp/raccn-ci.sqlite3
+      TELEGRAM_BOT_TOKEN: ''
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+      - run: python -m pip install -r backend/requirements.txt
+      - name: Previous-release asset retention regression
+        run: python -m unittest discover -s scripts -p 'test_frontend_compat.py'
+      - run: python manage.py test
+        working-directory: backend
+      - run: python manage.py makemigrations --check --dry-run
+        working-directory: backend
+
+  postgres-migration:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17.5
+        env:
+          POSTGRES_DB: raccn_test
+          POSTGRES_USER: raccn_test
+          POSTGRES_PASSWORD: ci-only-not-a-production-password
+        ports:
+          - '127.0.0.1:5432:5432'
+        options: >-
+          --health-cmd "pg_isready -U raccn_test -d raccn_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    env:
+      DJANGO_ENV: test
+      DJANGO_DEBUG: 'false'
+      DJANGO_DB_SSL: 'false'
+      DJANGO_SERVE_MEDIA: 'true'
+      DJANGO_SECURE_SSL_REDIRECT: 'false'
+      DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1,testserver
+      DATABASE_URL: postgresql://raccn_test:ci-only-not-a-production-password@127.0.0.1:5432/raccn_test
+      TELEGRAM_BOT_TOKEN: ''
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r backend/requirements.txt
+      - name: PostgreSQL 17 legacy catalog migration
+        run: python manage.py test projects.test_postgres_migrations --noinput
+        working-directory: backend
+
+  image:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build local image (no push or deployment)
+        run: docker build -t raccn-ci .
+      - name: Verify image prerequisites
+        run: |
+          docker run --rm -e DJANGO_ENV=build raccn-ci python manage.py check
+          docker run --rm -e DJANGO_ENV=build raccn-ci python -c "from pathlib import Path; assert Path('frontend_dist/index.html').is_file(); assert Path('staticfiles/staticfiles.json').is_file(); assert Path('Procfile').is_file()"
+      - name: Verify the default image command on a runtime port
+        run: |
+          docker image inspect --format '{{json .Config.Cmd}}' raccn-ci | python -c 'import json, sys; command=json.load(sys.stdin); assert command[0] == "gunicorn"; assert not any("$" in argument for argument in command)'
+          raccn_ci_container=raccn-entrypoint-check
+          trap 'docker rm -f "$raccn_ci_container" > /dev/null 2>&1 || true' EXIT
+          docker run -d --name "$raccn_ci_container" \
+            -e DJANGO_ENV=test -e DJANGO_DEBUG=false -e DJANGO_DB_SSL=false \
+            -e DJANGO_ALLOWED_HOSTS=localhost -e DJANGO_CANONICAL_ORIGIN=http://localhost \
+            -e DJANGO_SERVE_MEDIA=true -e DJANGO_MEDIA_ROOT=/tmp/raccn-media \
+            -e DJANGO_SECURE_SSL_REDIRECT=false -e TELEGRAM_BOT_TOKEN= \
+            -e DATABASE_URL=sqlite:////tmp/raccn-entrypoint.sqlite3 -e PORT=8321 raccn-ci
+          docker exec "$raccn_ci_container" mkdir -p /tmp/raccn-media
+          docker exec "$raccn_ci_container" python manage.py migrate --noinput
+          for attempt in $(seq 1 20); do
+            if docker exec "$raccn_ci_container" python deployment_ready.py > /dev/null; then break; fi
+            sleep 1
+          done
+          docker exec "$raccn_ci_container" python deployment_ready.py

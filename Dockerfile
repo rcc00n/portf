@@ -1,8 +1,9 @@
-FROM node:20-slim AS frontend
+FROM node:22-slim AS frontend
 WORKDIR /app
 COPY app/package*.json ./
 RUN npm ci
 COPY app/ ./
+COPY backend/config/route_metadata.json /backend/config/route_metadata.json
 ARG VITE_BASE=/
 ARG VITE_API_BASE=
 ENV VITE_BASE=$VITE_BASE
@@ -27,12 +28,14 @@ COPY backend/requirements.txt /srv/app/requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY backend/ /srv/app/
+COPY Procfile /srv/app/Procfile
+COPY app.json /srv/app/app.json
 COPY --from=frontend /app/dist /srv/app/frontend_dist
 
 ENV DJANGO_SETTINGS_MODULE=config.settings
 ENV PORT=8000
 
-RUN python manage.py collectstatic --noinput
+RUN DJANGO_ENV=build python manage.py collectstatic --noinput
 
 EXPOSE 8000
-CMD ["sh", "-c", "gunicorn config.wsgi:application --bind 0.0.0.0:${PORT}"]
+CMD ["gunicorn", "--config", "gunicorn.conf.py", "config.wsgi:application"]

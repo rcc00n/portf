@@ -1,61 +1,46 @@
-# Portfolio content and lead backend
+# RACCN Code backend
 
-Django owns published projects, galleries, pricing and project enquiries. Its
-admin interface manages content and lead status; Telegram delivery is optional.
-See the [repository overview](../README.md) and [frontend guide](../app/README.md).
+Django owns published projects, registered images, inquiry acceptance and the
+notification outbox. PostgreSQL and persistent media back production; isolated
+SQLite is supported for development and tests.
 
 ## Local setup
 
-From the repository root, use a fresh local checkout and Python 3.12:
+Use Python 3.12 from the repository root:
 
-```bash
+```sh
 python3 -m venv .venv
-source .venv/bin/activate
-python -m pip install -r backend/requirements.txt
-
-export DJANGO_DEBUG=true
-export DJANGO_SECRET_KEY="$(python -c 'import secrets; print(secrets.token_urlsafe(48))')"
-export DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1
-export CORS_ALLOWED_ORIGINS=http://127.0.0.1:5173,http://localhost:5173
-
+. .venv/bin/activate
+pip install -r backend/requirements.txt
+export DJANGO_ENV=development DJANGO_DEBUG=true DJANGO_DB_SSL=false
+export DJANGO_SERVE_MEDIA=true DJANGO_SECURE_SSL_REDIRECT=false
 python backend/manage.py migrate
 python backend/manage.py createsuperuser
-python backend/manage.py runserver 127.0.0.1:8000
+python backend/manage.py runserver 127.0.0.1:8001
 ```
 
-The default database is local SQLite. Leave `DATABASE_URL` unset for that local
-setup; an explicit database URL selects a different database. Open
-**http://127.0.0.1:8000/admin/** to add projects and pricing.
+Settings read process environment; `.env.example` is not loaded automatically.
+Never use production databases, secrets or provider accounts for local checks.
+Development defaults do not apply to production, which requires explicit stable
+secret/database/origin/hosts and persistent media settings.
 
-Settings read the process environment directly. This checkout does not ship the
-previously referenced `.env.example`, and `manage.py` does not automatically load
-an `.env` file. Export the values above or use a separate environment loader.
-Keep the generated secret private and stable for the lifetime of a local session.
+## Contracts
 
-## JSON endpoints
-
-| Method and path | Behavior |
+| Endpoint | Behavior |
 | --- | --- |
-| `GET /api/projects/` | Published projects, ordered links and image URLs |
-| `GET /api/pricing/` | Ordered pricing tiers and points |
-| `POST /api/contacts/` | Validate and persist an enquiry and its qualification data |
-| `GET /health/` | Application health response |
-| `/admin/` | Authenticated Django content and lead administration |
+| `GET /api/projects/` | Published records, stable slugs, ordering, links, image alt and registered URLs |
+| `GET /api/pricing/` | Preserved backend capability; not the public estimator source |
+| `POST /api/contacts/` | JSON validation, durable acceptance and UUID retry protection |
+| `GET /health/` | Process liveness independent of providers |
+| `GET /ready/` | Internal DB/migration/frontend/media readiness |
+| `/admin/` | Authenticated content, leads and notification state |
 
-The full URL configuration is in [`config/urls.py`](config/urls.py). In a Vite
-development process use `VITE_API_BASE=http://127.0.0.1:8000`; configure the allowed
-frontend origin in `CORS_ALLOWED_ORIGINS` as above.
+Only registered project images are publicly served; arbitrary filesystem paths
+are not exposed. See the [CMS/media contract](../docs/hardening/CMS_MEDIA_HARDENING.md).
 
-## Media and optional delivery
+Telegram delivery runs separately through `python manage.py process_inquiry_notifications`.
+Failed notification never invalidates a saved inquiry. Use mocked/disabled providers
+in tests; see the [contact contract](../docs/hardening/CONTACT_RELIABILITY.md).
 
-Uploaded project images use `backend/media/`. `DJANGO_SERVE_MEDIA` controls Django
-media serving and defaults to the debug setting. Production media persistence and
-serving are separate deployment decisions.
-
-To enable enquiry notifications, provide `TELEGRAM_BOT_TOKEN` privately and manage
-active `TelegramRecipient` records in Django admin. No token is required to browse
-the repository or manage local content.
-
-The root [Dockerfile](../Dockerfile) combines the built frontend with Django;
-[`DOKKU.md`](../DOKKU.md) records deployment commands. Hostnames, secrets, TLS,
-database and media storage must be configured for the intended environment.
+Follow the [root setup and checks](../README.md), [CI](../.github/workflows/ci.yml),
+[Dokku contract](../DOKKU.md) and [release runbook](../docs/operations/RELEASE_RUNBOOK.md).

@@ -1,91 +1,69 @@
-<p align="center">
-  <img src="docs/assets/portfolio-header.svg" alt="Raccoon Software — portfolio and engineering workspace" width="900">
-</p>
+# RACCN Code
 
-<p align="center">
-  <a href="#what-is-in-the-repository">Explore</a> ·
-  <a href="#run-locally">Run locally</a> ·
-  <a href="app/README.md">Frontend guide</a> ·
-  <a href="backend/README.md">Backend guide</a>
-</p>
+Public portfolio and engineering evidence site at [raccncode.com](https://raccncode.com): React/Vite frontend, Django CMS/admin and PostgreSQL production data. Django controls project publication, ordered copy/media/links, raw route metadata and durable inquiry acceptance.
 
-# Raccoon Software / Portfolio
+## Five-minute source review
 
-A software studio portfolio with routed case studies, interactive engineering
-explainers and a Django content and lead-management backend. The React interface
-combines project galleries, service pages and a structured project enquiry flow.
+1. [Project contract](docs/hardening/CMS_MEDIA_HARDENING.md): explicit publication/identity and production-style registered-image serving.
+2. [Inquiry acceptance](docs/hardening/CONTACT_RELIABILITY.md): durable persistence, idempotent retries and notification outbox.
+3. [Regression runner](scripts/check_release.py) and [root CI](.github/workflows/ci.yml): isolated application, browser, PostgreSQL migration and image checks.
+4. [Release verification](docs/operations/RELEASE_VERIFICATION_2026-11-25.md): measured production checks, rollback and remaining verification boundaries.
 
-## What is in the repository
+The site is custom art direction over a small explicit data contract, not a generic
+page builder. The estimator is illustrative and the operational demo uses fictional
+data. No analytics provider is installed. See [contribution](CONTRIBUTING.md) and
+[security](SECURITY.md) guidance; no new project-wide licence grant is implied.
 
-- **Portfolio and services:** responsive project galleries, pricing, process and
-  service pages, with published projects and pricing editable in Django admin.
-- **Engineering workspace:** architecture previews, admin-first examples, a scope
-  estimator and a rental-platform case study.
-- **Project enquiries:** browser-side qualification and estimate drafts, a contact
-  API, persistent lead status and optional Telegram delivery to configured recipients.
-- **Presentation tooling:** route metadata, motion, reusable controls and a local
-  page-view/CTA event queue.
+## Repository
 
-Engineering demos and estimate ranges are illustrative. Bundled seed content stays
-distinct from backend-managed records. The analytics helper keeps a browser-local
-event queue; an external analytics provider requires separate integration.
+- `app/`: public frontend and unit/browser regressions.
+- `backend/`: CMS, registered-image serving, inquiry API/outbox and server metadata.
+- `scripts/`: isolated integration checks.
+- `.github/workflows/ci.yml`: lint/build/tests; no deployment.
+- [DOKKU.md](DOKKU.md): production environment, media, proxy and worker contract.
+- [docs/](docs/README.md): operations and clearly labelled historical reviews.
 
-## Architecture
+## Local development
 
-```mermaid
-flowchart LR
-  Visitor[Visitor] --> UI[React / Vite]
-  UI -->|projects, pricing, enquiries| API[Django JSON endpoints]
-  Admin[Django admin] --> DB[(Projects and leads)]
-  API --> DB
-  API -->|optional| TG[Telegram recipients]
+Use Node 22 (at least 22.13) and Python 3.12 (CI/container target; Pillow 13 requires Python 3.11 or newer). No secrets or production data are needed.
+
+```sh
+python3 -m venv .venv
+. .venv/bin/activate
+pip install -r backend/requirements.txt
+npm --prefix app ci
+export DJANGO_ENV=development DJANGO_DEBUG=true DJANGO_DB_SSL=false
+export DJANGO_SERVE_MEDIA=true DJANGO_SECURE_SSL_REDIRECT=false
+python backend/manage.py migrate
+python backend/manage.py createsuperuser
+python backend/manage.py runserver 127.0.0.1:8001
 ```
 
-| Interface | Content and operations |
-| --- | --- |
-| React 19 · JavaScript · React Router | Django 5 · Python |
-| Vite 7 · Tailwind CSS 4 | SQLite locally; PostgreSQL via `DATABASE_URL` |
-| Framer Motion · Lucide | Django admin · WhiteNoise · Gunicorn |
+In a second terminal run `npm --prefix app run dev -- --host 127.0.0.1`. Vite proxies `/api` and `/media` to port 8001. Templates in `.env.example` are safe examples; export values explicitly (Django does not load dotenv). For built Django rendering set `DJANGO_FRONTEND_DIST_DIR` to the absolute `app/dist` path after building. Empty CMS produces an intentional empty state; no seed fallback republishes unpublished projects.
 
-The deployment image builds the frontend and serves its bundle from Django.
-Separate Vite and Django processes support local development.
+## CMS and inquiry operation
 
-## Run locally
+Admin: create a project, assign a stable unique slug, publication and ordering/featured placement, then ordered image/alt and link records. Only the approved `renter` identity has a case route; other/unknown case slugs are real 404s. Do not infer identity from titles. Owner must verify factual copy/links before publication. Uploaded files belong in persistent MEDIA_ROOT, separate from Vite assets and WhiteNoise static. See [CMS contract](docs/hardening/CMS_MEDIA_HARDENING.md).
 
-Use Node.js 22.12+ and Python 3.12 in a fresh checkout. To inspect the interface:
+A confirmed inquiry means a committed lead and durable outbox record. UUID retries recover the same acceptance; Telegram never blocks POST acceptance. Production runs one separately supervised `python manage.py process_inquiry_notifications` worker with the same DB and private Telegram configuration. Do not start a worker against real data during tests. Staff inspect failed/pending notifications in admin and can retry failed delivery without duplicating a lead. See [contact contract](docs/hardening/CONTACT_RELIABILITY.md).
 
-```bash
-cd app
-npm ci
-npm run dev -- --host 127.0.0.1
+## Tests and production build
+
+```sh
+pip install -r app/tests/requirements.txt
+python -m playwright install chromium
+python scripts/check_release.py
 ```
 
-Open **http://127.0.0.1:5173**. Without the backend, bundled seed projects and pricing
-remain visible; a frontend preview alone cannot persist an enquiry. For the full
-local flow, follow the [backend guide](backend/README.md), then start Vite with:
+The maintained runner performs lint, 81-combination estimator/unit coverage, build, backend tests/migration drift, contact/definition browser tests, and CMS/media/contact/metadata integrations using temporary SQLite/media and mocked/disabled Telegram. Individual commands live in root CI and the runner. Browser binaries and virtual environments are local, ignored material.
 
-```bash
-VITE_API_BASE=http://127.0.0.1:8000 npm run dev -- --host 127.0.0.1
-```
+`npm --prefix app run build` produces `app/dist`; Docker builds the same frontend and runs `collectstatic` for Django/admin. `npm ci` and exact backend pins reproduce dependency selections. OS/base-image digests are not locked/attested yet. Dokku topology is nginx → Gunicorn → PostgreSQL + persistent media, plus one notification worker. Read [production prerequisites](DOKKU.md) before any release; default production settings intentionally fail without explicit secrets/database/hosts/origin/media configuration.
 
-The checked-in scripts also provide:
+## Release status
 
-```bash
-npm run lint
-npm run build
-npm run preview -- --host 127.0.0.1
-```
-
-## Navigate the source
-
-| Path | Purpose |
-| --- | --- |
-| [`app/src/App.jsx`](app/src/App.jsx) | Routed portfolio, enquiry flow and seed content |
-| [`app/src/pages/engineering`](app/src/pages/engineering) | Interactive engineering modules |
-| [`backend/projects`](backend/projects) | Projects, images, links and pricing |
-| [`backend/leads`](backend/leads) | Enquiries, admin workflow and Telegram recipients |
-| [`backend/config/urls.py`](backend/config/urls.py) | Public JSON endpoints, health and SPA routing |
-| [`Dockerfile`](Dockerfile) · [`DOKKU.md`](DOKKU.md) | Image build and deployment notes |
-
-The existing Dokku notes require environment-specific configuration. No project-wide
-licence file is present; no new licence grant is added here.
+The redesigned application is deployed at [raccncode.com](https://raccncode.com).
+Exact source revisions, verification results and limitations are recorded in the
+[release verification](docs/operations/RELEASE_VERIFICATION_2026-11-25.md).
+CI performs checks only and does not deploy. Historical audits describe their
+original phase; they are not current assertions about production. Legal/operator
+facts and permissions must be kept accurate by the owner.

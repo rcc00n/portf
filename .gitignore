@@ -23,6 +23,16 @@ app/dist/
 .idea/
 .vscode/
 
-# Nested repository recovery copies are private, not application source.
-.git.bak/
+# Safe templates; local environment values remain private
 !.env.example
+# Local evidence, backups and caches
+/audit/
+/homepage-review/
+/prototype-review/
+**/.git.bak/
+*.sqlite3
+*.sqlite3-*
+*.log
+.pytest_cache/
+.coverage
+coverage/

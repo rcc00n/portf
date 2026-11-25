@@ -1,115 +1,57 @@
-import ogImage from "../assets/raccoon-logo.png";
-
-const SITE_TITLE = "Custom software & CRM delivery";
-const withSite = () => SITE_TITLE;
-
-const DEFAULT_META = {
-  title: SITE_TITLE,
-  description: "Senior-only product studio building CRMs, marketplaces, and internal platforms with production-grade engineering.",
-  image: ogImage,
-};
-
-const ROUTE_META = {
-  "/": {
-    title: SITE_TITLE,
-    description: "Senior-only teams building CRMs, marketplaces, and internal tools with reliable delivery and clear outcomes.",
-  },
-  "/services": {
-    title: withSite("Services"),
-    description: "Senior delivery for software development, CRM transformation, analytics, and growth systems.",
-  },
-  "/projects": {
-    title: withSite("Projects"),
-    description: "Case studies with measurable outcomes across CRM, marketplaces, and automation platforms.",
-  },
-  "/process": {
-    title: withSite("Process"),
-    description: "Delivery rituals, risk tracking, and weekly demos that keep launches predictable.",
-  },
-  "/pricing": {
-    title: withSite("Pricing"),
-    description: "Transparent tiers with senior-only delivery and scoped outcomes.",
-  },
-  "/tech": {
-    title: withSite("Tech"),
-    description: "Modern, reliable stack choices across frontend, backend, data, and DevOps.",
-  },
-  "/journal": {
-    title: withSite("Engineering Journal"),
-    description: "Short, opinionated notes on admin-first systems, scaling failure modes, and auditability.",
-  },
-  "/decisions": {
-    title: withSite("Decisions"),
-    description: "Public decision records covering architecture defaults, trade-offs, and when we change course.",
-  },
-  "/about": {
-    title: withSite("About"),
-    description: "A senior-only team founded by engineers and focused on delivery quality.",
-  },
-  "/not-for-everyone": {
-    title: withSite("Not for everyone"),
-    description: "A calm fit check to help teams self-select before starting.",
-  },
-  "/start": {
-    title: withSite("Start"),
-    description: "Qualification gate to align project type, complexity, budget, and timeline.",
-  },
-  "/contact": {
-    title: withSite("Contact"),
-    description: "Request a technical estimate with clear scope, timeline, and budget.",
-  },
-  "/pre-call": {
-    title: withSite("Pre-call package"),
-    description: "Prep package covering workflow, resources, and what to bring to the call.",
-  },
-  "/summary": {
-    title: withSite("Project summary"),
-    description: "Single-screen project one-pager with scope signals and next steps.",
-  },
-  "/engineering": {
-    title: withSite("Engineering Lab"),
-    description: "Advanced modules that surface architecture depth and delivery standards.",
-  },
-  "/architecture-preview": {
-    title: withSite("Architecture Preview"),
-    description: "Interactive system map showing frontend, backend, data, and integrations.",
-  },
-  "/admin-first": {
-    title: withSite("Admin-First Toggle"),
-    description: "Switch between customer and admin views to reveal control layers.",
-  },
-  "/production-ready": {
-    title: withSite("Production Readiness"),
-    description: "Checklist of auth, monitoring, backups, and security defaults.",
-  },
-  "/estimate": {
-    title: withSite("Estimator"),
-    description: "Range-based estimator for timelines, budgets, and architecture scope.",
-  },
-  "/admin-demo": {
-    title: withSite("Admin Demo"),
-    description: "Interactive admin control demo showing roles, ops, disputes, and financial transparency.",
-  },
-  "/demo/admin": {
-    title: withSite("Admin Demo"),
-    description: "Interactive admin control demo showing roles, ops, disputes, and financial transparency.",
-  },
-  "/cases/renter-architecture": {
-    title: withSite("Renter Architecture"),
-    description: "Public breakdown of a rental marketplace architecture and decisions.",
-  },
-};
-
-export const getMetaForPath = (pathname) => {
-  if (ROUTE_META[pathname]) {
-    return { ...DEFAULT_META, ...ROUTE_META[pathname] };
+import contract from '../../../backend/config/route_metadata.json' with { type: 'json' };
+export { contract };
+export const ROUTE_META = contract.routes;
+export const normalizePath = pathname => pathname.split(/[?#]/)[0].replace(/\/+$/, '') || '/';
+export function getMetaForPath(pathname, project = null, status = 'ready') {
+  const path = normalizePath(pathname);
+  let meta = contract.routes[path];
+  if (meta?.caseSlug) {
+    meta = status === 'error' ? contract.unavailable
+      : project?.slug === meta.caseSlug && project.is_published === true
+        ? { title: `${project.title} — ${contract.siteName}`, description: project.blurb || '' }
+        : contract.notFound;
   }
-  if (pathname.startsWith("/cases/")) {
-    return {
-      ...DEFAULT_META,
-      title: withSite("Case Study"),
-      description: "Public architecture case studies with engineering constraints and decisions.",
-    };
+  const found = meta && meta !== contract.notFound && meta !== contract.unavailable;
+  return { image: contract.image, ...meta || contract.notFound, path, canonical: found ? path : null };
+}
+export const fontPaths = path => [
+  '/fonts/instrument-sans-latin.woff2', '/fonts/ibm-plex-mono-400-latin.woff2',
+  ...(['/', '/start', '/start/define'].includes(path) ? ['/fonts/ibm-plex-mono-500-latin.woff2'] : []),
+];
+export function metaTags(meta, origin) {
+  return {
+    description: meta.description, robots: meta.noindex ? 'noindex, follow' : 'index, follow',
+    'raccn:canonical-origin': origin, 'raccn:route': meta.path,
+    'og:type': 'website', 'og:site_name': contract.siteName,
+    'og:title': meta.title, 'og:description': meta.description,
+    'og:url': meta.canonical ? origin + meta.canonical : null,
+    'og:image': origin + meta.image, 'og:image:width': '1200', 'og:image:height': '630',
+    'og:image:alt': contract.imageAlt,
+    'twitter:card': 'summary_large_image', 'twitter:title': meta.title,
+    'twitter:description': meta.description, 'twitter:image': origin + meta.image,
+    'twitter:image:alt': contract.imageAlt,
+  };
+}
+export function applyMetadata(meta) {
+  const origin = document.querySelector('meta[name="raccn:canonical-origin"]')?.content || contract.origin;
+  document.title = meta.title;
+  for (const [name, value] of Object.entries(metaTags(meta, origin))) {
+    const attribute = name.startsWith('og:') ? 'property' : 'name';
+    let element = document.head.querySelector(`meta[${attribute}="${name}"]`);
+    if (value === null) { element?.remove(); continue; }
+    if (!element) { element = document.createElement('meta'); element.setAttribute(attribute, name); document.head.appendChild(element); }
+    element.content = value;
   }
-  return DEFAULT_META;
-};
+  let canonical = document.head.querySelector('link[rel="canonical"]');
+  if (!meta.canonical) { canonical?.remove(); return; }
+  if (!canonical) { canonical = document.createElement('link'); canonical.rel = 'canonical'; document.head.appendChild(canonical); }
+  canonical.href = origin + meta.canonical;
+}
+export function renderMetadataHead(meta, origin = contract.origin) {
+  const escape = value => String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#x27;'}[c]));
+  return [`<title>${escape(meta.title)}</title>`,
+    ...Object.entries(metaTags(meta, origin)).filter(([,value])=>value!==null).map(([name,value])=>`<meta ${name.startsWith('og:')?'property':'name'}="${name}" content="${escape(value)}" />`),
+    ...(meta.canonical ? [`<link rel="canonical" href="${escape(origin + meta.canonical)}" />`] : []),
+    ...fontPaths(meta.path).map(path=>`<link rel="preload" href="${path}" as="font" type="font/woff2" crossorigin />`),
+  ].join('\n');
+}

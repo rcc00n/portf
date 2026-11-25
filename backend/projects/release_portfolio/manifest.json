@@ -1,0 +1,147 @@
+{
+  "version": 1,
+  "projects": [
+    {
+      "slug": "renter",
+      "title": "Renter",
+      "impact": "Marketplace / Customer & operator systems",
+      "blurb": "A peer-to-peer equipment marketplace connecting discovery and bookings with payments, disputes and an operator console.",
+      "status": "Case study",
+      "links": [],
+      "images": [
+        {
+          "file": "renter.webp",
+          "alt": "Renter marketplace with tool search and category browsing.",
+          "replaces": [
+            "Screenshot_1.png"
+          ]
+        },
+        {
+          "file": "renter-operator-redacted.webp",
+          "alt": "Renter operator interface. Identifying details are redacted.",
+          "replaces": [
+            "Screenshot_3.png",
+            "release-20261125-renter-operator.webp"
+          ]
+        },
+        {
+          "file": "renter-profile-redacted.webp",
+          "alt": "Renter profile interface. Identifying details are redacted.",
+          "replaces": [
+            "Screenshot_2.png"
+          ]
+        }
+      ],
+      "expected_title": "Renter",
+      "featured_placement": "supporting"
+    },
+    {
+      "slug": "bad-guy-motors",
+      "title": "Bad Guy Motors",
+      "impact": "Automotive / Commerce & booking",
+      "blurb": "An automotive storefront and service-booking experience backed by editable content, media and inquiry management.",
+      "status": "Public website",
+      "links": [
+        {
+          "label": "Visit website",
+          "href": "https://badguymotors.com/"
+        }
+      ],
+      "images": [
+        {
+          "file": "bad-guy-motors.webp",
+          "alt": "Bad Guy Motors storefront showing custom fabrication services and online booking."
+        }
+      ],
+      "expected_title": "Bad Guy Motors",
+      "featured_placement": "supporting"
+    },
+    {
+      "slug": "quantix",
+      "title": "QUANTIX",
+      "impact": "Market research / Paper execution",
+      "blurb": "Public market data, depth-aware research and accountable paper execution. Separate portfolios and an evidence trail make simulated outcomes inspectable.",
+      "status": "Paper trading only",
+      "links": [
+        {
+          "label": "Source code",
+          "href": "https://github.com/rcc00n/QUANTIX"
+        }
+      ],
+      "images": [
+        {
+          "file": "quantix-terminal.png",
+          "alt": "QUANTIX terminal displaying a clearly labelled synthetic paper-trading demonstration."
+        }
+      ],
+      "expected_title": "QUANTIX",
+      "featured_placement": "supporting"
+    },
+    {
+      "slug": "quorum",
+      "title": "Quorum",
+      "impact": "News intelligence / Evidence & reasoning",
+      "blurb": "A multi-agent news reader that compares coverage, verifies claims against sources and exposes the reasoning behind each story.",
+      "status": "Research project",
+      "links": [
+        {
+          "label": "Source code",
+          "href": "https://github.com/rcc00n/Quorum"
+        }
+      ],
+      "images": [
+        {
+          "file": "quorum.png",
+          "alt": "Quorum news intelligence landing page with a source-backed research evidence panel."
+        }
+      ],
+      "expected_title": "Quorum",
+      "featured_placement": "supporting"
+    },
+    {
+      "slug": "milk-vancouver",
+      "title": "MilkRoute",
+      "impact": "Commerce / Delivery operations",
+      "blurb": "A dairy storefront connected to delivery planning, route sequencing and driver workflows. A queued optimizer reorders future delivery stops through Google Directions.",
+      "status": "Storefront showcase",
+      "links": [
+        {
+          "label": "Source code",
+          "href": "https://github.com/rcc00n/MilkVancouver"
+        }
+      ],
+      "images": [
+        {
+          "file": "milk-vancouver-shop.png",
+          "alt": "MilkRoute project: original dairy storefront showcase with categories and product cards."
+        }
+      ],
+      "expected_title": "MilkRoute",
+      "featured_placement": "supporting",
+      "retired_links": [
+        "https://milkvanq.duckdns.org/shop"
+      ]
+    },
+    {
+      "slug": "contract-workflow",
+      "title": "Contract workflow",
+      "impact": "Document operations / Internal tooling",
+      "blurb": "Document preparation, structured records and operational reporting in one internal workflow. Templates and operational data stay private.",
+      "status": "Anonymized / Synthetic demo",
+      "links": [
+        {
+          "label": "Source code",
+          "href": "https://github.com/rcc00n/contract-workflow"
+        }
+      ],
+      "images": [
+        {
+          "file": "contract-workflow.png",
+          "alt": "Contract workflow dashboard with a clearly labelled synthetic demonstration of operational records."
+        }
+      ],
+      "expected_title": "Contract workflow",
+      "featured_placement": "supporting"
+    }
+  ]
+}

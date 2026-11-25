@@ -1,0 +1,48 @@
+/* Static linework on three finite composited sheets. No repainting color/dash
+   clock across the viewport: the layer sequence carries the signal palette. */
+.hp-topology-event {
+  position: fixed;
+  inset: 0;
+  z-index: 35;
+  overflow: hidden;
+  pointer-events: none;
+  contain: strict;
+}
+.hp-topology-event * { pointer-events: none; }
+.hp-topology-sheet {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  will-change: transform, opacity;
+  animation: hp-topology-expand 1380ms cubic-bezier(.18,.65,.2,1) both, hp-topology-cobalt 1380ms linear both;
+}
+.hp-topology-sheet--1 { animation-name: hp-topology-expand, hp-topology-violet; }
+.hp-topology-sheet--2 { animation-name: hp-topology-expand, hp-topology-cyan; }
+@keyframes hp-topology-expand {
+  0% { transform: translate3d(0,0,0) scale(.12); }
+  36% { transform: translate3d(0,var(--field-lift),0) scale(.94); }
+  60%,72% { transform: translate3d(0,var(--field-lift),0) scale(1.03); }
+  100% { transform: translate3d(0,0,0) scale(.17); }
+}
+@keyframes hp-topology-cobalt {
+  0% { opacity: 0; }
+  9%,25% { opacity: .86; }
+  48% { opacity: .2; }
+  76%,100% { opacity: 0; }
+}
+@keyframes hp-topology-violet {
+  0%,12% { opacity: 0; }
+  34%,45% { opacity: .88; }
+  68% { opacity: .25; }
+  100% { opacity: 0; }
+}
+@keyframes hp-topology-cyan {
+  0%,26% { opacity: 0; }
+  55%,70% { opacity: .85; }
+  100% { opacity: 0; }
+}
+@media (prefers-reduced-motion:reduce) {
+  .hp-topology-event { display: none; }
+  .hp-topology-event * { animation: none !important; }
+}

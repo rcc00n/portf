@@ -8,18 +8,20 @@ licences and attribution. Financial, pricing and payment changes need regression
 coverage of the affected rules. Do not weaken existing assertions to obtain a green
 workflow, edit applied migrations silently, or add simulated results as real data.
 
-Run the focused checks with:
+Run the maintained isolated release checks from the repository root with:
 
 ```bash
-python3 ci/checks.py
+python scripts/check_release.py
 ```
 
-Install the workflow's Python dependencies first. [CI scope](ci/README.md) explains
-what these checks cover and what they do not. For the interface, also run the
-source-defined commands in `app/`:
+Install the documented backend/browser dependencies and Chromium first.
+[CI scope](ci/README.md) points to the exact workflow and runner. For focused
+frontend development, use the commands in `app/`:
 
 ```bash
 npm ci
+npm run lint
+npm test
 npm run build
 ```
 

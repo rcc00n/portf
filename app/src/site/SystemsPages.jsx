@@ -1,0 +1,48 @@
+import { useMemo, useState } from "react";
+import { ClosingAction, ChoiceGroup, Evidence, PageLead, SignalLink } from "./SiteShell.jsx";
+import useProjectCatalog from "../projects/useProjectCatalog.js";
+import CatalogStatus from "../projects/CatalogStatus.jsx";
+import { imageAlt } from "../projects/catalog.js";
+import SystemGraph from "./SystemGraph.jsx";
+import ArchitectureExplorer from "./ArchitectureExplorer.jsx";
+import { buildPreset } from "../pages/engineering/architectureData.js";
+import { CHECKLIST_ITEMS } from "../pages/engineering/productionReadyData.js";
+
+export function SystemsPage() {
+  const [active,setActive]=useState("backend");
+  const [view,setView]=useState("customer");
+  const catalog=useProjectCatalog();
+  const renter=catalog.projects.find(project=>project.slug==="renter");
+  const evidenceIndex=view==="customer"?0:1;
+  const evidence=renter?.media[evidenceIndex];
+  const preset=useMemo(()=>buildPreset("Marketplace","MVP"),[]);
+  const block=preset.blocks[active];
+  return <>
+    <PageLead index="03 / Systems" title={<>The interface.<br /><em>And everything<br />behind it.</em></>} intro="Architecture, operator controls, and production decisions shape whether a product can be understood, changed, and run."><SignalLink to="/systems/architecture">Explore the architecture</SignalLink></PageLead>
+    <section className="site-system-overview site-section"><div><span className="site-label">Architecture / Follow the responsibility</span><SystemGraph active={active} onSelect={setActive} product="Marketplace" /></div><aside aria-live="polite"><span className="site-label">Selected layer</span><h2>{block.title}</h2><p>{block.summary}</p><SignalLink to="/systems/architecture">Explore this system</SignalLink></aside></section>
+    <section className="site-control-comparison site-section" id="control"><header className="site-editorial"><span className="site-label">Control / Admin-first</span><h2>One product.<br />Different decisions.</h2><p>The customer needs a clear next step. The operator needs context, permissions, and a way to handle exceptions.</p></header><div className="site-comparison-select"><ChoiceGroup legend="View the product through" name="control-view" options={[{value:"customer",label:"Customer"},{value:"admin",label:"Operator"}]} value={view} onChange={setView} /><p aria-live="polite">{view==="customer" ? "Discovery, availability, and a path to booking." : "Disputes, ledger activity, and a trace of what changed."}</p></div>{evidence?<Evidence key={view} src={evidence.url} alt={imageAlt(renter,evidence,evidenceIndex)} label={`${renter.title} / ${view==="customer"?"Customer":"Operator"} evidence`} note="Two sides of the same product"/>:catalog.status==="ready"?<p className="site-caption">Project comparison is not currently published.</p>:<CatalogStatus catalog={catalog}/>}<SignalLink to="/systems/demo" className="site-comparison-link">Try the operational demo</SignalLink></section>
+    <section className="site-production site-section" id="production"><div><span className="site-label">Production / Plan for what follows</span><h2>A release is<br />a beginning.</h2><p>These are the operational questions we bring into scope. The appropriate controls and targets depend on the product.</p></div><div>{CHECKLIST_ITEMS.map((item,i)=><details key={item.id} className="site-disclosure"><summary><span className="site-disclosure-number">0{i+1}</span>{item.title}<span aria-hidden="true">+</span></summary><div><p>{item.why}</p><ul>{item.includes.map(line=><li key={line}>{line}</li>)}</ul></div></details>)}</div></section>
+    <section className="site-editorial site-section"><span className="site-label">Decisions / Make the trade-off explicit</span><h2>Every choice<br />has a cost.</h2><div><p>The useful record includes the context, the decision, the trade-off, and the condition that would make us change it.</p><SignalLink to="/systems/decisions">Read the decision records</SignalLink></div></section>
+    <ClosingAction title={<>Make your system<br />easier to operate.</>} detail="Bring the workflow, the constraint, or the part that keeps breaking." />
+  </>;
+}
+export function ArchitecturePage() {
+  return <>
+    <PageLead className="site-tool-lead" index="Systems / Architecture explorer" title={<>Choose the shape.<br /><em>See the trade-offs.</em></>} intro="Change the product and scale to reconfigure the system. Run a workflow to follow the handoffs, or select any layer to explore its decisions." />
+    <ArchitectureExplorer />
+    <p className="site-architecture-note">This explorer illustrates design options. It does not describe a deployed system or guarantee performance. Final architecture and operational targets are established from the project context.</p>
+    <ClosingAction title={<>Which constraints<br />shape your product?</>} />
+  </>;
+}
+const records=[
+  {title:"Start with clear boundaries.",context:"Early products have changing requirements and uncertain domain boundaries. Splitting services too soon adds more places for a request to fail.",decision:"Begin with a modular monolith. Make responsibilities and interfaces explicit before distributing them.",tradeoff:"Independent deployment is limited and the runtime is shared. In return, the system is easier to follow and operate.",revisit:"Separate a service when the domain is stable, ownership is clear, and deployment coupling becomes a measured constraint."},
+  {title:"Real-time needs a reason.",context:"Live updates add state, connection management, and new failure paths. Many operational tasks can tolerate a short delay.",decision:"Use polling or event-driven refresh for the workflows that need it. Make freshness visible.",tradeoff:"Some information can be briefly stale. Simpler recovery and lower operational overhead may be worth that cost.",revisit:"Use streaming when a clear user need justifies the latency requirement and the operational cost."},
+  {title:"Design the right to change.",context:"Different people need different views and actions. A shared interface should not imply shared authority.",decision:"Define roles and least-privilege access alongside the data model and operator workflows.",tradeoff:"Permissions add design and testing work. They also make consequential actions easier to understand and review.",revisit:"Simplify where a truly single-user product has no shared-access or audit requirements."},
+];
+export function DecisionsPage() {
+  return <><PageLead index="Systems / Decision records" title={<>The decision.<br /><em>And its conditions.</em></>} intro="Working principles, with the trade-offs left visible. These records explain how we reason; they are not claims about every project." />
+    <section className="site-section site-records">{records.map((record,i)=><article key={record.title} data-resolve><header><span className="site-label">ADR / 00{i+1}</span><h2>{record.title}</h2></header><dl>{[["Context",record.context],["Decision",record.decision],["Trade-off",record.tradeoff],["Revisit when",record.revisit]].map(([label,text])=><div key={label}><dt>{label}</dt><dd>{text}</dd></div>)}</dl></article>)}</section>
+    <section className="site-editorial site-section"><span className="site-label">In practice / BGM</span><h2>A committed record.<br />A separate delivery.</h2><div><p>BGM keeps business records separate from notification delivery. A PostgreSQL regression races eight workers for one notification claim with a mocked provider. This checks coordination inside the application; it does not promise exactly-once delivery by an external service.</p><a className="site-text-link" href="https://github.com/rcc00n/bgm_crm/blob/master/docs/ENGINEERING_CASE_STUDY.md" target="_blank" rel="noreferrer">Read the implementation and trade-offs ↗</a></div></section>
+    <ClosingAction title={<>Make the next<br />decision explicit.</>} />
+  </>;
+}

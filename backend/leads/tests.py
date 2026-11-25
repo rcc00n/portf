@@ -1,0 +1,139 @@
+import json
+import uuid
+from unittest.mock import patch
+
+from django.test import TestCase
+from django.urls import reverse
+
+from .models import ContactRequest
+from .views import CONTACT_LIMITS
+
+
+class ContactRequestTests(TestCase):
+    def setUp(self):
+        self.url = reverse("contact-request")
+        self.payload = {
+            "name": "Test visitor",
+            "email": "visitor@example.com",
+            "message": "A product project to discuss.",
+            "source": "homepage-start",
+        }
+        # Every endpoint test is isolated from live external delivery.
+        self.notification = patch("leads.notifications.send_telegram_message", side_effect=AssertionError("No Telegram calls in POST"))
+        self.notify = self.notification.start()
+        self.addCleanup(self.notification.stop)
+
+    def post(self, payload):
+        return self.client.post(self.url, data=json.dumps(payload), content_type="application/json", HTTP_IDEMPOTENCY_KEY=str(uuid.uuid4()))
+
+    def test_requires_post(self):
+        self.assertEqual(self.client.get(self.url).status_code, 405)
+
+    def test_rejects_non_object_and_malformed_json_without_saving(self):
+        for payload in ([], None, "text", 123, True):
+            with self.subTest(payload=payload):
+                self.assertEqual(self.post(payload).status_code, 400)
+        for raw in (b"{", b"\xff"):
+            with self.subTest(raw=raw):
+                self.assertEqual(self.client.post(self.url, data=raw, content_type="application/json", HTTP_IDEMPOTENCY_KEY=str(uuid.uuid4())).status_code, 400)
+        self.assertEqual(ContactRequest.objects.count(), 0)
+        self.notify.assert_not_called()
+
+    def test_required_field_errors_are_identified(self):
+        response = self.post({"name": " ", "email": [], "message": None})
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(set(response.json()["fields"]), {"name", "email", "message"})
+        self.assertFalse(ContactRequest.objects.exists())
+
+    def test_rejects_invalid_email(self):
+        for email in ("not-an-email", "name@example", "name @example.com", "a@example.com\nb@example.com"):
+            with self.subTest(email=email):
+                response = self.post({**self.payload, "email": email})
+                self.assertEqual(response.status_code, 400)
+                self.assertIn("email", response.json()["fields"])
+        self.assertFalse(ContactRequest.objects.exists())
+
+    def test_rejects_oversized_values_before_saving_or_notifying(self):
+        for field, limit in CONTACT_LIMITS.items():
+            with self.subTest(field=field):
+                response = self.post({**self.payload, field: "x" * (limit + 1)})
+                self.assertEqual(response.status_code, 400)
+                self.assertIn(field, response.json()["fields"])
+        self.assertFalse(ContactRequest.objects.exists())
+        self.notify.assert_not_called()
+
+    def test_saves_trimmed_inquiry_and_preserves_existing_metadata(self):
+        qualification = {"projectType": {"value": "saas", "label": "SaaS", "rating": 2, "total": 4}}
+        response = self.post({
+            **self.payload,
+            "name": "  Test visitor  ",
+            "email": " visitor@example.com ",
+            "company": " Example company ",
+            "message": "  A project outline.  ",
+            "qualification": qualification,
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.json()["ok"])
+        lead = ContactRequest.objects.get(pk=response.json()["id"])
+        self.assertEqual(lead.name, "Test visitor")
+        self.assertEqual(lead.email, "visitor@example.com")
+        self.assertEqual(lead.company, "Example company")
+        self.assertEqual(lead.message, "A project outline.")
+        self.assertEqual(lead.source, "homepage-start")
+        self.assertEqual(lead.qualification, qualification)
+        self.notify.assert_not_called()
+        self.assertEqual(lead.notification.status, "pending")
+
+    def test_unknown_project_intent_is_persisted_without_example_product(self):
+        for value in ("unsure", "unknown", "not sure", "Not sure", "not sure yet"):
+            with self.subTest(value=value):
+                response = self.post({
+                    **self.payload,
+                    "source": "site-start:unsure/Balanced/unspecified/unspecified",
+                    "qualification": {
+                        "projectType": {"value": value, "label": "Not sure"},
+                        "complexity": {"value": "Balanced", "label": "Balanced"},
+                    },
+                })
+                self.assertEqual(response.status_code, 200)
+                lead = ContactRequest.objects.get(pk=response.json()["id"])
+                self.assertEqual(lead.qualification["projectType"]["value"], "unsure")
+                self.assertEqual(lead.qualification["projectType"]["label"], "Not sure")
+                self.assertEqual(lead.qualification["complexity"]["value"], "Balanced")
+                self.assertIn("unsure", lead.source)
+                self.assertNotIn("CRM", json.dumps(lead.qualification))
+                self.assertEqual(lead.message, self.payload["message"])
+
+    def test_unknown_project_label_cannot_describe_an_example_product(self):
+        response = self.post({**self.payload, "qualification": {
+            "projectType": {"value": "unknown", "label": "CRM"},
+        }})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(ContactRequest.objects.get().qualification["projectType"]["label"], "Not sure")
+
+    def test_optional_preferences_do_not_imply_a_project_type(self):
+        response = self.post({**self.payload, "qualification": {
+            "budget": {"value": "10_25k", "label": "$10k–25k"},
+        }})
+        self.assertEqual(response.status_code, 200)
+        self.assertNotIn("projectType", ContactRequest.objects.get().qualification)
+
+    def test_inquiry_without_definition_requires_only_the_three_contact_fields(self):
+        response = self.post(self.payload)
+        self.assertEqual(response.status_code, 200)
+        self.assertIsNone(ContactRequest.objects.get().qualification)
+
+    def test_accepts_limit_boundaries(self):
+        response = self.post({**self.payload, "name": "n" * 120, "company": "c" * 200, "message": "m" * 5000})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(ContactRequest.objects.get().message), 5000)
+
+    def test_invalid_forwarded_ip_falls_back_to_remote_address(self):
+        response = self.client.post(self.url, data=json.dumps(self.payload), content_type="application/json", HTTP_X_FORWARDED_FOR="invalid, 192.0.2.1", REMOTE_ADDR="127.0.0.1", HTTP_IDEMPOTENCY_KEY=str(uuid.uuid4()))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(ContactRequest.objects.get().ip_address, "127.0.0.1")
+
+    def test_qualification_nonfinite_number_does_not_crash(self):
+        response = self.post({**self.payload, "qualification": {"budget": {"label": "To discuss", "rating": float("inf")}}})
+        self.assertEqual(response.status_code, 200)
+        self.assertIsNone(ContactRequest.objects.get().qualification["budget"]["rating"])

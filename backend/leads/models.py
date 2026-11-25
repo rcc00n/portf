@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils import timezone
 
 
 class TelegramRecipient(models.Model):
@@ -25,6 +26,8 @@ class ContactRequest(models.Model):
         (STATUS_DONE, "Done"),
     ]
 
+    submission_key = models.UUIDField(null=True, blank=True, unique=True, editable=False)
+    submission_digest = models.CharField(max_length=64, blank=True, editable=False)
     name = models.CharField(max_length=120)
     email = models.EmailField()
     company = models.CharField(max_length=200, blank=True)
@@ -44,3 +47,30 @@ class ContactRequest(models.Model):
 
     def __str__(self):
         return f"{self.name} ({self.email})"
+
+
+class InquiryNotification(models.Model):
+    """One durable job per inquiry; delivered recipients are never deliberately resent."""
+    lead = models.OneToOneField(ContactRequest, on_delete=models.CASCADE, related_name="notification")
+    status = models.CharField(max_length=12, default="pending", choices=[
+        (state, state.title()) for state in ("pending", "processing", "sent", "failed")
+    ])
+    deliveries = models.JSONField(default=dict, blank=True)
+    attempts = models.PositiveSmallIntegerField(default=0)
+    last_attempt_at = models.DateTimeField(null=True, blank=True)
+    next_attempt_at = models.DateTimeField(default=timezone.now)
+    last_error = models.CharField(max_length=240, blank=True)
+    sent_at = models.DateTimeField(null=True, blank=True)
+    lease_token = models.UUIDField(null=True, editable=False)
+    lease_until = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        indexes = [models.Index(fields=["status", "next_attempt_at"], name="inquiry_delivery_due")]
+
+
+class InquiryRateBucket(models.Model):
+    """Bounded fixed-window counters shared across application workers."""
+    key = models.CharField(max_length=64, primary_key=True)
+    count = models.PositiveIntegerField(default=0)
+    expires_at = models.DateTimeField(db_index=True)
