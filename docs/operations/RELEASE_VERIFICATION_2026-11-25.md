@@ -1,5 +1,8 @@
 # RACCN Code release verification — 2026-11-25
 
+This record covers the initial portfolio launch and the subsequent architecture
+interaction release described at the end of this document.
+
 ## Scope and source
 
 The owner explicitly authorized the production configuration update, secret-key
@@ -140,3 +143,77 @@ is not an adequate configuration rollback.
   rehearsed on the shared production host.
 
 See [portfolio decisions](PORTFOLIO_RELEASE.md) for publication and media provenance.
+
+## Architecture interaction follow-up
+
+The owner explicitly authorized production deployment of the final interactive
+architecture refinement after the local review. Deployed source revision:
+`ed05f5b14fe20efb79e2fbf4cc1f1ef7d9867e6f`, branch
+`refinement/architecture-interaction`. Application code is unchanged from the
+reviewed `8bdafe8` frontend; the additional commit hardens release packaging.
+Backend source, schema, estimator semantics and the approved homepage are unchanged.
+
+The explorer has nine meaningful product/scale configurations, specialized
+queue/cache/read-model responsibilities, selectable connected layers, and finite
+workflow playback with pause/resume/replay. Mobile layouts, native keyboard
+controls, reduced motion and interruption cleanup are regression protected.
+
+Pre-deployment checks passed: lint, production build, 38 frontend unit tests,
+106 Django tests (one PostgreSQL-only test skipped under SQLite), migration drift,
+27 browser tests and all CMS/media/contact/metadata smoke checks. An independent
+browser pass exercised the three complete Scale workflows, rapid mid-flow changes,
+offscreen pause/resume, live reduced-motion changes and visible keyboard focus at
+320/390px. No new interaction defect was found. Only Chromium was available;
+headless tab switching did not produce real hidden-tab state, so that specific
+browser event was not represented as an observed verification.
+
+One release-specific defect was reproduced: a browser holding an old entry script
+could navigate to a missing lazy route chunk and produce an empty React root.
+The tested packaging collector now retains only the preceding approved release's
+reachable hashed JavaScript/CSS. Eleven isolated tests cover dependency traversal,
+missing files, immutable-name collisions, symlinks, unsafe paths and output safety.
+The actual artifacts require 13 copied chunks (399,796 bytes) and reuse six
+byte-identical chunks. No old HTML, images, media, fonts, maps or private records
+are copied. See the [release runbook](RELEASE_RUNBOOK.md) for the reproducible
+derived-image recipe and bounded retention policy.
+
+The readiness-gated production switch succeeded. Public HTML now references
+`/assets/index-BAtIGee2.js`. Post-switch checks passed:
+
+- All six maintained architecture browser regressions ran against production,
+  including all nine configurations, playback, interruption, keyboard selection,
+  mobile and reduced motion.
+- A real browser tab was kept open on `/approach` with the previous entry
+  `/assets/index-CH-0_JcY.js` across the switch. It navigated to Systems and the old
+  architecture explorer without a reload, missing assets or JavaScript errors.
+  Refreshing then loaded the new explorer. This verifies actual rollout continuity,
+  not only a mocked missing-file case.
+- Twelve canonical pages, twenty legacy redirects, genuine 404s, all six published
+  projects and eleven public images passed the external smoke checks. Retired
+  identifying-media URLs remain 404. Desktop/mobile gallery and Start paths passed.
+- Protected BGM homepage, store and services each returned HTTP 200.
+- Independent live visual/keyboard inspection passed at 1440px, 390px and 320px
+  with normal/reduced motion. The homepage Control Plane and all six projects
+  remain intact; no console errors, failed assets, overflow or write requests were
+  observed.
+
+Only compatibility JavaScript/CSS was added to the tested candidate image. Every
+existing frontend file and runtime setting in that image remained byte-identical;
+the final default-command smoke verified all nineteen previous reachable chunks
+over HTTP with correct MIME types and SHA256 hashes, and the new HTML entrypoint.
+No new inquiry or real provider notification was sent by this verification.
+
+The final web and notification worker both run `ed05f5b`, with zero restarts during
+verification and the existing bounded restart policy. Content fingerprints for all
+ten projects, twenty-three images, five links and thirteen inquiries match the
+pre-release snapshot; six projects remain published and the outbox is empty.
+Secret key, database, provider and proxy settings are unchanged, and the one-shot
+catalog flag remains absent. nginx validation passed. The twelve unrelated running
+containers retained their IDs, start times and restart counts.
+
+Fresh restricted rollback material is stored at
+`/var/backups/raccn/20261125-architecture-8bdafe8`: the actual preceding running
+image archive, database/media/config snapshots and compatibility-asset provenance.
+Earlier backups remain retained. These are private operational artifacts, not Git
+source. The earlier documented provider/Safari/backup-retention limitations still
+apply; no new external delivery guarantee is implied by the release.
