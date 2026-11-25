@@ -41,6 +41,9 @@ class FrontendRoutingTests(SimpleTestCase):
                 response = self.client.get(route)
                 self.assertEqual(response.status_code, 200)
                 self.assertContains(response, 'id="root"')
+                self.assertEqual(response["Cache-Control"], "no-store" if route=="/work/renter" else "no-cache")
+        self.assertEqual(self.client.get("/start?source=homepage").status_code, 200)
+        self.assertEqual(self.client.get("/privacy/").status_code, 200)
 
     def test_retired_identity_bearing_assets_are_not_public_even_if_left_on_disk(self):
         for name in ["assets/projects/swiftfleet/1.png", "home/media/worlddoc.webp"]:
@@ -48,9 +51,6 @@ class FrontendRoutingTests(SimpleTestCase):
             asset.parent.mkdir(parents=True, exist_ok=True)
             asset.write_bytes(b"retired evidence")
             self.assertEqual(self.client.get("/" + name).status_code, 404)
-                self.assertEqual(response["Cache-Control"], "no-store" if route=="/work/renter" else "no-cache")
-        self.assertEqual(self.client.get("/start?source=homepage").status_code, 200)
-        self.assertEqual(self.client.get("/privacy/").status_code, 200)
 
     def test_unknown_route_returns_not_found_shell_with_http_404(self):
         response = self.client.get("/this-page-does-not-exist")
