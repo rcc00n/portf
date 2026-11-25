@@ -50,6 +50,7 @@ class DefinitionBrowserTests(unittest.TestCase):
         expect(self.page.locator('input[value="unsure"]')).to_be_checked()
         expect(self.page.locator("#summary h2")).to_have_text("Not sureBalanced scope.")
         expect(self.page.locator(".site-estimate-result")).to_contain_text("Example assumptions: CRM product")
+        expect(self.page.locator(".site-estimate-result")).to_contain_text("$18k-$32k")
         share = self.page.get_by_role("link", name="Open definition link").get_attribute("href")
         self.assertEqual(parse_qs(urlparse(share).query), {"product": ["unsure"], "complexity": ["Balanced"]})
         self.page.get_by_role("link", name="Discuss this project definition").click()
@@ -97,6 +98,20 @@ class DefinitionBrowserTests(unittest.TestCase):
         self.page.get_by_role("radio", name=re.compile("^Not sure")).check()
         self.page.get_by_role("link", name="Open definition link").click()
         expect(self.page.locator("#summary h2")).to_contain_text("Not sure")
+
+    def test_reduced_budget_uses_current_prices_for_selected_and_restored_saas(self):
+        self.visit("/start/define?product=saas&complexity=Lean&team=Small&integrations=None")
+        expect(self.page.locator('input[value="SaaS"]')).to_be_checked()
+        expect(self.page.locator(".site-estimate-result")).to_contain_text("$11k-$18k")
+        expect(self.page.locator(".site-estimate-result")).not_to_contain_text("Example assumptions")
+        # Changing a choice persists a snapshot; restoring it must use current price bands.
+        self.page.get_by_role("radio", name=re.compile("^Heavy")).check()
+        expect(self.page.locator(".site-estimate-result")).to_contain_text("$18k-$32k")
+        self.visit("/start/define")
+        expect(self.page.locator('input[value="SaaS"]')).to_be_checked()
+        expect(self.page.locator('input[value="Heavy"]')).to_be_checked()
+        expect(self.page.locator(".site-estimate-result")).to_contain_text("$18k-$32k")
+        expect(self.page.locator("#summary h2")).to_have_text("SaaSLean scope.")
 
     def test_planning_only_never_submits_example_defaults(self):
         self.visit("/start/define")

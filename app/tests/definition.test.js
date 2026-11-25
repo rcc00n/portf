@@ -59,10 +59,40 @@ test('valid query > saved estimate > qualification > example precedence is prese
     {product: 'E-commerce', complexity: 'Balanced', team: 'Expanded', integrations: 'Standard'});
 });
 
-test('81 original estimator combinations retain complete ranges, notes and block tags', () => {
+test('81 original combinations retain scoring, timelines, notes and tags with the approved budget reduction', () => {
   const fixture = JSON.parse(readFileSync(new URL('./fixtures/estimator-legacy.json', import.meta.url), 'utf8'));
+  // Keep the original fixture intact: only the owner-approved public budget bands change.
+  const revisedRanges = {
+    '$12k-$20k': '$11k-$18k',
+    '$20k-$35k': '$18k-$32k',
+    '$35k-$50k': '$32k-$45k',
+    '$50k-$75k': '$45k-$68k',
+    '$75k-$120k': '$68k-$108k',
+  };
   assert.equal(fixture.cases.length, 81);
-  for (const {inputs, expected} of fixture.cases) assert.deepEqual(buildEstimate(inputs), expected, JSON.stringify(inputs));
+  const coveredRanges = new Set();
+  for (const {inputs, expected} of fixture.cases) {
+    const range = revisedRanges[expected.budget.range];
+    assert.ok(range, `Missing approved range for ${expected.budget.range}`);
+    coveredRanges.add(range);
+    assert.deepEqual(buildEstimate(inputs), {...expected, budget: {...expected.budget, range}}, JSON.stringify(inputs));
+  }
+  assert.equal(coveredRanges.size, 5);
+});
+
+test('restored choices use current budgets without turning an illustrative product into visitor intent', () => {
+  definition.saveStorage('estimateSnapshot', {version: 2, product: 'SaaS', complexity: 'Lean', team: 'Small', integrations: 'None'});
+  const restored = definition.loadDefinition();
+  const summary = definition.buildDefinitionSummary(restored.selected);
+  assert.equal(summary.estimate.budget.range, '$11k-$18k');
+  assert.equal(summary.illustrative, false);
+  assert.equal(summary.productLabel, 'SaaS');
+  const unknown = definition.loadDefinition('?product=unknown');
+  const example = definition.buildDefinitionSummary(unknown.selected);
+  assert.equal(example.estimate.budget.range, '$11k-$18k');
+  assert.equal(example.illustrative, true);
+  assert.equal(example.productLabel, 'Not sure');
+  assert.equal(definition.inquiryQualification(unknown.selected).projectType.value, 'unsure');
 });
 
 test('SaaS keeps its corrected weight and dedicated system evidence', () => {

@@ -44,7 +44,12 @@ and error/retry/opt-out behavior; Django tests verify validation and persisted J
 combinations from Git revision `ded2944`, before this fix. Tests compare ranges,
 notes, blocks and tags. Do not regenerate it from the modified implementation.
 The corrected SaaS behavior is checked separately across its 27 combinations.
-No estimator arithmetic code is changed in this fix.
+The unknown-intent fix did not change estimator arithmetic. The owner-requested
+2026-11-25 pricing refinement reduces only the five budget ranges by approximately
+10%, rounded to whole thousands. Tests explicitly map those approved ranges onto
+the unchanged fixture and still compare every other result, including scoring,
+timelines, notes and tags. Browser coverage checks current prices after restoring
+saved choices and keeps unknown-product estimates labelled as illustrative.
 
 ## Checkpoint and scope
 
