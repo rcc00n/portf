@@ -1,5 +1,6 @@
 """Runtime contracts are tested without production credentials or providers."""
 import ipaddress
+import json
 import os
 from pathlib import Path
 import subprocess
@@ -17,6 +18,20 @@ from deployment_ready import NoRedirect, check_readiness
 
 
 class DeploymentProbeTests(SimpleTestCase):
+    def test_dokku_startup_command_uses_supported_argv_array(self):
+        # Dokku 0.34.7 decodes Healthcheck.Command into []string. A shell string
+        # can pass application tests yet prevent the actual release from booting.
+        backend = Path(__file__).resolve().parents[1]
+        manifest_path = next(path for path in (backend / 'app.json', backend.parent / 'app.json') if path.is_file())
+        manifest = json.loads(manifest_path.read_text())
+        checks = manifest['healthchecks']['web']
+        self.assertTrue(checks)
+        for check in checks:
+            command = check['command']
+            self.assertIsInstance(command, list)
+            self.assertTrue(command)
+            self.assertTrue(all(isinstance(arg, str) and arg for arg in command))
+
     def probe(self, status=200, body=b'{"ok": true}'):
         response = Mock(status=status)
         response.read.return_value = body
