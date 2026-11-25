@@ -121,3 +121,21 @@ jobs:
         run: |
           docker run --rm -e DJANGO_ENV=build raccn-ci python manage.py check
           docker run --rm -e DJANGO_ENV=build raccn-ci python -c "from pathlib import Path; assert Path('frontend_dist/index.html').is_file(); assert Path('staticfiles/staticfiles.json').is_file(); assert Path('Procfile').is_file()"
+      - name: Verify the default image command on a runtime port
+        run: |
+          docker image inspect --format '{{json .Config.Cmd}}' raccn-ci | python -c 'import json, sys; command=json.load(sys.stdin); assert command[0] == "gunicorn"; assert not any("$" in argument for argument in command)'
+          raccn_ci_container=raccn-entrypoint-check
+          trap 'docker rm -f "$raccn_ci_container" > /dev/null 2>&1 || true' EXIT
+          docker run -d --name "$raccn_ci_container" \
+            -e DJANGO_ENV=test -e DJANGO_DEBUG=false -e DJANGO_DB_SSL=false \
+            -e DJANGO_ALLOWED_HOSTS=localhost -e DJANGO_CANONICAL_ORIGIN=http://localhost \
+            -e DJANGO_SERVE_MEDIA=true -e DJANGO_MEDIA_ROOT=/tmp/raccn-media \
+            -e DJANGO_SECURE_SSL_REDIRECT=false -e TELEGRAM_BOT_TOKEN= \
+            -e DATABASE_URL=sqlite:////tmp/raccn-entrypoint.sqlite3 -e PORT=8321 raccn-ci
+          docker exec "$raccn_ci_container" mkdir -p /tmp/raccn-media
+          docker exec "$raccn_ci_container" python manage.py migrate --noinput
+          for attempt in $(seq 1 20); do
+            if docker exec "$raccn_ci_container" python deployment_ready.py > /dev/null; then break; fi
+            sleep 1
+          done
+          docker exec "$raccn_ci_container" python deployment_ready.py
