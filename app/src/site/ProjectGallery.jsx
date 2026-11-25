@@ -1,22 +1,65 @@
-import { useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { imageAlt } from "../projects/catalog.js";
 import "./project-gallery.css";
+
+function lockDocumentScroll() {
+  const root = document.documentElement;
+  const body = document.body;
+  const { scrollX, scrollY } = window;
+  const scrollbar = Math.max(0, window.innerWidth - root.clientWidth);
+  const saved = [];
+  const set = (element, property, value) => {
+    saved.push([element, property, element.style.getPropertyValue(property), element.style.getPropertyPriority(property)]);
+    element.style.setProperty(property, value);
+  };
+  // Fixed body also prevents background touch scrolling on iOS. Preserve its
+  // available width when the desktop scrollbar disappears, avoiding a shift.
+  set(root, "overflow", "hidden");
+  set(body, "position", "fixed");
+  set(body, "top", `${-scrollY}px`);
+  set(body, "left", `${-scrollX}px`);
+  set(body, "width", `calc(100vw - ${scrollbar}px)`);
+  let restored = false;
+  return () => {
+    if (restored) return;
+    restored = true;
+    for (const [element, property, value, priority] of saved) {
+      if (value) element.style.setProperty(property, value, priority);
+      else element.style.removeProperty(property);
+    }
+    window.scrollTo({ left: scrollX, top: scrollY, behavior: "instant" });
+  };
+}
 
 export default function ProjectGallery({ project }) {
   const dialog = useRef(null);
   const opener = useRef(null);
   const closeButton = useRef(null);
+  const restoreScroll = useRef(null);
   const titleId = useId();
   const instructionsId = useId();
   const [index, setIndex] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
+  useEffect(() => () => restoreScroll.current?.(), []);
   const media = [...project.media].sort((a, b) => a.order - b.order || a.id - b.id);
   if (media.length < 2) return null;
   const current = Math.min(index, media.length - 1);
   const image = media[current];
   const move = direction => setIndex(value => (value + direction + media.length) % media.length);
-  const close = () => dialog.current?.close();
+  const finishClose = () => {
+    restoreScroll.current?.();
+    restoreScroll.current = null;
+    setIsOpen(false);
+    opener.current?.focus({ preventScroll: true });
+  };
+  const close = () => {
+    dialog.current?.close();
+    finishClose();
+  };
   const open = () => {
+    if (dialog.current.open) return;
+    restoreScroll.current?.();
+    restoreScroll.current = lockDocumentScroll();
     setIndex(0);
     setIsOpen(true);
     dialog.current.showModal();
@@ -28,10 +71,8 @@ export default function ProjectGallery({ project }) {
       View {media.length} images <span aria-hidden="true">↗</span>
     </button>
     <dialog ref={dialog} className="site-project-gallery" aria-labelledby={titleId} aria-describedby={instructionsId}
-      onClose={() => {
-        setIsOpen(false);
-        opener.current?.focus({ preventScroll: true });
-      }}
+      onCancel={event => { event.preventDefault(); close(); }}
+      onClose={() => { if (!dialog.current?.open) finishClose(); }}
       onClick={event => {
         if (event.target !== event.currentTarget) return;
         const bounds = event.currentTarget.getBoundingClientRect();

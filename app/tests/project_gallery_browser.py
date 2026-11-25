@@ -112,6 +112,46 @@ class ProjectGalleryBrowserTests(unittest.TestCase):
         expect(archive.locator("img")).to_have_count(2)
         expect(archive.locator("img").last).to_be_visible()
 
+    def test_background_scroll_locked_without_shift_and_restored(self):
+        for width in (1440, 390):
+            with self.subTest(width=width):
+                self.page.set_viewport_size({"width": width, "height": 1000 if width == 1440 else 844})
+                self.page.emulate_media(reduced_motion="reduce")
+                self.page.evaluate("document.body.style.setProperty('position', 'relative', 'important'); document.documentElement.style.setProperty('overflow', 'auto')")
+                self.trigger.scroll_into_view_if_needed()
+                self.trigger.focus()
+                before = self.page.evaluate("({x:scrollX,y:scrollY,bodyStyle:document.body.style.cssText,rootStyle:document.documentElement.style.cssText})")
+                bounds = self.page.locator("#project-renter").bounding_box()
+                # Keyboard opening avoids Playwright's separate pointer auto-scroll
+                # around the sticky mobile header changing the reference position.
+                self.page.keyboard.press("Enter")
+                expect(self.dialog).to_be_visible()
+                locked = self.page.locator("#project-renter").bounding_box()
+                for dimension in ("x", "y", "width"):
+                    self.assertAlmostEqual(bounds[dimension], locked[dimension], delta=1)
+                initial_scroll = self.page.evaluate("scrollY")
+                self.page.mouse.move(width / 2, 400)
+                self.page.mouse.wheel(0, 600)
+                self.page.wait_for_timeout(200)
+                self.assertEqual(self.page.evaluate("scrollY"), initial_scroll)
+                self.assertAlmostEqual(self.page.locator("#project-renter").bounding_box()["y"], locked["y"], delta=1)
+                self.page.keyboard.press("Escape")
+                expect(self.trigger).to_be_focused()
+                after = self.page.evaluate("({x:scrollX,y:scrollY,bodyStyle:document.body.style.cssText,rootStyle:document.documentElement.style.cssText})")
+                self.assertEqual(after, before)
+
+    def test_scroll_styles_restored_on_route_unmount(self):
+        before = self.page.evaluate("[document.body.style.cssText,document.documentElement.style.cssText]")
+        self.trigger.click()
+        expect(self.dialog).to_be_visible()
+        expect(self.page.locator("body")).to_have_css("position", "fixed")
+        # Native Back can dismiss a modal before history traversal. Dispatch an
+        # internal navigation directly to exercise actual component unmounting.
+        self.page.evaluate("document.querySelector('.site-header a[href=\"/approach\"]').click()")
+        self.page.wait_for_url("**/approach")
+        expect(self.page.locator("dialog[open]")).to_have_count(0)
+        self.assertEqual(self.page.evaluate("[document.body.style.cssText,document.documentElement.style.cssText]"), before)
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

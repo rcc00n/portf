@@ -26,6 +26,8 @@
   transform: translate(2px,-2px);
 }
 .site-project-gallery {
+  position: fixed;
+  inset: 0;
   width: min(94vw,1440px);
   height: min(92dvh,1050px);
   max-width: none;
