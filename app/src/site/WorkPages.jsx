@@ -5,14 +5,15 @@ import useProjectCatalog from "../projects/useProjectCatalog.js";
 import CatalogStatus from "../projects/CatalogStatus.jsx";
 import { casePath, imageAlt, presentProject, projectLinks, selectProjectEvidence } from "../projects/catalog.js";
 import { ClosingAction, Evidence, NotFound, PageLead, SignalLink } from "./SiteShell.jsx";
+import ProjectGallery from "./ProjectGallery.jsx";
 
 function ProjectEvidence({project, index, eager=false, className=""}) {
   const image=project.media[0];
   if (!image) return null;
   const evidence=<Evidence eager={eager} height={project.slug==="worlddoc"?858:810} src={image.url} alt={imageAlt(project,image)} label={`${String(index).padStart(2,"0")} / ${project.title}`} note={casePath(project)?"Explore the case ↗":projectLinks(project).length?"Visit project ↗":"Project evidence"}/>;
-  if(casePath(project))return <Link className={className} to={casePath(project)} aria-label={`Explore ${project.title}`}>{evidence}</Link>;
   const href=presentProject(project).href;
-  return href?<a className={className} href={href} target="_blank" rel="noreferrer" aria-label={`${project.title} — opens in a new tab`}>{evidence}</a>:evidence;
+  const linkedEvidence=casePath(project)?<Link className={className} to={casePath(project)} aria-label={`Explore ${project.title}`}>{evidence}</Link>:href?<a className={className} href={href} target="_blank" rel="noreferrer" aria-label={`${project.title} — opens in a new tab`}>{evidence}</a>:evidence;
+  return <>{linkedEvidence}<ProjectGallery project={project}/></>;
 }
 function ProjectLinks({project}) {
   return <>{projectLinks(project).map((link,i)=><a className="site-text-link" key={i} href={link.href} target="_blank" rel="noreferrer">{link.label} ↗</a>)}</>;
@@ -23,14 +24,14 @@ export function WorkPage() {
   return <>
     <PageLead index="02 / Selected work" title={<>Products in front.<br /><em>Systems behind.</em></>} intro="Marketplace, service, and directory interfaces. Explore the product and the operational thinking behind it." />
     {catalog.status!=="ready"&&<section className="site-section"><CatalogStatus catalog={catalog}/></section>}
-    {lead && <section className="site-work-feature" data-project-slug={lead.slug}>
+    {lead && <section className="site-work-feature" id={`project-${lead.slug}`} data-project-slug={lead.slug}>
       <ProjectEvidence project={lead} eager index={1} className="site-work-image"/>
       <div className="site-project-caption"><span className="site-label">{lead.impact}{lead.status?` / ${lead.status}`:""}</span><h2>{(lead.headline||lead.title).split("\n").map((line,i)=><span key={i}>{i>0&&<br/>}{line}</span>)}</h2><div><p>{lead.blurb}</p>{casePath(lead)?<SignalLink to={casePath(lead)}>Explore {lead.title}</SignalLink>:<ProjectLinks project={lead}/>}</div></div>
     </section>}
-    {supporting.length>0 && <section className="site-project-pair" aria-label="More selected work">{supporting.map((project,i)=><article key={project.slug} data-project-slug={project.slug}>
+    {supporting.length>0 && <section className="site-project-pair" aria-label="More selected work">{supporting.map((project,i)=><article key={project.slug} id={`project-${project.slug}`} data-project-slug={project.slug}>
       <ProjectEvidence project={project} index={i+(lead?2:1)}/><span className="site-label">{project.impact}{project.status?` / ${project.status}`:""}</span><h2>{project.title}</h2><p>{project.blurb}</p><ProjectLinks project={project}/>
     </article>)}</section>}
-    {archive.length>0 && <section className="site-section"><span className="site-label">From the project archive</span>{archive.map(project=><details className="site-disclosure" key={project.slug} data-project-slug={project.slug}><summary>{project.title}<span aria-hidden="true">+</span></summary><div><span className="site-label">{project.impact}{project.status?` / ${project.status}`:""}</span><p>{project.blurb}</p>{project.media.map((image,i)=><img className="site-archive-image" key={image.id} src={image.url} alt={imageAlt(project,image,i)} loading="lazy" />)}{casePath(project)&&<SignalLink to={casePath(project)}>Explore {project.title}</SignalLink>}<ProjectLinks project={project}/></div></details>)}</section>}
+    {archive.length>0 && <section className="site-section"><span className="site-label">From the project archive</span>{archive.map(project=><details className="site-disclosure" key={project.slug} id={`project-${project.slug}`} data-project-slug={project.slug}><summary>{project.title}<span aria-hidden="true">+</span></summary><div><span className="site-label">{project.impact}{project.status?` / ${project.status}`:""}</span><p>{project.blurb}</p>{project.media.map((image,i)=><img className="site-archive-image" key={image.id} src={image.url} alt={imageAlt(project,image,i)} loading="lazy" />)}{casePath(project)&&<SignalLink to={casePath(project)}>Explore {project.title}</SignalLink>}<ProjectLinks project={project}/></div></details>)}</section>}
     <ClosingAction title={<>A product to build.<br />A system to resolve.</>} />
   </>;
 }
