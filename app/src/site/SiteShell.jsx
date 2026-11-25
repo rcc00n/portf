@@ -34,7 +34,6 @@ export default function SiteShell() {
       if (target && !anchorHandled) { target.scrollIntoView({ behavior: "instant", block: "start" }); anchorHandled = true; }
     };
     const frame = requestAnimationFrame(() => {
-      if (!hash) window.scrollTo({ top: 0, behavior: "instant" });
       place();
       if (previous.current !== pathname) main.current?.focus({ preventScroll: true });
       previous.current = pathname;

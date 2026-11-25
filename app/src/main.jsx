@@ -3,6 +3,7 @@ import ReactDOM from "react-dom/client";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import "./index.css";
 import RouteMetadata from "./components/RouteMetadata.jsx";
+import RouteScroll from "./components/RouteScroll.jsx";
 import LegacyRedirect from "./site/LegacyRedirect.jsx";
 import { redirects } from "./site/routeMigration.js";
 
@@ -21,12 +22,12 @@ const PrivacyPage=lazy(()=>import("./pages/legal/LegalPages.jsx").then(m=>({defa
 const TermsPage=lazy(()=>import("./pages/legal/LegalPages.jsx").then(m=>({default:m.TermsPage})));
 const NotFound=lazy(()=>import("./site/SiteShell.jsx").then(m=>({default:m.NotFound})));
 const loader=<div style={{minHeight:"100svh",background:"#0d0e0c"}}/>;
-const page=element=><Suspense fallback={loader}>{element}</Suspense>;
+const page=element=><Suspense fallback={loader}><RouteScroll>{element}</RouteScroll></Suspense>;
 
 ReactDOM.createRoot(document.getElementById("root")).render(<React.StrictMode><BrowserRouter><RouteMetadata/><Routes>
   <Route path="/" element={page(<HomePage/>)}/>
   {Object.keys(redirects).map(path=><Route key={path} path={path} element={<LegacyRedirect/>}/>)}
-  <Route element={page(<SiteShell/>)}>
+  <Route element={<Suspense fallback={loader}><SiteShell/></Suspense>}>
     <Route path="/work" element={page(<WorkPage/>)}/><Route path="/work/renter" element={page(<RenterPage/>)}/>
     <Route path="/systems" element={page(<SystemsPage/>)}/><Route path="/systems/architecture" element={page(<ArchitecturePage/>)}/><Route path="/systems/decisions" element={page(<DecisionsPage/>)}/><Route path="/systems/demo" element={page(<DemoPage/>)}/>
     <Route path="/approach" element={page(<ApproachPage/>)}/><Route path="/start" element={page(<StartPage/>)}/><Route path="/start/define" element={page(<DefinePage/>)}/>
