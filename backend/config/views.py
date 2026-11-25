@@ -100,6 +100,8 @@ def _frontend_asset(request, root, path):
 def frontend_index(request):
     root = Path(settings.FRONTEND_DIST_DIR).resolve()
     path = request.path_info
+    if path.startswith("/assets/projects/") or path == "/home/media/worlddoc.webp":
+        raise Http404("Retired project evidence")
     if path in PUBLIC_FILES or path.startswith(PUBLIC_PREFIXES):
         return _frontend_asset(request, root, path)
     if Path(path).suffix or "\\" in path or any(part.startswith(".") for part in Path(path).parts):

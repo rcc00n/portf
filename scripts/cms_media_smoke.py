@@ -59,7 +59,7 @@ def run(root):
     first=Project.objects.create(slug='cms-first', title='CMS first', impact='Verified fixture type', blurb='First fixture description', is_published=True, featured_placement='supporting', featured_order=1, order=1)
     second=Project.objects.create(slug='cms-second', title='CMS second', is_published=True, featured_placement='supporting', featured_order=2, order=2)
     other=Project.objects.create(slug='cms-archive', title='Renter WorldDoc motorcycle doctor finder', is_published=True, order=3)
-    pic=attach(first, 'app/public/home/media/worlddoc.webp', 'Owner-provided catalog alt')
+    pic=attach(first, 'app/public/evidence/renter/customer.webp', 'Owner-provided catalog alt')
     attach(second, 'app/public/home/media/bad-guy-motors.webp', 'Second fixture evidence')
     ProjectLink.objects.create(project=first, label='CMS link', href='https://example.org/cms', order=1)
     logs=(root/'gunicorn.log').open('w+')

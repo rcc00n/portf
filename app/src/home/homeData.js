@@ -1,27 +1,3 @@
-// Historical reference only. Never used as a publication fallback.
-export const legacyCuratedProjects = [
-  {
-    key: "bad-guy-motors",
-    match: ["bad guy motors", "motorcycle"],
-    title: "Bad Guy Motors",
-    href: "https://badguymotors.com",
-    type: "Product & service website",
-    blurb: "A fabrication and parts website bringing service information, project builds, and customer inquiries into one place.",
-    image: "/home/media/bad-guy-motors.webp",
-    imageAlt: "Bad Guy Motors fabrication and diesel shop website",
-  },
-  {
-    key: "worlddoc",
-    match: ["worlddoc", "doctor finder"],
-    title: "WorldDoc",
-    href: "https://rcc00n.github.io/prj_E/",
-    type: "Directory system",
-    blurb: "A global doctor directory shaped around specialty and region-based search.",
-    image: "/home/media/worlddoc.webp",
-    imageAlt: "WorldDoc doctor directory interface",
-  },
-];
-
 export { loadHomepageProjects, selectHomepageProjects } from "../projects/catalog.js";
 
 export const systemModes = [

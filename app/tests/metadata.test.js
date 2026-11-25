@@ -47,4 +47,6 @@ test('migrated evidence, fonts, licences and social preview preserve exact appro
   const image=readFileSync(new URL('../public/social/raccn-code.png',import.meta.url));
   assert.deepEqual([image.readUInt32BE(16),image.readUInt32BE(20)],[1200,630]);
   assert.equal(existsSync(new URL('../public/prototype/fonts',import.meta.url)),false);
+  assert.equal(existsSync(new URL('../public/assets/projects',import.meta.url)),false);
+  assert.equal(existsSync(new URL('../public/home/media/worlddoc.webp',import.meta.url)),false);
 });

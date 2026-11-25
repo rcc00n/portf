@@ -26,7 +26,7 @@ class FrontendRoutingTests(SimpleTestCase):
             "favicon.ico": (b"icon", "image/vnd.microsoft.icon"),
             "social/raccn-code.png": (b"social image", "image/png"),
             "fonts/instrument-sans-latin.woff2": (b"font", "font/woff2"),
-            "home/media/worlddoc.webp": (b"webp", "image/webp"),
+            "home/media/bad-guy-motors.webp": (b"webp", "image/webp"),
             "assets/index-AbCd1234.js": (b"console.log('RACCN');", "text/javascript"),
             "assets/index-AbCd1234.css": (b"body { color: white; }", "text/css"),
         }
@@ -41,6 +41,13 @@ class FrontendRoutingTests(SimpleTestCase):
                 response = self.client.get(route)
                 self.assertEqual(response.status_code, 200)
                 self.assertContains(response, 'id="root"')
+
+    def test_retired_identity_bearing_assets_are_not_public_even_if_left_on_disk(self):
+        for name in ["assets/projects/swiftfleet/1.png", "home/media/worlddoc.webp"]:
+            asset = self.root / name
+            asset.parent.mkdir(parents=True, exist_ok=True)
+            asset.write_bytes(b"retired evidence")
+            self.assertEqual(self.client.get("/" + name).status_code, 404)
                 self.assertEqual(response["Cache-Control"], "no-store" if route=="/work/renter" else "no-cache")
         self.assertEqual(self.client.get("/start?source=homepage").status_code, 200)
         self.assertEqual(self.client.get("/privacy/").status_code, 200)

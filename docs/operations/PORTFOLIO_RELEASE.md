@@ -52,6 +52,15 @@ private backup/media storage but are no longer registered public paths, so the
 new protected media handler returns 404 for those old URLs. No claim is made that
 historical public downloads or Git/provider caches have been erased.
 
+The unused static project PNG collection and old WorldDoc capture were also
+removed from the public build after live CMS URLs were confirmed to use uploaded
+`/media/projects/` files. The static collection included identifying rental-company
+imagery. Originals are in a restricted backup outside Git, not a public docs
+archive. Retired paths return 404, and tests prevent accidental reintroduction.
+The unused `legacyCuratedProjects` constant was removed; active CMS data and
+backend models were preserved. Historical Git visibility is a separate owner
+decision and is not solved by deleting files from a new commit.
+
 New-image `release.py` normally runs migrations only. The one-time, explicitly
 reviewed `RACCN_RELEASE_PORTFOLIO=2026-11-25` flag additionally runs the above mapped
 import before traffic switches. Unset it immediately after a successful release;

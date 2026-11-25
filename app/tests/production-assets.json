@@ -24,8 +24,9 @@
     "previous": "app/public/prototype/media/renter-market.webp"
   },
   "app/public/evidence/renter/operator.webp": {
-    "sha256": "05debc1d32ff0ef7c098fb81d7151031d5c5120ad5f7c6b91941c4879da7a4c7",
-    "previous": "app/public/prototype/media/renter-control.webp"
+    "sha256": "3cc6502469e9cece8fc427148ce46305fda39628f9eaf7e555f786984cea7538",
+    "previous": "app/public/prototype/media/renter-control.webp",
+    "review": "2026-11-25: opaque identity redactions; original UI retained."
   },
   "app/public/social/raccn-code.png": {
     "sha256": "e9ce93069436443e42a5f2aeb78837fb61938b8be2ac33b86dd8dc6961f9b8bb",
