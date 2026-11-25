@@ -40,11 +40,11 @@ const HomeHeader = () => (
       <RaccnGlyph />
       <span>RACCN <b>CODE</b></span>
     </a>
-    <nav className="hp-nav" aria-label="Homepage">
-      <a href="#work">Work</a>
-      <a href="#systems">Systems</a>
-      <a href="#approach">Approach</a>
-      <a href="#start">Start</a>
+    <nav className="hp-nav" aria-label="Main navigation">
+      <Link to="/work">Work</Link>
+      <Link to="/systems">Systems</Link>
+      <Link to="/approach">Approach</Link>
+      <Link to="/start">Start</Link>
     </nav>
     <div className="hp-header-state" aria-label="Active page state">
       <span>Control plane</span>

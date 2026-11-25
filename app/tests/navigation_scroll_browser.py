@@ -13,7 +13,8 @@ from playwright.sync_api import expect, sync_playwright
 class NavigationScrollBrowserTests(unittest.TestCase):
     ready_selectors = {"/": "#top", "/work": "#project-renter",
                        "/approach": "#working-together", "/systems": ".site-system-overview",
-                       "/systems/architecture": ".architecture-explorer"}
+                       "/systems/architecture": ".architecture-explorer",
+                       "/start": ".hp-start-form"}
 
     @classmethod
     def setUpClass(cls):
@@ -95,7 +96,7 @@ class NavigationScrollBrowserTests(unittest.TestCase):
         self.scroll_middle()
         self.page.locator(".site-header .site-brand").click()
         self.assert_top("/")
-        # This is a real below-the-fold React link, not the homepage section nav.
+        # Exercise a below-the-fold React link as well as the header links.
         self.page.locator(".hp-work-index-link").scroll_into_view_if_needed()
         self.assertGreater(self.page.evaluate("scrollY"), 300)
         self.page.locator(".hp-work-index-link").click()
@@ -152,17 +153,34 @@ class NavigationScrollBrowserTests(unittest.TestCase):
                 route.fulfill(json=self.catalog)
         self.assert_anchor("project-milk-vancouver")
 
-    def test_homepage_section_links_and_hash_history_still_land_at_targets(self):
+    def test_homepage_menu_opens_pages_at_top_desktop_mobile_and_keyboard(self):
+        for width in (1440, 390):
+            self.page.set_viewport_size({"width": width, "height": 1000 if width == 1440 else 844})
+            for destination in ("/work", "/systems", "/approach", "/start"):
+                with self.subTest(width=width, destination=destination):
+                    self.visit("/")
+                    self.scroll_middle()
+                    link = self.page.locator(f'.hp-nav a[href="{destination}"]')
+                    expect(link).to_be_visible()
+                    if destination == "/start":
+                        link.focus()
+                        link.press("Enter")
+                    else:
+                        link.click()
+                    self.assert_top(destination)
+                    self.page.go_back()
+                    self.assert_top("/")
+
+    def test_homepage_intentional_anchors_and_hash_history_still_work(self):
         self.visit("/")
         expect(self.page.locator("[data-project-slug]")).to_have_count(6)
-        for identifier in ("systems", "approach", "start"):
-            self.page.locator(f'.hp-nav a[href="#{identifier}"]').click()
-            self.assert_anchor(identifier)
-        self.page.go_back()
-        self.assert_anchor("approach")
-        self.page.go_forward()
+        self.page.locator(".hp-hero-enter").click()
         self.assert_anchor("start")
         self.page.locator(".hp-header .hp-brand").click()
+        self.page.wait_for_function("scrollY <= 1")
+        self.page.go_back()
+        self.assert_anchor("start")
+        self.page.go_forward()
         self.page.wait_for_function("scrollY <= 1")
 
     def test_gallery_cleanup_cannot_restore_previous_scroll_over_a_new_route(self):
