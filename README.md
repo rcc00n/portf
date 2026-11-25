@@ -13,7 +13,7 @@ Public portfolio and engineering evidence site: React/Vite frontend, Django CMS/
 
 ## Local development
 
-Use Node 22 (at least 22.13) and Python 3.12 (CI/container target; backend also tested locally on 3.10). No secrets or production data are needed.
+Use Node 22 (at least 22.13) and Python 3.12 (CI/container target; Pillow 13 requires Python 3.11 or newer). No secrets or production data are needed.
 
 ```sh
 python3 -m venv .venv
