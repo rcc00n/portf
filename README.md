@@ -1,6 +1,18 @@
 # RACCN Code
 
-Public portfolio and engineering evidence site: React/Vite frontend, Django CMS/admin and PostgreSQL production data. The approved Control Plane design is unchanged. Django controls project publication, ordered copy/media/links, raw route metadata and durable inquiry acceptance.
+Public portfolio and engineering evidence site at [raccncode.com](https://raccncode.com): React/Vite frontend, Django CMS/admin and PostgreSQL production data. Django controls project publication, ordered copy/media/links, raw route metadata and durable inquiry acceptance.
+
+## Five-minute source review
+
+1. [Project contract](docs/hardening/CMS_MEDIA_HARDENING.md): explicit publication/identity and production-style registered-image serving.
+2. [Inquiry acceptance](docs/hardening/CONTACT_RELIABILITY.md): durable persistence, idempotent retries and notification outbox.
+3. [Regression runner](scripts/check_release.py) and [root CI](.github/workflows/ci.yml): isolated application, browser, PostgreSQL migration and image checks.
+4. [Release verification](docs/operations/RELEASE_VERIFICATION_2026-11-25.md): measured production checks, rollback and remaining verification boundaries.
+
+The site is custom art direction over a small explicit data contract, not a generic
+page builder. The estimator is illustrative and the operational demo uses fictional
+data. No analytics provider is installed. See [contribution](CONTRIBUTING.md) and
+[security](SECURITY.md) guidance; no new project-wide licence grant is implied.
 
 ## Repository
 
@@ -49,4 +61,9 @@ The maintained runner performs lint, 81-combination estimator/unit coverage, bui
 
 ## Release status
 
-Repository/operations hardening only. No staging/production deploy or merge to main. Owner/legal facts, actual PostgreSQL/media/proxy/worker behavior, backups and image verification remain staging gates. Historical audits are evidence from their original phase, not current production-readiness claims.
+The redesigned application is deployed at [raccncode.com](https://raccncode.com).
+Exact source revisions, verification results and limitations are recorded in the
+[release verification](docs/operations/RELEASE_VERIFICATION_2026-11-25.md).
+CI performs checks only and does not deploy. Historical audits describe their
+original phase; they are not current assertions about production. Legal/operator
+facts and permissions must be kept accurate by the owner.

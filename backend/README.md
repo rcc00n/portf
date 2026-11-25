@@ -1,32 +1,46 @@
-Backend (Django)
+# RACCN Code backend
 
-Local setup
-1) Create a virtualenv and install deps
-- python -m venv .venv
-- source .venv/bin/activate
-- pip install -r backend/requirements.txt
+Django owns published projects, registered images, inquiry acceptance and the
+notification outbox. PostgreSQL and persistent media back production; isolated
+SQLite is supported for development and tests.
 
-2) Configure env
-- cp backend/.env.example backend/.env
-- edit backend/.env
+## Local setup
 
-3) Run migrations + create admin
-- python backend/manage.py migrate
-- python backend/manage.py createsuperuser
+Use Python 3.12 from the repository root:
 
-4) Start backend
-- python backend/manage.py runserver
+```sh
+python3 -m venv .venv
+. .venv/bin/activate
+pip install -r backend/requirements.txt
+export DJANGO_ENV=development DJANGO_DEBUG=true DJANGO_DB_SSL=false
+export DJANGO_SERVE_MEDIA=true DJANGO_SECURE_SSL_REDIRECT=false
+python backend/manage.py migrate
+python backend/manage.py createsuperuser
+python backend/manage.py runserver 127.0.0.1:8001
+```
 
-Frontend dev
-- cd app
-- npm install
-- cp .env.example .env (optional)
-- npm run dev
+Settings read process environment; `.env.example` is not loaded automatically.
+Never use production databases, secrets or provider accounts for local checks.
+Development defaults do not apply to production, which requires explicit stable
+secret/database/origin/hosts and persistent media settings.
 
-Notes
-- The API endpoints are /api/projects/, /api/pricing/, /api/contacts/ and the admin is /admin/.
-- Inquiry acceptance is database-backed and independent of Telegram. Set TELEGRAM_BOT_TOKEN, add active recipients in admin, and run the separate `python manage.py process_inquiry_notifications` worker from `backend/`. See [contact reliability contract](../CONTACT_RELIABILITY.md) and [Dokku runtime](../DOKKU.md).
-- Settings read process environment; copying `.env` alone does not load it. Export the reviewed values through your shell/process manager without committing them.
-- Uploaded images are stored under backend/media/.
-- Set DJANGO_SERVE_MEDIA=true if you want Django to serve uploads without a CDN.
-- For a production build, the Dockerfile builds the frontend and copies it into backend/frontend_dist.
+## Contracts
+
+| Endpoint | Behavior |
+| --- | --- |
+| `GET /api/projects/` | Published records, stable slugs, ordering, links, image alt and registered URLs |
+| `GET /api/pricing/` | Preserved backend capability; not the public estimator source |
+| `POST /api/contacts/` | JSON validation, durable acceptance and UUID retry protection |
+| `GET /health/` | Process liveness independent of providers |
+| `GET /ready/` | Internal DB/migration/frontend/media readiness |
+| `/admin/` | Authenticated content, leads and notification state |
+
+Only registered project images are publicly served; arbitrary filesystem paths
+are not exposed. See the [CMS/media contract](../docs/hardening/CMS_MEDIA_HARDENING.md).
+
+Telegram delivery runs separately through `python manage.py process_inquiry_notifications`.
+Failed notification never invalidates a saved inquiry. Use mocked/disabled providers
+in tests; see the [contact contract](../docs/hardening/CONTACT_RELIABILITY.md).
+
+Follow the [root setup and checks](../README.md), [CI](../.github/workflows/ci.yml),
+[Dokku contract](../DOKKU.md) and [release runbook](../docs/operations/RELEASE_RUNBOOK.md).
