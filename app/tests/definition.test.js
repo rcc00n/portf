@@ -63,11 +63,11 @@ test('81 original combinations retain scoring, timelines, notes and tags with th
   const fixture = JSON.parse(readFileSync(new URL('./fixtures/estimator-legacy.json', import.meta.url), 'utf8'));
   // Keep the original fixture intact: only the owner-approved public budget bands change.
   const revisedRanges = {
-    '$12k-$20k': '$11k-$18k',
-    '$20k-$35k': '$18k-$32k',
-    '$35k-$50k': '$32k-$45k',
-    '$50k-$75k': '$45k-$68k',
-    '$75k-$120k': '$68k-$108k',
+    '$12k-$20k': '$10k-$16k',
+    '$20k-$35k': '$16k-$29k',
+    '$35k-$50k': '$29k-$41k',
+    '$50k-$75k': '$41k-$61k',
+    '$75k-$120k': '$61k-$97k',
   };
   assert.equal(fixture.cases.length, 81);
   const coveredRanges = new Set();
@@ -84,12 +84,12 @@ test('restored choices use current budgets without turning an illustrative produ
   definition.saveStorage('estimateSnapshot', {version: 2, product: 'SaaS', complexity: 'Lean', team: 'Small', integrations: 'None'});
   const restored = definition.loadDefinition();
   const summary = definition.buildDefinitionSummary(restored.selected);
-  assert.equal(summary.estimate.budget.range, '$11k-$18k');
+  assert.equal(summary.estimate.budget.range, '$10k-$16k');
   assert.equal(summary.illustrative, false);
   assert.equal(summary.productLabel, 'SaaS');
   const unknown = definition.loadDefinition('?product=unknown');
   const example = definition.buildDefinitionSummary(unknown.selected);
-  assert.equal(example.estimate.budget.range, '$11k-$18k');
+  assert.equal(example.estimate.budget.range, '$10k-$16k');
   assert.equal(example.illustrative, true);
   assert.equal(example.productLabel, 'Not sure');
   assert.equal(definition.inquiryQualification(unknown.selected).projectType.value, 'unsure');

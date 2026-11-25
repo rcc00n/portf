@@ -63,11 +63,11 @@ const TIMELINE_BUCKETS = [
 ];
 
 const BUDGET_BUCKETS = [
-  { max: 3, range: "$11k-$18k", note: "Lean build with core ops" },
-  { max: 5, range: "$18k-$32k", note: "Balanced scope and delivery" },
-  { max: 7, range: "$32k-$45k", note: "Complex workflows and integrations" },
-  { max: 9, range: "$45k-$68k", note: "Advanced reliability and scale" },
-  { max: 99, range: "$68k-$108k", note: "Enterprise scope and long-run support" },
+  { max: 3, range: "$10k-$16k", note: "Lean build with core ops" },
+  { max: 5, range: "$16k-$29k", note: "Balanced scope and delivery" },
+  { max: 7, range: "$29k-$41k", note: "Complex workflows and integrations" },
+  { max: 9, range: "$41k-$61k", note: "Advanced reliability and scale" },
+  { max: 99, range: "$61k-$97k", note: "Enterprise scope and long-run support" },
 ];
 
 const BASE_BLOCKS = [
