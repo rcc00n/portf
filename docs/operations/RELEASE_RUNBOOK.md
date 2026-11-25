@@ -13,7 +13,7 @@ The database connection uses TLS. nginx overwrites `X-Forwarded-For` with
 `$remote_addr` and `X-Forwarded-Proto` with `$scheme`; it preserves the request Host.
 There is no `tags` plugin: do not use obsolete `tags:deploy` rollback instructions.
 
-The current old runtime needs production configuration changes before it can run
+The pre-release legacy runtime needed production configuration changes before it could run
 the hardened code: disable DEBUG, explicitly select production, set the verified
 canonical origin, configure the trusted proxy boundary, and replace the old key
 with a private stable key meeting the new minimum. Key replacement invalidates
@@ -46,7 +46,8 @@ snapshot through the operator's secret-management procedure, outside Git and log
    during backup so new files and their database records remain consistent.
 4. Preserve the running image with a unique local Docker tag before Dokku replaces
    `dokku/portf:latest`; use the verified running container image ID, not a guessed
-   previous tag. Keep it until post-release checks and rollback window are complete.
+   previous tag. Also save a restricted, checksummed image archive: scheduled Docker
+   pruning can delete an unused tagged image. Keep both through the rollback window.
 5. Run migrations and the reviewed project import against the isolated restored DB,
    with notification delivery disabled. Check retained lead/media counts. Published
    identity mapping must be explicit, and unverified legacy claims remain excluded.
@@ -84,6 +85,12 @@ traffic switch. The probe ignores HTTP proxies and refuses redirects; it cannot
 fall through to an old healthy public container. Readiness requires DB connection,
 applied migrations, writable mounted media and a frontend artifact. It deliberately
 does not call Telegram.
+
+On installed Dokku 0.34.7, the startup-check `command` must be an argument array.
+The shipped image and Procfile start Gunicorn directly; `gunicorn.conf.py` reads
+`PORT` inside the running container. Avoid a shell-expanded bind expression that
+Dokku can evaluate before the runtime environment exists. CI exercises the actual
+image default command on a non-default port, not an overridden test command.
 
 After the web release and reviewed CMS import, set one worker while preserving web
 scale (`dokku ps:scale portf web=1 worker=1`). Verify recognition of the new Procfile,

@@ -4,6 +4,7 @@ The approved application is in `app/` and `backend/`. Root CI and `scripts/` con
 
 - [Current hardening handoff](operations/REPOSITORY_OPERATIONS_HARDENING.md)
 - [Selected portfolio and publication plan](operations/PORTFOLIO_RELEASE.md)
+- [2026-11-25 release verification and remaining provider follow-up](operations/RELEASE_VERIFICATION_2026-11-25.md)
 - [Release, backup and rollback procedure](operations/RELEASE_RUNBOOK.md)
 - [Dependency decisions](operations/DEPENDENCIES.md)
 - [Verified legacy cleanup](operations/LEGACY_CLEANUP.md)

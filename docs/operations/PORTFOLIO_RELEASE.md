@@ -58,8 +58,10 @@ removed from the public build after live CMS URLs were confirmed to use uploaded
 imagery. Originals are in a restricted backup outside Git, not a public docs
 archive. Retired paths return 404, and tests prevent accidental reintroduction.
 The unused `legacyCuratedProjects` constant was removed; active CMS data and
-backend models were preserved. Historical Git visibility is a separate owner
-decision and is not solved by deleting files from a new commit.
+backend models were preserved. Historical Git visibility is not solved by deleting
+files from a new commit. The owner subsequently authorized targeted history removal;
+see the [release verification](RELEASE_VERIFICATION_2026-11-25.md) for the completed
+branch cleanup and the remaining GitHub pull-request cache follow-up.
 
 New-image `release.py` normally runs migrations only. The one-time, explicitly
 reviewed `RACCN_RELEASE_PORTFOLIO=2026-11-25` flag additionally runs the above mapped
