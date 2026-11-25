@@ -11,11 +11,25 @@
       "images": [
         {
           "file": "renter.webp",
-          "alt": "Renter marketplace with tool search and category browsing."
+          "alt": "Renter marketplace with tool search and category browsing.",
+          "replaces": [
+            "Screenshot_1.png"
+          ]
         },
         {
-          "file": "renter-operator.webp",
-          "alt": "Renter operator interface for reviewing marketplace activity."
+          "file": "renter-operator-redacted.webp",
+          "alt": "Renter operator interface. Identifying details are redacted.",
+          "replaces": [
+            "Screenshot_3.png",
+            "release-20261125-renter-operator.webp"
+          ]
+        },
+        {
+          "file": "renter-profile-redacted.webp",
+          "alt": "Renter profile interface. Identifying details are redacted.",
+          "replaces": [
+            "Screenshot_2.png"
+          ]
         }
       ],
       "expected_title": "Renter",

@@ -71,3 +71,17 @@ class ReleasePortfolioTests(TestCase):
         self.run_import("--apply")
         self.assertFalse(ProjectLink.objects.filter(pk=retired.pk).exists())
         self.assertTrue(ProjectLink.objects.filter(pk=retained.pk).exists())
+
+    def test_reviewed_redaction_reuses_record_and_retires_raw_public_path(self):
+        project = Project.objects.create(slug="renter", title="Renter", is_published=True)
+        old = ProjectImage.objects.create(project=project, image=ContentFile((self.root / "media" / "example.png").read_bytes(), name="Screenshot_3.png"))
+        previous_path = old.image.name
+        self.rows[0]["images"][0]["replaces"] = ["Screenshot_3.png"]
+        (self.root / "manifest.json").write_text(json.dumps({"version": 1, "projects": self.rows}))
+        self.run_import("--apply")
+        old.refresh_from_db()
+        self.assertEqual(project.images.count(), 1)
+        self.assertNotEqual(old.image.name, previous_path)
+        self.assertFalse(ProjectImage.objects.filter(image=previous_path).exists())
+        self.assertTrue(old.image.storage.exists(previous_path))  # retained, unregistered, not public
+        self.assertEqual(old.order, 0)

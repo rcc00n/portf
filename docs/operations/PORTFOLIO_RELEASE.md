@@ -44,6 +44,14 @@ names are stable across retries. Existing links are retained except exact URLs i
 the owner-approved `retired_links` list. MilkRoute's old live-site link is explicitly
 retired. Unrelated links are never removed by a broad title/URL heuristic.
 
+Privacy exception: reviewed Renter operator/profile captures contained identifiable
+account/contact values. Opaque labelled redactions preserve the real interface;
+the importer reuses the three known legacy image records by explicit filename.
+The operator/profile records now point to redacted files. Originals remain in the
+private backup/media storage but are no longer registered public paths, so the
+new protected media handler returns 404 for those old URLs. No claim is made that
+historical public downloads or Git/provider caches have been erased.
+
 New-image `release.py` normally runs migrations only. The one-time, explicitly
 reviewed `RACCN_RELEASE_PORTFOLIO=2026-11-25` flag additionally runs the above mapped
 import before traffic switches. Unset it immediately after a successful release;

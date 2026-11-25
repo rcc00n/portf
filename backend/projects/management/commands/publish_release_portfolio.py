@@ -72,8 +72,12 @@ class Command(BaseCommand):
                 for index, image in enumerate(row["images"]):
                     filename = f"release-20261125-{image['file']}"
                     record = project.images.filter(image=f"projects/{project.pk}/{filename}").first()
+                    if not record and image.get("replaces"):
+                        legacy = [f"projects/{project.pk}/{name}" for name in image["replaces"]]
+                        record = project.images.filter(image__in=legacy).first()
                     if not record:
                         record = ProjectImage(project=project)
+                    if record.image.name != f"projects/{project.pk}/{filename}":
                         # A previous interrupted transaction may have left this exact file.
                         name = f"projects/{project.pk}/{filename}"
                         if record.image.storage.exists(name):
