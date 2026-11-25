@@ -109,6 +109,43 @@ as a hidden health check. Verify web/worker share the same DB and media persists
 across the controlled container replacement. Check BGM and other protected public
 paths remain healthy without changing their process/configuration.
 
+## Preserve navigation in already-open tabs
+
+Vite route chunks are loaded on demand. Replacing the image while a tab still
+holds the previous entry script can otherwise remove a chunk that tab has not
+requested yet. A missing route chunk was reproduced as an empty React root during
+the architecture release review.
+
+Retain the immediately preceding approved release's reachable hashed JavaScript
+and CSS alongside the new build. This is a packaging step, not a fallback to old
+HTML or project data:
+
+1. Export `frontend_dist` from the verified running image into a restricted
+   temporary directory. Record that image ID. Extract the tested candidate's
+   `frontend_dist` separately.
+2. Run `scripts/prepare_frontend_compat.py --previous PREVIOUS_DIST --current
+   CANDIDATE_DIST --output CONTEXT/assets`. The output directory must be empty or
+   absent. The collector follows the previous entry document's code dependencies,
+   copies only missing hashed `.js`/`.css` files, and rejects missing dependencies,
+   symlinks and same-name/different-byte collisions. Save its JSON manifest outside
+   the `assets` directory.
+3. Build the final image from that reviewed context with
+   `docker build -f deploy/frontend-compat.Dockerfile --build-arg
+   RELEASE_IMAGE=TESTED_CANDIDATE -t FINAL_IMAGE CONTEXT`. Label the final image with
+   the current source revision and retain the previous-image/asset manifest with
+   the release evidence. Re-run the actual default-command readiness smoke against
+   the final image.
+4. Hold an existing browser tab open before the traffic switch. After switching,
+   navigate to an unvisited lazy route without refreshing and verify its assets
+   and page load. Then refresh and verify the new application is selected.
+
+Do not copy all historical assets. The collector deliberately excludes uploaded
+media, images, fonts, source maps, documents and the previous HTML, and does not
+retain unreachable leftovers from earlier compatibility layers. Only use a
+privacy-reviewed previous release. New requests receive the new HTML; the limited
+compatibility files let an existing session finish navigation without interruption.
+This retains one previous application version, not indefinitely old browser tabs.
+
 ## Rollback
 
 Dokku 0.34.7 supports `git:from-image` for a preserved local image:

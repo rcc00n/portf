@@ -22,6 +22,7 @@ def main():
         def run(command, cwd=ROOT):
             print('+ ' + ' '.join(command), flush=True)
             subprocess.run(command, cwd=cwd, env=env, check=True)
+        run([sys.executable, '-m', 'unittest', 'discover', '-s', 'scripts', '-p', 'test_frontend_compat.py'])
         for command in [['npm', '--prefix', 'app', 'run', 'lint'], ['npm', '--prefix', 'app', 'test'], ['npm', '--prefix', 'app', 'run', 'build']]:
             run(command)
         for args in [['test', '--noinput'], ['makemigrations', '--check', '--dry-run']]:
